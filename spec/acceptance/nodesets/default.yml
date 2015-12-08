@@ -1,0 +1,6 @@
+HOSTS:
+  testbox:
+    roles:
+      - agent
+    platform: solaris-12-x86
+    ip: <insert ip address>

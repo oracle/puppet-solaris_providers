@@ -1,0 +1,17 @@
+{
+  "name": "oracle-solaris_providers",
+  "version": "1.0.0",
+  "author": "Oracle",
+  "summary": "Oracle Solaris Providers",
+  "license": "Apache 2.0",
+  "source": "https://github.com/oraclesolaris/puppet-module",
+  "project_page": "https://github.com/oraclesolaris/puppet-module",
+  "issues_url": "https://support.oracle.com",
+  "dependencies": [
+    {
+      "name": "puppetlabs-stdlib",
+      "version_range": ">= 1.0.0"
+    }
+  ]
+}
+
