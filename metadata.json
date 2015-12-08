@@ -1,17 +1,31 @@
 {
   "name": "oracle-solaris_providers",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "author": "Oracle",
   "summary": "Oracle Solaris Providers",
-  "license": "Apache 2.0",
-  "source": "https://github.com/oraclesolaris/puppet-module",
-  "project_page": "https://github.com/oraclesolaris/puppet-module",
+  "license": "Apache-2.0",
+  "source": "https://github.com/oraclesolaris/puppet-solaris_providers",
+  "project_page": "https://github.com/oraclesolaris/puppet-solaris_providers",
   "issues_url": "https://support.oracle.com",
   "dependencies": [
     {
       "name": "puppetlabs-stdlib",
-      "version_range": ">= 1.0.0"
+      "version_range": "4.7.x"
     }
+  ],
+  "operatingsystem_support": [
+        {
+            "operatingsystem": "Solaris",
+            "operatingsystemrelease": [
+                "11",
+                "12"
+            ]
+        }
+    ],
+  "tags": [
+    "nameservice",
+    "dns",
+    "nis",
+    "ldap"
   ]
 }
-
