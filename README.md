@@ -23,7 +23,7 @@ found exclusively on Oracle Solaris.
 The Oracle Solaris Providers module currently enables configuration of the
 following:
 
-  -DNS, LDAP and NIS naming services
+  * DNS, LDAP and NIS naming services
 
 Many more types and providers will be added in the future.
 
@@ -34,34 +34,34 @@ Many more types and providers will be added in the future.
 The providers included in this module make changes to the SMF properties of the
 following services:
 
-svc:/network/dns/client`
-svc:/network/ldap/client`
-svc:/network/nis/client
-svc:/network/nis/domain
+svc:/network/dns/client  
+svc:/network/ldap/client  
+svc:/network/nis/client  
+svc:/network/nis/domain  
 
 ### Beginning with solaris_providers
 
-For Solaris 11.x puppet module install oracle-solaris_providers
-For Solaris 12.x pkg install puppet/oracle-solaris_providers
+For Solaris 11.x puppet module install oracle-solaris_providers  
+For Solaris 12.x pkg install puppet/oracle-solaris_providers  
 
 ## Usage
 
 Use the puppet describe command to see the properties for each of the defined
 providers:
 
-puppet describe dns
-puppet describe ldap
-puppet describe nis
+puppet describe dns  
+puppet describe ldap  
+puppet describe nis  
 
 ## Reference
 
 These types and providers interact with SMF properties of the following services
 using the svcprop command:
 
-svc:/network/dns/client`
-svc:/network/ldap/client`
-svc:/network/nis/client
-svc:/network/nis/domain
+svc:/network/dns/client  
+svc:/network/ldap/client  
+svc:/network/nis/client  
+svc:/network/nis/domain  
 
 ## Limitations
 
