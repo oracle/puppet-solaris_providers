@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "author": "Oracle",
   "summary": "Oracle Solaris Providers",
-  "license": "Apache 2.0",
-  "source": "https://github.com/oraclesolaris/puppet-module",
-  "project_page": "https://github.com/oraclesolaris/puppet-module",
+  "license": "Apache-2.0",
+  "source": "https://github.com/oraclesolaris/puppet-solaris_providers"
+  "project_page": "https://github.com/oraclesolaris/puppet-solaris_providers"
   "issues_url": "https://support.oracle.com",
   "dependencies": [
     {
