@@ -1,6 +1,6 @@
 {
   "name": "oracle-solaris_providers",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "author": "Oracle",
   "summary": "Oracle Solaris Providers",
   "license": "Apache-2.0",
@@ -9,7 +9,7 @@
   "issues_url": "https://support.oracle.com",
   "dependencies": [
     {
-      "name": "puppetlabs-stdlib",
+      "name": "puppetlabs/stdlib",
       "version_range": "4.7.x"
     }
   ],
@@ -26,6 +26,12 @@
     "nameservice",
     "dns",
     "nis",
-    "ldap"
+    "ldap",
+    "package",
+    "pkg",
+    "facet",
+    "mediator",
+    "publisher",
+    "variant"
   ]
 }
