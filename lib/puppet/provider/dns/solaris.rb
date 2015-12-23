@@ -57,13 +57,12 @@ Puppet::Type.type(:dns).provide(:dns) do
         define_method(field.to_s + "=") do |should|
             begin
                 if should.is_a? Array
-                    # the first entry needs the open paren and the last entry
-                    # needs the close paren
-                    should[0] = "(" + should[0]
-                    should[-1] = should[-1] + ")"
+                    arr = should.collect {|val| '"' + val + '"'}
+                    arr[0] = "(" + arr[0]
+                    arr[-1] = arr[-1] + ")"
 
                     svccfg("-s", Dns_fmri, "setprop",
-                           "config/" + field.to_s, "=", should)
+                           "config/" + field.to_s, "=", arr)
                 else
                     # Puppet seems to get confused about when to pass an empty
                     # string or "\"\"".  Catch either condition to handle
