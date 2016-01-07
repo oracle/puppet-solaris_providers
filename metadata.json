@@ -9,7 +9,7 @@
   "issues_url": "https://support.oracle.com",
   "dependencies": [
     {
-      "name": "puppetlabs-stdlib",
+      "name": "puppetlabs/stdlib",
       "version_range": "4.7.x"
     }
   ],
