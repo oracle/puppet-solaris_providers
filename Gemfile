@@ -4,4 +4,5 @@ group(:development, :test) do
   gem 'beaker-rspec', :require => false
   gem 'rspec', :require => false
   gem 'pry', :require => false
+  gem 'psych', :require => false
 end
