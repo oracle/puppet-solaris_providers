@@ -1,7 +1,5 @@
 #!/usr/bin/env rspec
-
 require 'spec_helper'
-require_relative  '../../../lib/puppet/type/pkg_publisher'
 
 describe Puppet::Type.type(:pkg_publisher) do
 
@@ -11,15 +9,15 @@ describe Puppet::Type.type(:pkg_publisher) do
   end
 
   it "should have :name as its keyattribute" do
-    @class.key_attributes.should == [:name]
+    expect( @class.key_attributes).to be == [:name]
   end
 
   describe "when validating attributes" do
-    [ :ensure, :origin, :enable, :sticky, :searchfirst, :searchafter, 
+    [ :ensure, :origin, :enable, :sticky, :searchfirst, :searchafter,
       :searchbefore, :proxy, :sslkey, :sslcert, :mirror
     ].each do |prop|
       it "should have a #{prop} property" do
-        @class.attrtype(prop).should == :property
+        expect(@class.attrtype(prop)).to be == :property
       end
     end
   end
@@ -34,12 +32,12 @@ describe Puppet::Type.type(:pkg_publisher) do
 
       [ "present", "absent" ].each do |newval|
         it "should accept a value of #{newval}" do
-          proc { validate(newval) }.should_not raise_error
+          expect { validate(newval) }.not_to raise_error
         end
       end
 
       it "should reject invalid values" do
-        proc { validate "foo" }.should raise_error Puppet::Error, error_pattern
+        expect { validate "foo" }.to raise_error(Puppet::Error, error_pattern)
       end
     end  # ensure
 
@@ -49,20 +47,20 @@ describe Puppet::Type.type(:pkg_publisher) do
       end
 
       it "should accept a value" do
-        proc { validate "[ 'file://mydir/' ]" 
-             }.should_not raise_error
+        expect { validate "[ 'file://mydir/' ]"
+             }.not_to raise_error
       end
 
       it "should return an array for a single value" do
         mytype = @class.new(:name => @profile_name,
                             :origin => "file://mydir")
-        mytype.property("origin").value.should be_an(Array)
+        expect(mytype.property("origin").value).to be_an(Array)
       end
 
       it "should trim trailing slashes from file:// URI values" do
         mytype = @class.new(:name => @profile_name,
                             :origin => ['file://trail/', 'file://notrail'])
-        mytype.property("origin").value.should == 
+        expect(mytype.property("origin").value).to be ==
                                        ['file://trail', 'file://notrail']
       end
     end  # origin
@@ -76,12 +74,12 @@ describe Puppet::Type.type(:pkg_publisher) do
 
       [ "true", "false" ].each do |follow_val|
         it "should accept a value of #{follow_val}" do
-          proc { validate(follow_val) }.should_not raise_error
+          expect { validate(follow_val) }.not_to raise_error
         end
       end
 
       it "should reject an invalid value" do
-        proc { validate("foobar") }.should raise_error(Puppet::ResourceError,
+        expect { validate("foobar") }.to raise_error(Puppet::ResourceError,
                                                        error_pattern)
       end
     end  # enable
@@ -95,12 +93,12 @@ describe Puppet::Type.type(:pkg_publisher) do
 
       [ "true", "false" ].each do |follow_val|
         it "should accept a value of #{follow_val}" do
-          proc { validate(follow_val) }.should_not raise_error
+          expect { validate(follow_val) }.not_to raise_error
         end
       end
 
       it "should reject an invalid value" do
-        proc { validate("foobar") }.should raise_error(Puppet::ResourceError,
+        expect { validate("foobar") }.to raise_error(Puppet::ResourceError,
                                                        error_pattern)
       end
     end  # sticky
@@ -114,12 +112,12 @@ describe Puppet::Type.type(:pkg_publisher) do
 
       [ "true" ].each do |follow_val|
         it "should accept a value of #{follow_val}" do
-          proc { validate(follow_val) }.should_not raise_error
+          expect { validate(follow_val) }.not_to raise_error
         end
       end
 
       it "should reject an invalid value" do
-        proc { validate("foobar") }.should raise_error(Puppet::ResourceError,
+        expect { validate("foobar") }.to raise_error(Puppet::ResourceError,
                                                        error_pattern)
       end
     end  # searchfirst
@@ -130,7 +128,7 @@ describe Puppet::Type.type(:pkg_publisher) do
       end
 
       it "should accept a value" do
-        proc { validate "foo" }.should_not raise_error
+        expect { validate "foo" }.not_to raise_error
       end
     end  # searchafter
 
@@ -140,7 +138,7 @@ describe Puppet::Type.type(:pkg_publisher) do
       end
 
       it "should accept a value" do
-        proc { validate "foo" }.should_not raise_error
+        expect { validate "foo" }.not_to raise_error
       end
     end  # searchbefore
 
@@ -150,7 +148,7 @@ describe Puppet::Type.type(:pkg_publisher) do
       end
 
       it "should accept a value" do
-        proc { validate "foo" }.should_not raise_error
+        expect { validate "foo" }.not_to raise_error
       end
     end  # proxy
 
@@ -160,7 +158,7 @@ describe Puppet::Type.type(:pkg_publisher) do
       end
 
       it "should accept a value" do
-        proc { validate "foo" }.should_not raise_error
+        expect { validate "foo" }.not_to raise_error
       end
     end  # sslkey
 
@@ -170,7 +168,7 @@ describe Puppet::Type.type(:pkg_publisher) do
       end
 
       it "should accept a value" do
-        proc { validate "foo" }.should_not raise_error
+        expect { validate "foo" }.not_to raise_error
       end
     end  # sslcert
 
@@ -180,20 +178,20 @@ describe Puppet::Type.type(:pkg_publisher) do
       end
 
       it "should accept a value" do
-        proc { validate "[ 'file://mydir/' ]"
-             }.should_not raise_error
+        expect { validate "[ 'file://mydir/' ]"
+             }.not_to raise_error
       end
 
       it "should return an array for a single value" do
         mytype = @class.new(:name => @profile_name,
                             :mirror => "file://mydir")
-        mytype.property("mirror").value.should be_an(Array)
+        expect(mytype.property("mirror").value).to be_an(Array)
       end
 
       it "should trim trailing slashes from file:// URI values" do
         mytype = @class.new(:name => @profile_name,
                             :mirror => ['file://trail/', 'file://notrail'])
-        mytype.property("mirror").value.should ==
+        expect(mytype.property("mirror").value).to be ==
                                        ['file://trail', 'file://notrail']
       end
     end  # mirror

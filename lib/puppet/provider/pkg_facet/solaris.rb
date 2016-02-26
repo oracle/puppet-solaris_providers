@@ -1,12 +1,3 @@
-#
-# CDDL HEADER START
-#
-# The contents of this file are subject to the terms of the
-# Common Development and Distribution License (the "License").
-# You may not use this file except in compliance with the License.
-#
-# You can obtain a copy of the license at usr/src/OPENSOLARIS.LICENSE
-# or http://www.opensolaris.org/os/licensing.
 # See the License for the specific language governing permissions
 # and limitations under the License.
 #
@@ -20,7 +11,7 @@
 #
 
 #
-# Copyright (c) 2013, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2013,2016 Oracle and/or its affiliates. All rights reserved.
 #
 
 Puppet::Type.type(:pkg_facet).provide(:pkg_facet) do
@@ -29,13 +20,17 @@ Puppet::Type.type(:pkg_facet).provide(:pkg_facet) do
     defaultfor :osfamily => :solaris, :kernelrelease => ['5.11', '5.12']
     commands :pkg => '/usr/bin/pkg'
 
+    # Defined classvar once. Access must be via Klass.send to prevent
+    # undefined method `class_variable_get' errors
+    Puppet::Type::Pkg_facet::ProviderPkg_facet.send(:class_variable_set, :@@classvars, {:changes => []})
+
     def self.instances
         pkg(:facet, "-H", "-F", "tsv").split("\n").collect do |line|
             name, value = line.split
             new(:name => name,
                 :ensure => :present,
                 :value => value.downcase)
-        end 
+        end
     end
 
     def self.prefetch(resources)
@@ -66,12 +61,32 @@ Puppet::Type.type(:pkg_facet).provide(:pkg_facet) do
         @property_hash[:ensure] == :present
     end
 
+    def defer(arg)
+      Puppet.debug "Defering facet: #{arg}"
+      cv = Puppet::Type::Pkg_facet::ProviderPkg_facet.send(:class_variable_get, :@@classvars)
+      cv[:changes].push arg
+      Puppet::Type::Pkg_facet::ProviderPkg_facet.send(:class_variable_set, :@@classvars, cv)
+    end
+
+    def self.post_resource_eval
+        # Apply any stashed changes and remove the class variable
+        cv = Puppet::Type::Pkg_facet::ProviderPkg_facet.send(:class_variable_get, :@@classvars)
+        # If changes have been stashed apply them
+        if cv[:changes].length > 0
+          Puppet.debug("Applying %s defered facet changes" % cv[:changes].length)
+          pkg("change-facet", cv[:changes])
+        end
+
+        # Cleanup our tracking class variable
+        Puppet::Type::Pkg_facet::ProviderPkg_facet.send(:remove_class_variable, :@@classvars)
+    end
+
     # required puppet functions
     def create
-        pkg("change-facet", "#{@resource[:name]}=#{@resource[:value]}")
+        defer "#{@resource[:name]}=#{@resource[:value]}"
     end
 
     def destroy
-        pkg("change-facet", "#{@resource[:name]}=None")
+        defer "#{@resource[:name]}=None"
     end
 end

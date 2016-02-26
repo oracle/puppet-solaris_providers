@@ -20,29 +20,11 @@
 #
 
 #
-# Copyright (c) 2013, 2015, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2013, 2015, 2016, Oracle and/or its affiliates. All rights reserved.
 #
 
-require 'ipaddr'
+require File.expand_path(File.join(File.dirname(__FILE__), '..', 'util', 'validation.rb'))
 require 'puppet/property/list'
-
-def valid_hostname?(hostname)
-    return false if hostname.length > 255 or hostname.scan('..').any?
-    hostname = hostname[0...-1] if hostname.index('.', -1)
-    return hostname.split('.').collect { |i|
-        i.size <= 63 and
-        not (i.rindex('-', 0) or i.index('-', -1) or i.scan(/[^a-z\d-]/i).any?)
-    }.all?
-end
-
-def valid_ip?(value)
-    begin
-        ip = IPAddr.new(value)
-    rescue ArgumentError
-        return false
-    end
-    return true
-end
 
 Puppet::Type.newtype(:ldap) do
     @doc = "Manage the configuration of the LDAP client for Oracle Solaris"
@@ -75,7 +57,7 @@ Puppet::Type.newtype(:ldap) do
         def should
             @should
         end
-        
+
         def insync?(is)
             is = [] if is == :absent or is.nil?
             is.sort == self.should.sort
@@ -96,8 +78,9 @@ Puppet::Type.newtype(:ldap) do
         end
 
         validate do |value|
-            raise Puppet::Error, "default_server entry:  #{value} is 
-                invalid" if not valid_ip?(value) and not valid_hostname?(value)
+          unless valid_ip?(value) || valid_hostname?(value)
+            raise Puppet::Error, "default_server entry:  #{value} is invalid"
+          end
         end
     end
 
@@ -113,7 +96,7 @@ Puppet::Type.newtype(:ldap) do
         def should
             @should
         end
-        
+
         def insync?(is)
             is = [] if is == :absent or is.nil?
             is.sort == self.should.sort
@@ -134,8 +117,10 @@ Puppet::Type.newtype(:ldap) do
         end
 
         validate do |value|
-            raise Puppet::Error, "preferred_server entry:  #{value} is 
-                invalid" if not valid_ip?(value) and not valid_hostname?(value)
+            unless  valid_ip?(value) || valid_hostname?(value)
+                raise Puppet::Error, "preferred_server entry: #{value} is
+                    invalid"
+            end
         end
     end
 
@@ -164,12 +149,12 @@ Puppet::Type.newtype(:ldap) do
             attr_accessor :pg
         end
         self.pg = "config"
-        
+
         # ensure should remains an array
         def should
             @should
         end
-        
+
         def insync?(is)
             is = [] if is == :absent or is.nil?
             is.collect! {|x| x.to_s}
@@ -240,12 +225,12 @@ Puppet::Type.newtype(:ldap) do
             attr_accessor :pg
         end
         self.pg = "config"
-        
+
         # ensure should remains an array
         def should
             @should
         end
-        
+
         def insync?(is)
             is = [] if is == :absent or is.nil?
             is.sort == self.should.sort
@@ -261,7 +246,7 @@ Puppet::Type.newtype(:ldap) do
         desc "A  mapping from an objectclass defined by a service to an
               objectclass in an alternative schema.  Specify multiple mappings
               as an array."
-        
+
         class << self
             attr_accessor :pg
         end
@@ -271,7 +256,7 @@ Puppet::Type.newtype(:ldap) do
         def should
             @should
         end
-        
+
         def insync?(is)
             is = [] if is == :absent or is.nil?
             is.sort == self.should.sort
@@ -306,7 +291,7 @@ Puppet::Type.newtype(:ldap) do
         def should
             @should
         end
-        
+
         def insync?(is)
             is = [] if is == :absent or is.nil?
             is.sort == self.should.sort
@@ -340,7 +325,7 @@ Puppet::Type.newtype(:ldap) do
         def should
             @should
         end
-        
+
         def insync?(is)
             is = [] if is == :absent or is.nil?
             is.sort == self.should.sort
@@ -351,7 +336,7 @@ Puppet::Type.newtype(:ldap) do
             " "
         end
     end
-    
+
     newproperty(:bind_passwd) do
         desc "password to be used for authenticating the bind DN."
         class << self
