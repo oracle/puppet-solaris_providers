@@ -61,9 +61,9 @@ Puppet::Type.newtype(:dns) do
 
         validate do |value|
             begin
-                ip = IPAddr.new(value)
+                IPAddr.new(value)
             rescue ArgumentError
-                raise Puppet::Error, "nameserver IP address:  #{value} is 
+                raise Puppet::Error, "nameserver IP address:  #{value} is
                     invalid"
             end
         end
@@ -116,7 +116,7 @@ Puppet::Type.newtype(:dns) do
 
         validate do |value|
             begin
-                ip = IPAddr.new(value)
+                IPAddr.new(value)
             rescue ArgumentError
                 raise Puppet::Error, "sortlist IP address: #{value} is invalid"
             end
@@ -155,12 +155,14 @@ Puppet::Type.newtype(:dns) do
 
                 # attempt to cast the integer specified
                 begin
-                    check = Integer(data[1])
+                    Integer(data[1])
                 rescue ArgumentError
-                    raise Puppet::Error, "option #{value} is invalid"
-                end 
+                    raise Puppet::Error, "option '#{value}' is invalid, can not be cast to an Integer"
+                end
+            elsif data.empty?
+                # Empty values are valid to clear settings in smf
             else
-                raise Puppet::Error, "option #{value} is invalid"
+                raise Puppet::Error, "option '#{value}' is invalid"
             end
         end
     end
