@@ -29,7 +29,7 @@ describe Puppet::Type.type(:address_object).provider(:address_object) do
         :address => '127.0.0.1/8',
         :remote_address => nil,
         :address_type => 'static',
-        :down => :false, 
+        :down => :false,
         :enable => :true
       } )
     end
@@ -47,7 +47,7 @@ describe Puppet::Type.type(:address_object).provider(:address_object) do
         :address => '127.0.0.1/8',
         :remote_address => '1.2.3.4/8',
         :address_type => 'static',
-        :down => :false, 
+        :down => :false,
         :enable => :true
       } )
     end
@@ -65,7 +65,7 @@ describe Puppet::Type.type(:address_object).provider(:address_object) do
         :address => nil,
         :remote_address => nil,
         :address_type => 'dhcp',
-        :down => :false, 
+        :down => :false,
         :enable => :true
       } )
     end
@@ -83,7 +83,7 @@ describe Puppet::Type.type(:address_object).provider(:address_object) do
         :address => nil,
         :remote_address => nil,
         :address_type => 'dhcp',
-        :down => :false, 
+        :down => :false,
         :enable => :false
       } )
     end
@@ -101,7 +101,7 @@ describe Puppet::Type.type(:address_object).provider(:address_object) do
         :address => nil,
         :remote_address => nil,
         :address_type => 'dhcp',
-        :down => :true, 
+        :down => :true,
         :enable => :true
       } )
     end
@@ -135,7 +135,7 @@ describe Puppet::Type.type(:address_object).provider(:address_object) do
   end
 
   [:address_type, :enable, :address, :remote_address, :down, :seconds,
-   :hostname, :interface_id, :remote_interface_id, :stateful, 
+   :hostname, :interface_id, :remote_interface_id, :stateful,
    :stateless].each do |property|
       it "should find a reader for #{property}" do
         expect(provider.class.method_defined?(property)).to eq(true)

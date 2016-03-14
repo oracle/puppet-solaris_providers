@@ -27,10 +27,10 @@ describe Puppet::Type.type(:address_properties).provider(:address_properties) do
         :name       => "lo0/v4",
         :ensure     => :present,
         :properties => {
-           "deprecated"=> "off", 
-           "prefixlen" => "8", 
-           "private"   => "off", 
-           "transmit"  => "on", 
+           "deprecated"=> "off",
+           "prefixlen" => "8",
+           "private"   => "off",
+           "transmit"  => "on",
            "zone"      => "global"
          }
       } )

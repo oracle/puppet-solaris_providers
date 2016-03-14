@@ -22,8 +22,8 @@ describe Puppet::Type.type(:zone) do
       end
     end # properties
 
-    [:config_profile, :zonecfg_export, :archive, :archived_zonename, 
-     :clone, :sysidcfg, :install_args 
+    [:config_profile, :zonecfg_export, :archive, :archived_zonename,
+     :clone, :sysidcfg, :install_args
     ].each do |prop|
       it "should have a #{prop} parameter" do
         expect(@class.attrtype(prop)).to eq(:param)
