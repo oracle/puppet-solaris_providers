@@ -23,14 +23,14 @@
 # Copyright (c) 2013, 2015, Oracle and/or its affiliates. All rights reserved.
 #
 
-require 'ipaddr'
+require File.expand_path(File.join(File.dirname(__FILE__), '..', 'util', 'validation.rb'))
 require 'puppet/property/list'
 
 def valid_hostname?(hostname)
     return false if hostname.length > 255 or hostname.scan('..').any?
     hostname = hostname[0...-1] if hostname.index('.', -1)
     return hostname.split('.').collect { |i|
-        i.size <= 63 and 
+        i.size <= 63 and
         not (i.rindex('-', 0) or i.index('-', -1) or i.scan(/[^a-z\d-]/i).any?)
     }.all?
 end
@@ -68,13 +68,10 @@ Puppet::Type.newtype(:nis) do
         end
 
         validate do |value|
-            begin
-                ip = IPAddr.new(value)
-            rescue ArgumentError
-                # the value wasn't a valid IP address, so check the hostname
-                raise Puppet::Error, "ypserver entry:  #{value} is 
-                    invalid" if not valid_hostname? value
-            end
+          unless valid_ip?(value) || valid_hostname?(value)
+                raise Puppet::Error, "ypserver entry:  #{value} is
+                    invalid"
+          end
         end
     end
 
