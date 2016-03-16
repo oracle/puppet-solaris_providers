@@ -20,10 +20,10 @@
 #
 
 #
-# Copyright (c) 2013, 2014, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2013, 2014, 2016, Oracle and/or its affiliates. All rights reserved.
 #
 
-require 'ipaddr'
+require File.expand_path(File.join(File.dirname(__FILE__), '..', 'util', 'validation.rb'))
 require 'puppet/property/list'
 
 # DNS options
@@ -60,12 +60,8 @@ Puppet::Type.newtype(:dns) do
         end
 
         validate do |value|
-            begin
-                IPAddr.new(value)
-            rescue ArgumentError
-                raise Puppet::Error, "nameserver IP address:  #{value} is
-                    invalid"
-            end
+            raise Puppet::Error, "nameserver IP address:  #{value} is
+                invalid" unless valid_ip?(value)
         end
     end
 
@@ -115,11 +111,8 @@ Puppet::Type.newtype(:dns) do
         end
 
         validate do |value|
-            begin
-                IPAddr.new(value)
-            rescue ArgumentError
-                raise Puppet::Error, "sortlist IP address: #{value} is invalid"
-            end
+            raise Puppet::Error, "sortlist IP address:  #{value} is
+                invalid" unless valid_ip?(value)
         end
     end
 

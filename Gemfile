@@ -5,6 +5,8 @@ group(:development, :test) do
   gem 'rspec-puppet', :require => true
   gem 'beaker-rspec', :require => false
   gem 'rspec', :require => false
+  gem 'rake', :require => false
   gem 'pry', :require => false
   gem 'psych', :require => false
+  gem 'puppet', :require => true
 end
