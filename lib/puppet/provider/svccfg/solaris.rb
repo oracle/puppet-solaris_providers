@@ -20,7 +20,7 @@
 #
 
 #
-# Copyright (c) 2013, 2014, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2013, 2016, Oracle and/or its affiliates. All rights reserved.
 #
 
 Puppet::Type.type(:svccfg).provide(:svccfg) do
@@ -28,56 +28,115 @@ Puppet::Type.type(:svccfg).provide(:svccfg) do
     defaultfor :operatingsystem => :solaris
     commands :svccfg => "/usr/sbin/svccfg", :svcprop => "/usr/bin/svcprop"
 
+    mk_resource_methods
+
     def exists?
-        p = exec_cmd(command(:svcprop), "-p", @resource[:property],
-                     @resource[:fmri])
-        if @resource[:ensure] == :absent
-            # only test for the existance of the property and not the value
-            return p[:exit] == 0
-        elsif @resource[:ensure] == :present
-            # if the property group or property doesn't exist at all, the exit
-            # code will be 1
-            return false if p[:exit] != 0
+        if @property_hash[:ensure] == :present && ! @resource[:value].nil?
+          # property exists and resource has a defined value
+          @property_hash[:value] == @resource[:value]
+        else
+          # just check for presence
+          @property_hash[:ensure] == :present
+        end
+    end
 
-            # turn @resource[:value] into a simple string by dropping the first
-            # and last array elements (the parens) and removing all double
-            # quotes
-            simple = @resource[:value][1..-2].join(" ")[1..-2].gsub(/\"/, "")
+    def self.instances
+      svcs = Hash.new {|h,k| h[k] = [] }
+      # "prop_fmri" => [ "fmri", "property", "type", "value" ]
 
-            # For properties, check the value against what's in SMF.  For
-            # property groups, svcprop already verified the PG exists by not
-            # failing
-            if @resource[:property].include? "/"
-                return p[:out].strip == simple
-            else
-                return p[:exit] == 0
+      svcprop('-a', '-f', '*').each_line do |line|
+        if line.encode!(:invalid => :replace).match(/\Asvc:/)
+          @prop_fmri = line.chomp.split[0]
+          svcs[@prop_fmri] = line.chomp.split(%r(/:properties/| ),4)
+        else
+          # Handle multi-line properties
+          svcs[@prop_fmri][-1] << line.chomp
+        end
+      end
+
+      instances = []
+      # Walk each discovered service
+      svcs.each_pair do |prop_fmri,a|
+        # Walk each property and create the resource
+          instances.push new(
+              :name       => prop_fmri,
+              :prop_fmri  => prop_fmri,
+              :fmri       => a[0],
+              :property   => a[1],
+              :type       => a[2],
+              :value      => a[3],
+              :ensure     => :present,
+             )
+      end
+      return instances
+    end
+
+    def self.prefetch(resources)
+        # pull the instances on the system
+        svcprops = instances
+        # set the provider for the resource to set the property_hash
+        resources.each_pair do |key,res|
+            if provider = svcprops.find{ |prop| prop.prop_fmri == res.parameters[:prop_fmri].should}
+                resources[key].provider = provider
             end
         end
     end
 
-    def create
-        # Check to see if the service instance exists
-        cmd = Array[command(:svccfg), "select", @resource[:fmri]]
-        svc_exist = exec_cmd(cmd)
+    def munge_value
+      munged = ""
+      # reformat values which may be lists. If there is no resource type look for
+      # a property_hash value
+      case ( @resource[:type] ? @resource[:type] : type.to_sym )
+      when :astring, :ustring, :boolean, :count, :integer, :time
+        # Do Nothing for these types
+        munged = @resource[:value]
 
-        # Raise an error if the entity does not exist
-        if svc_exist[:exit] != 0
-            raise Puppet::Error, "SMF entity #{@resource[:fmri]} does not exist"
+      when :fmri, :opaque, :host, :hostname, :net_address, :net_address_v4,
+        :net_address_v6, :uri
+        if @resource[:value].split(/\s+/).length > 1
+          munged << "\\(#{@resource[:value]}\\)"
         end
-        
+      else
+        # without a type pass value unmunged
+        munged = @resource[:value]
+      end
+
+      return munged
+    end
+
+    def update_property_hash
+      a = svcprop('-f', @resource[:prop_fmri]).lines.first.split(/\s+/,3)
+      @property_hash[:value] = a[2]
+      @property_hash[:type] ||= a[1].to_sym
+      @property_hash[:ensure] = :present
+    rescue
+        @property_hash[:ensure] = :absent
+    ensure
+      return nil
+    end
+
+    def create
+        # commands will always begin with these args
         args = ["-s", @resource[:fmri]]
 
         if @resource[:property].include? "/"
             args << "setprop" << @resource[:property] << "="
             if type = @resource[:type] and type != nil
-                args << @resource[:type] + ":"
+                args << "#{@resource[:type]}:"
             end
-            args << @resource[:value]
+
+
+            args << munge_value
         else
             args << "addpg" << @resource[:property] << @resource[:type]
         end
-        svccfg(args)
+
+        # Normal defined command execution doesn't work here in the case of
+        # list type variables e.g.  svccfg: Invalid "net_address" value ...
+        Puppet::Util::Execution.execute([command(:svccfg),*args].join(" "))
+
         svccfg("-s", @resource[:fmri], "refresh")
+        update_property_hash
     end
 
     def destroy
@@ -87,6 +146,7 @@ Puppet::Type.type(:svccfg).provide(:svccfg) do
             svccfg("-s", @resource[:fmri], "delpg", @resource[:property])
         end
         svccfg("-s", @resource[:fmri], "refresh")
+        update_property_hash
     end
 
     def delcust
@@ -109,6 +169,7 @@ Puppet::Type.type(:svccfg).provide(:svccfg) do
             end
             svccfg("-s", @resource[:fmri], "refresh")
         end
+        update_property_hash
     end
 
     def exec_cmd(*cmd)
