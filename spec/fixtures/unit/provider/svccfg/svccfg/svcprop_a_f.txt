@@ -1,0 +1,25 @@
+svc:/network/bridge/:properties/config/force-protocol count 3
+svc:/network/bridge/:properties/config/forward-delay count 3840
+svc:/network/nfs/nlockmgr:default/:properties/nfs-props/lockd_listen_backlog integer 32
+svc:/network/nfs/server:default/:properties/nfs-props/max_connections integer -1
+svc:/smf/manifest/:properties/lib_svc_manifest_system_pfexecd_xml/md5sum opaque ad8c591e772544921760bf65b1dfc038
+svc:/smf/manifest/:properties/lib_svc_manifest_system_picl_xml/md5sum opaque 1e0224ad7830c013b50ece40c0cf7f56
+svc:/network/nis/domain:default/:properties/config/domainname hostname oracle.com
+svc:/network/dns/client:default/:properties/config/nameserver net_address 10.10.10.197 10.10.10.198 192.192.192.132
+svc:/network/install:default/:properties/install_ipv4_interface/default_route net_address_v4 10.10.10.1
+svc:/network/install:default/:properties/install_ipv4_interface/static_address net_address_v4 10.10.10.91/24
+svc:/network/install:default/:properties/install_ipv6_interface/default_route net_address_v6 ::0
+svc:/network/install:default/:properties/install_ipv6_interface/interface_id net_address_v6 ::0/0
+svc:/system/install/telemetry-manager:files/:properties/periodic/jitter time 60
+svc:/system/install/telemetry-manager:files/:properties/periodic/period time 86400
+svc:/system/security/security-extensions:default/:properties/restarter_actions/refresh_complete time 1461283526.654946000
+svc:/network/ip-interface-management:default/:properties/tm_proppat_t_static-route_destination-type/constraint_name astring any host net
+svc:/application/cups/in-lpd:default/:properties/general/action_authorization astring solaris.smf.manage.cups
+svc:/application/cups/in-lpd:default/:properties/inetd_start/exec astring /usr/lib/cups/daemon/cups-lpd\ -o\ document-format=application/octet-stream
+svc:/application/database/mysql:version_56/:properties/tm_common_name/C ustring MySQL\ Database\ Management\ System
+svc:/network/inetd:default/:properties/tm_pgpatt_method/description_C ustring A\ method\ defines\ how\ inetd\ interacts\ with\ its\ services.\ \ inetd_start\ is\ executed\ to\ handle\ a\ connection.\ \ inetd_offline\ is\ executed\ when\ the\ service\ is\ taken\ offline.\ \ inetd_online\ is\ executed\ when\ the\ ser
+vice\ is\ taken\ from\ offline\ to\ online.\ \ inetd_disable\ is\ executed\ when\ the\ service\ is\ disabled.\ \ inetd_refresh\ is\ executed\ when\ the\ service\ is\ refreshed.
+svc:/application/cups/in-lpd:default/:properties/filesystem_minimal/entities fmri svc:/system/filesystem/minimal
+svc:/application/cups/in-lpd:default/:properties/loopback/entities fmri svc:/network/loopback
+svc:/application/cups/in-lpd:default/:properties/inetd_start/use_profile boolean false
+svc:/application/cups/scheduler:default/:properties/general/active boolean true

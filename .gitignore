@@ -1,4 +1,5 @@
 spec/examples.txt
+spec/fixtures/modules
 pkg
 .bundle
 Gemfile.lock
