@@ -77,6 +77,6 @@ describe Puppet::Type.type(:address_properties) do
         expect { validate ({"a" => "b"}) }.not_to raise_error
       end
     end  # seconds
- 
+
   end # validating values
 end

@@ -27,8 +27,8 @@ describe Puppet::Type.type(:zone).provider(:solaris) do
 
   context 'with two zones' do
     before :each do
-      described_class.stubs(:adm).with(:list, "-cp").returns "0:global:running:/::solaris:shared:-::\n4:myzone:installed:/system/volatile/zones/myzone/zonepath:29be88cb-e61a-4204-8d9b-f4a61bf0efdd:solaris-kz:excl:R:solaris-kz:" 
-    end  
+      described_class.stubs(:adm).with(:list, "-cp").returns "0:global:running:/::solaris:shared:-::\n4:myzone:installed:/system/volatile/zones/myzone/zonepath:29be88cb-e61a-4204-8d9b-f4a61bf0efdd:solaris-kz:excl:R:solaris-kz:"
+    end
 
     it 'should find two zones' do
       expect(described_class.instances.size).to eq(2)
