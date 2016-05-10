@@ -39,13 +39,13 @@ describe Puppet::Type.type(:address_properties).provider(:address_properties) do
 
   [ "exists?", "create", "exec_cmd" ].each do |method|
     it "should have a #{method} method" do
-      provider.class.method_defined?(method).should == true
+      expect(provider.class.method_defined?(method)).to eq(true)
     end
   end
 
   [ "properties" ].each do |property|
       it "should find a writer for #{property}" do
-        provider.class.method_defined?(property.to_s+"=").should == true
+        expect(provider.class.method_defined?(property.to_s+"=")).to eq(true)
       end
   end
 

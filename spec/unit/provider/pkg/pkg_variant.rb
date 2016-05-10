@@ -41,7 +41,7 @@ describe Puppet::Type.type(:pkg_variant).provider(:pkg_variant) do
 
   [ "value", "exists?", "create" ].each do |method|
     it "should have a #{method} method" do
-      provider.class.method_defined?(method).should == true
+      expect(provider.class.method_defined?(method)).to eq(true)
     end
   end
 end

@@ -44,7 +44,7 @@ describe Puppet::Type.type(:pkg_mediator).provider(:pkg_mediator) do
   [ "version", "exists?", "implementation", "build_flags", 
     "create", "destroy" ].each do |method|
     it "should have a #{method} method" do
-      provider.class.method_defined?(method).should == true
+      expect(provider.class.method_defined?(method)).to eq(true)
     end
   end
 end

@@ -11,13 +11,13 @@ describe Puppet::Type.type(:address_properties) do
   end
 
   it "should have :address as its keyattribute" do
-    @class.key_attributes.should == [:address]
+    expect(@class.key_attributes).to eq([:address])
   end
 
   describe "when validating properties" do
     [ :properties ].each do |prop|
       it "should have a #{prop} property" do
-        @class.attrtype(prop).should == :property
+        expect(@class.attrtype(prop)).to eq(:property)
       end
     end
   end # validating properties
@@ -25,7 +25,7 @@ describe Puppet::Type.type(:address_properties) do
   describe "when validating parameters" do
     [ :address, :temporary ].each do |prop|
       it "should have a #{prop} property" do
-        @class.attrtype(prop).should == :param
+        expect(@class.attrtype(prop)).to eq(:param)
       end
     end
   end # validating properties
@@ -40,12 +40,12 @@ describe Puppet::Type.type(:address_properties) do
 
       [ "present" ].each do |newval|
         it "should accept a value of #{newval}" do
-          proc { validate(newval) }.should_not raise_error
+          expect { validate(newval) }.not_to raise_error
         end
       end
 
       it "should reject invalid values" do
-        proc { validate "foo" }.should raise_error Puppet::Error, error_pattern
+        expect { validate "foo" }.to raise_error Puppet::Error, error_pattern
       end
     end  # ensure
 
@@ -58,12 +58,12 @@ describe Puppet::Type.type(:address_properties) do
 
       [ "true", "false" ].each do |follow_val|
         it "should accept a value of #{follow_val}" do
-          proc { validate(follow_val) }.should_not raise_error
+          expect { validate(follow_val) }.not_to raise_error
         end
       end
 
       it "should reject an invalid value" do
-        proc { validate("foobar") }.should raise_error(Puppet::ResourceError,
+        expect { validate("foobar") }.to raise_error(Puppet::ResourceError,
                                                        error_pattern)
       end
     end  # temporary
@@ -74,7 +74,7 @@ describe Puppet::Type.type(:address_properties) do
       end
 
       it "should accept a hash value" do
-        proc { validate ({"a" => "b"}) }.should_not raise_error
+        expect { validate ({"a" => "b"}) }.not_to raise_error
       end
     end  # seconds
  

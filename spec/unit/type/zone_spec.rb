@@ -11,14 +11,14 @@ describe Puppet::Type.type(:zone) do
   end
 
   it "should have :name as its keyattribute" do
-    @class.key_attributes.should == [:name]
+    expect(@class.key_attributes).to eq([:name])
   end
 
   describe "when validating attributes" do
     [:id, :zonepath, :iptype, :brand
     ].each do |prop|
       it "should have a #{prop} property" do
-        @class.attrtype(prop).should == :property
+        expect(@class.attrtype(prop)).to eq(:property)
       end
     end # properties
 
@@ -26,7 +26,7 @@ describe Puppet::Type.type(:zone) do
      :clone, :sysidcfg, :install_args 
     ].each do |prop|
       it "should have a #{prop} parameter" do
-        @class.attrtype(prop).should == :param
+        expect(@class.attrtype(prop)).to eq(:param)
       end
     end # parameters
   end # validating attributes

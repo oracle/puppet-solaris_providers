@@ -125,12 +125,12 @@ describe Puppet::Type.type(:address_object).provider(:address_object) do
     )
     provider = @resource.provider
     options = provider.add_options
-    options.should == ["-t", "-T", :static, "-a", "local=1.2.3.4", "-a", "remote=2.3.4.5", "-d", "-w", 5, "-h", "a.foo.com", "-i", "local=lo0", "-i", "remote=lo1", "-p", "stateful=yes", "-p", "stateless=no"]
+    expect(options).to eq(["-t", "-T", :static, "-a", "local=1.2.3.4", "-a", "remote=2.3.4.5", "-d", "-w", 5, "-h", "a.foo.com", "-i", "local=lo0", "-i", "remote=lo1", "-p", "stateful=yes", "-p", "stateless=no"])
   end
 
   [ "exists?", "add_options", "is_temp", "create", "destroy" ].each do |method|
     it "should have a #{method} method" do
-      provider.class.method_defined?(method).should == true
+      expect(provider.class.method_defined?(method)).to eq(true)
     end
   end
 
@@ -138,13 +138,13 @@ describe Puppet::Type.type(:address_object).provider(:address_object) do
    :hostname, :interface_id, :remote_interface_id, :stateful, 
    :stateless].each do |property|
       it "should find a reader for #{property}" do
-        provider.class.method_defined?(property).should == true
+        expect(provider.class.method_defined?(property)).to eq(true)
       end
   end
 
   [:enable, :down].each do |property|
       it "should find a writer for #{property}" do
-        provider.class.method_defined?(property.to_s+"=").should == true
+        expect(provider.class.method_defined?(property.to_s+"=")).to eq(true)
       end
   end
 
