@@ -16,11 +16,11 @@ describe Puppet::Type.type(:zone).provider(:solaris) do
   describe "when validating defined properties" do
     Puppet::Type.type(:zone).validproperties.each do |field|
       it "should find a reader for #{field}" do
-        provider.class.method_defined?(field.to_s).should == true
+        expect(provider.class.method_defined?(field.to_s)).to eq(true)
       end
 
       it "should find a writer for #{field}" do
-        provider.class.method_defined?(field.to_s+"=").should == true
+        expect(provider.class.method_defined?(field.to_s+"=")).to eq(true)
       end
     end  # validproperties
   end  # validating default values

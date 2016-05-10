@@ -89,21 +89,21 @@ describe Puppet::Type.type(:pkg_publisher).provider(:pkg_publisher) do
   [ "exists?", "build_origin", "build_flags", 
     "create", "destroy" ].each do |method|
     it "should have a #{method} method" do
-      provider.class.method_defined?(method).should == true
+      expect(provider.class.method_defined?(method)).to eq(true)
     end
   end
 
   [:sticky, :enable, :origin, :mirror, :proxy, :searchfirst, :searchafter,
      :searchbefore, :sslkey, :sslcert].each do |property|
       it "should find a reader for #{property}" do
-        provider.class.method_defined?(property).should == true
+        expect(provider.class.method_defined?(property)).to eq(true)
       end
   end
 
   [:sticky, :enable, :mirror, :proxy, :searchfirst, :searchafter,
      :searchbefore, :sslkey, :sslcert].each do |property|
       it "should find a writer for #{property}" do
-        provider.class.method_defined?(property.to_s+"=").should == true
+        expect(provider.class.method_defined?(property.to_s+"=")).to eq(true)
       end
   end
 end

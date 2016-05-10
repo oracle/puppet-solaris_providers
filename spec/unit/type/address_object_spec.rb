@@ -11,7 +11,7 @@ describe Puppet::Type.type(:address_object) do
   end
 
   it "should have :name as its keyattribute" do
-    @class.key_attributes.should == [:name]
+    expect(@class.key_attributes).to eq([:name])
   end
 
   describe "when validating properties" do
@@ -19,7 +19,7 @@ describe Puppet::Type.type(:address_object) do
       :hostname, :interface_id, :remote_interface_id, :stateful, :stateless
     ].each do |prop|
       it "should have a #{prop} property" do
-        @class.attrtype(prop).should == :property
+        expect(@class.attrtype(prop)).to eq(:property)
       end
     end
   end # validating properties
@@ -28,7 +28,7 @@ describe Puppet::Type.type(:address_object) do
     [ :name, :temporary
     ].each do |prop|
       it "should have a #{prop} property" do
-        @class.attrtype(prop).should == :param
+        expect(@class.attrtype(prop)).to eq(:param)
       end
     end
   end # validating properties
@@ -43,12 +43,12 @@ describe Puppet::Type.type(:address_object) do
 
       [ "present", "absent" ].each do |newval|
         it "should accept a value of #{newval}" do
-          proc { validate(newval) }.should_not raise_error
+          expect { validate(newval) }.not_to raise_error
         end
       end
 
       it "should reject invalid values" do
-        proc { validate "foo" }.should raise_error Puppet::Error, error_pattern
+        expect { validate "foo" }.to raise_error Puppet::Error, error_pattern
       end
     end  # ensure
 
@@ -61,12 +61,12 @@ describe Puppet::Type.type(:address_object) do
 
       [ "true", "false" ].each do |follow_val|
         it "should accept a value of #{follow_val}" do
-          proc { validate(follow_val) }.should_not raise_error
+          expect { validate(follow_val) }.not_to raise_error
         end
       end
 
       it "should reject an invalid value" do
-        proc { validate("foobar") }.should raise_error(Puppet::ResourceError,
+        expect { validate("foobar") }.to raise_error(Puppet::ResourceError,
                                                        error_pattern)
       end
     end  # temporary
@@ -80,12 +80,12 @@ describe Puppet::Type.type(:address_object) do
 
       [ :static, :dhcp, :addrconf, :from_gz ].each do |follow_val|
         it "should accept a value of #{follow_val}" do
-          proc { validate(follow_val) }.should_not raise_error
+          expect { validate(follow_val) }.not_to raise_error
         end
       end
 
       it "should reject an invalid value" do
-        proc { validate("foobar") }.should raise_error(Puppet::ResourceError,
+        expect { validate("foobar") }.to raise_error(Puppet::ResourceError,
                                                        error_pattern)
       end
     end  # address_type
@@ -99,12 +99,12 @@ describe Puppet::Type.type(:address_object) do
 
       [ "true", "false" ].each do |follow_val|
         it "should accept a value of #{follow_val}" do
-          proc { validate(follow_val) }.should_not raise_error
+          expect { validate(follow_val) }.not_to raise_error
         end
       end
 
       it "should reject an invalid value" do
-        proc { validate("foobar") }.should raise_error(Puppet::ResourceError,
+        expect { validate("foobar") }.to raise_error(Puppet::ResourceError,
                                                        error_pattern)
       end
     end  # enable
@@ -122,13 +122,13 @@ describe Puppet::Type.type(:address_object) do
       end
 
       it "should reject a value if address_type is not static" do
-        proc { validate_dhcp "1.2.3.4"
-             }.should raise_error(Puppet::ResourceError, error_pattern)
+        expect { validate_dhcp "1.2.3.4"
+             }.to raise_error(Puppet::ResourceError, error_pattern)
       end
 
       it "should accept a value" do
-        proc { validate_static "1.2.3.4"
-             }.should_not raise_error
+        expect { validate_static "1.2.3.4"
+             }.not_to raise_error
       end
     end  # address
 
@@ -145,13 +145,13 @@ describe Puppet::Type.type(:address_object) do
       end
 
       it "should reject a value if address_type is not static" do
-        proc { validate_dhcp "1.2.3.4"
-             }.should raise_error(Puppet::ResourceError, error_pattern)
+        expect { validate_dhcp "1.2.3.4"
+             }.to raise_error(Puppet::ResourceError, error_pattern)
       end
 
       it "should accept a value" do
-        proc { validate_static "1.2.3.4"
-             }.should_not raise_error
+        expect { validate_static "1.2.3.4"
+             }.not_to raise_error
       end
     end  # remote_address
 
@@ -169,19 +169,19 @@ describe Puppet::Type.type(:address_object) do
       end
 
       it "should reject a value if address_type is not static" do
-        proc { validate_dhcp "true"
-             }.should raise_error(Puppet::ResourceError, error_pattern)
+        expect { validate_dhcp "true"
+             }.to raise_error(Puppet::ResourceError, error_pattern)
       end
 
       [ "true", "false" ].each do |follow_val|
         it "should accept a value of #{follow_val}" do
-          proc { validate_static(follow_val) }.should_not raise_error
+          expect { validate_static(follow_val) }.not_to raise_error
         end
       end
 
       it "should reject an invalid value" do
-        proc { validate_static("foobar") 
-             }.should raise_error(Puppet::ResourceError, error_pattern)
+        expect { validate_static("foobar") 
+             }.to raise_error(Puppet::ResourceError, error_pattern)
       end
     end  # down
 
@@ -198,21 +198,21 @@ describe Puppet::Type.type(:address_object) do
       end
 
       it "should reject a value if address_type is not dhcp" do
-        proc { validate_static "20"
-             }.should raise_error(Puppet::ResourceError, error_pattern)
+        expect { validate_static "20"
+             }.to raise_error(Puppet::ResourceError, error_pattern)
       end
 
       it "should accept an integer value" do
-        proc { validate_dhcp "5" }.should_not raise_error
+        expect { validate_dhcp "5" }.not_to raise_error
       end
 
       it "should accept a value of forever" do
-        proc { validate_dhcp "forever" }.should_not raise_error
+        expect { validate_dhcp "forever" }.not_to raise_error
       end
 
       it "should reject an invalid value" do
-        proc { validate_dhcp "foobar" 
-             }.should raise_error(Puppet::ResourceError, error_pattern)
+        expect { validate_dhcp "foobar" 
+             }.to raise_error(Puppet::ResourceError, error_pattern)
       end
     end  # seconds
  
@@ -229,13 +229,13 @@ describe Puppet::Type.type(:address_object) do
       end
 
       it "should reject a value if address_type is not dhcp" do
-        proc { validate_static "a.foobar.com"
-             }.should raise_error(Puppet::ResourceError, error_pattern)
+        expect { validate_static "a.foobar.com"
+             }.to raise_error(Puppet::ResourceError, error_pattern)
       end
 
       it "should accept a value" do
-        proc { validate_dhcp "a.foobar.com"
-             }.should_not raise_error
+        expect { validate_dhcp "a.foobar.com"
+             }.not_to raise_error
       end
     end  # hostname
 
@@ -252,13 +252,13 @@ describe Puppet::Type.type(:address_object) do
       end
 
       it "should reject a value if address_type is not addrconf" do
-        proc { validate_static "lo0/v4"
-             }.should raise_error(Puppet::ResourceError, error_pattern)
+        expect { validate_static "lo0/v4"
+             }.to raise_error(Puppet::ResourceError, error_pattern)
       end
 
       it "should accept a value" do
-        proc { validate_addrconf "lo0/v4"
-             }.should_not raise_error
+        expect { validate_addrconf "lo0/v4"
+             }.not_to raise_error
       end
     end  # interface_id
 
@@ -275,13 +275,13 @@ describe Puppet::Type.type(:address_object) do
       end
 
       it "should reject a value if address_type is not addrconf" do
-        proc { validate_static "lo0/v4"
-             }.should raise_error(Puppet::ResourceError, error_pattern)
+        expect { validate_static "lo0/v4"
+             }.to raise_error(Puppet::ResourceError, error_pattern)
       end
 
       it "should accept a value" do
-        proc { validate_addrconf "lo0/v4"
-             }.should_not raise_error
+        expect { validate_addrconf "lo0/v4"
+             }.not_to raise_error
       end
     end  # remote_interface_id
 
@@ -294,12 +294,12 @@ describe Puppet::Type.type(:address_object) do
 
       [ "yes", "no" ].each do |follow_val|
         it "should accept a value of #{follow_val}" do
-          proc { validate(follow_val) }.should_not raise_error
+          expect { validate(follow_val) }.not_to raise_error
         end
       end
 
       it "should reject an invalid value" do
-        proc { validate("foobar") }.should raise_error(Puppet::ResourceError,
+        expect { validate("foobar") }.to raise_error(Puppet::ResourceError,
                                                        error_pattern)
       end
     end  # stateful
@@ -313,12 +313,12 @@ describe Puppet::Type.type(:address_object) do
 
       [ "yes", "no" ].each do |follow_val|
         it "should accept a value of #{follow_val}" do
-          proc { validate(follow_val) }.should_not raise_error
+          expect { validate(follow_val) }.not_to raise_error
         end
       end
 
       it "should reject an invalid value" do
-        proc { validate("foobar") }.should raise_error(Puppet::ResourceError,
+        expect { validate("foobar") }.to raise_error(Puppet::ResourceError,
                                                        error_pattern)
       end
     end  # stateless
