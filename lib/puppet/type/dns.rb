@@ -23,7 +23,7 @@
 # Copyright (c) 2013, 2014, 2016, Oracle and/or its affiliates. All rights reserved.
 #
 
-require File.expand_path(File.join(File.dirname(__FILE__), '..', 'util', 'validation.rb'))
+require File.expand_path(File.join(File.dirname(__FILE__), '..','..','puppet_x/oracle/solaris_providers/util/validation.rb'))
 require 'puppet/property/list'
 
 # DNS options
@@ -32,6 +32,7 @@ arg_opts =  ["ndots", "timeout", "retrans", "attempts", "retry"]
 
 Puppet::Type.newtype(:dns) do
     @doc = "Manage the configuration of the DNS client for Oracle Solaris"
+    validator = PuppetX::Oracle::SolarisProviders::Util::Validation.new
 
     newparam(:name) do
         desc "The symbolic name for the DNS client settings to use.  This name
@@ -61,7 +62,7 @@ Puppet::Type.newtype(:dns) do
 
         validate do |value|
             raise Puppet::Error, "nameserver IP address:  #{value} is
-                invalid" unless valid_ip?(value)
+                invalid" unless validator.valid_ip?(value)
         end
     end
 
@@ -112,7 +113,7 @@ Puppet::Type.newtype(:dns) do
 
         validate do |value|
             raise Puppet::Error, "sortlist IP address:  #{value} is
-                invalid" unless valid_ip?(value)
+                invalid" unless validator.valid_ip?(value)
         end
     end
 
