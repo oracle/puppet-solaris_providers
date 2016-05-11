@@ -66,12 +66,20 @@ describe Puppet::Type.type(:nis) do
              }.to raise_error(Puppet::Error, error_pattern)
       end
 
-      it "should reject invalid IP addresses" do
-        expect { validate "192.168.1.256"
-             }.to raise_error(Puppet::Error, error_pattern)
-        expect { validate "192.168.1."
-             }.to raise_error(Puppet::Error, error_pattern)
+      ["192.168.1.253","1.2.3.4"].each do |ip|
+        it "should accept valid IP addresses #{ip}" do
+          expect { validate ip
+          }.not_to raise_error
+        end
       end
+
+      ["192.168.1.256","192.168.1."].each do |ip|
+        it "should reject invalid IP addresses #{ip}" do
+          expect { validate ip
+          }.to raise_error(Puppet::Error, error_pattern)
+        end
+      end
+
 
       it "should accept an array of valid values" do
         expect { validate(
