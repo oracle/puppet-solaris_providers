@@ -37,7 +37,7 @@ Puppet::Type.type(:pkg_publisher).provide(:pkg_publisher) do
                 line.split("\t")
 
             # set the order of the publishers
-            if not publisher_order.include?(name)
+            if not publisher_order.include?("name")
                 publisher_order << name
             end
             # strip off any trailing "/" characters
@@ -69,17 +69,15 @@ Puppet::Type.type(:pkg_publisher).provide(:pkg_publisher) do
                 publishers[name]["proxy"] = proxy if proxy != "-"
 
                 index = publisher_order.index(name)
-                publishers[name]["searchfirst"] = (index == 0) ? :true : nil
+                if index == 0
+                    publishers[name]["searchfirst"] = true
+                    publishers[name]["searchafter"] = nil
+                else
+                    publishers[name]["searchfirst"] = nil
+                    publishers[name]["searchafter"] = publisher_order[index-1]
+                end
             end
         end
-
-        (0..((publisher_order.size)-2)).each do |index|
-          publishers[publisher_order[index]]["searchbefore"] = publisher_order[index+1]
-        end
-        (1..((publisher_order.size)-1)).each do |index|
-          publishers[publisher_order[index]]["searchafter"] = publisher_order[index-1]
-        end
-
         # create new entries for the system
         publishers.keys.collect do |publisher|
             new(:name => publisher,
@@ -91,7 +89,7 @@ Puppet::Type.type(:pkg_publisher).provide(:pkg_publisher) do
                 :proxy => publishers[publisher]["proxy"],
                 :searchfirst => publishers[publisher]["searchfirst"],
                 :searchafter => publishers[publisher]["searchafter"],
-                :searchbefore => publishers[publisher]["searchbefore"],
+                :searchbefore => nil,
                 :sslkey => nil,
                 :sslcert => nil)
         end
@@ -188,9 +186,7 @@ Puppet::Type.type(:pkg_publisher).provide(:pkg_publisher) do
             end
         end
 
-        if searchbefore = @resource[:searchbefore] and searchbefore != "" \
-                      and @resource[:searchafter] == nil \
-                      and @resource[:searchfirst] == nil
+        if searchbefore = @resource[:searchbefore] and searchbefore != ""
             if pkg(:publisher, "-H", "-F", "tsv").split("\n").detect \
                 { |line| line.split()[0] == searchbefore }
                     flags << "--search-before" << searchbefore
