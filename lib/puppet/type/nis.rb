@@ -51,7 +51,7 @@ Puppet::Type.newtype(:nis) do
 
         def insync?(is)
             is = [] if is == :absent or is.nil?
-            is.sort == self.should.sort
+            is.to_a.flatten.sort == self.should.sort
         end
 
         # svcprop returns multivalue entries delimited with a space
@@ -84,6 +84,17 @@ Puppet::Type.newtype(:nis) do
 
         def is_to_s(currentvalue)
           currentvalue.to_s
+        end
+
+        validate do |value|
+          unless value.kind_of?(Hash)
+            fail("Argument `#{value}`:#{value.class} is not a hash")
+          end
+          value.each_pair do |k,v|
+            unless validator.valid_ip?(v)
+              fail("Invalid address `#{v}` for entry `#{k}`")
+            end
+          end
         end
     end
 
