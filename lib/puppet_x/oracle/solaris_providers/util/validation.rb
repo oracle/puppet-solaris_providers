@@ -23,7 +23,14 @@
 # Copyright (c) 2013, 2015, 2106, Oracle and/or its affiliates. All rights reserved.
 #
 
-require 'puppet_x'
+# Puppet 4 renames Puppetx to PuppetX
+begin
+  require 'puppet_x'
+rescue LoadError
+  # Support Puppet 3.x with the 4.x namespace
+  module PuppetX; end
+end
+
 require 'ipaddr'
 module PuppetX::Oracle
   module SolarisProviders

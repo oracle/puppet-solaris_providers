@@ -101,7 +101,13 @@ describe Puppet::Type.type(:nis) do
       end
 
       it "should allow a value to be set" do
-        expect { validate "foo.com" }.not_to raise_error
+        expect { @class.new(:name => @profile_name, :securenets => {'host' => '1.1.1.1'}) }.not_to raise_error
+      end
+      it "should fail if argument is not a hash" do
+        expect { @class.new(:name => @profile_name, :securenets => ['host','1.1.1.1']) }.to raise_error(Puppet::Error, /is not a hash/)
+      end
+      it "should fail if argument value is not an IP address" do
+        expect { @class.new(:name => @profile_name, :securenets => {'host' => '1.1.1'}) }.to raise_error(Puppet::Error, /Invalid address/)
       end
     end  # securenets
 
