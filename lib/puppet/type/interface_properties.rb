@@ -20,7 +20,7 @@
 #
 
 #
-# Copyright (c) 2013, 2014, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2013, 2016, Oracle and/or its affiliates. All rights reserved.
 #
 
 Puppet::Type.newtype(:interface_properties) do
@@ -52,7 +52,7 @@ Puppet::Type.newtype(:interface_properties) do
 
     newproperty(:properties) do
         desc "A hash table of propname=propvalue entries to apply to the
-              interface"
+              interface. See ipadm(8)"
 
         def property_matches?(current, desired)
             desired.each do |key, value|
