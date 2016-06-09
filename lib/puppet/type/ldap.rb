@@ -23,11 +23,12 @@
 # Copyright (c) 2013, 2015, 2016, Oracle and/or its affiliates. All rights reserved.
 #
 
-require File.expand_path(File.join(File.dirname(__FILE__), '..', 'util', 'validation.rb'))
+require File.expand_path(File.join(File.dirname(__FILE__), '..','..','puppet_x/oracle/solaris_providers/util/validation.rb'))
 require 'puppet/property/list'
 
 Puppet::Type.newtype(:ldap) do
     @doc = "Manage the configuration of the LDAP client for Oracle Solaris"
+    validator = PuppetX::Oracle::SolarisProviders::Util::Validation.new
 
     newparam(:name) do
         desc "The symbolic name for the LDAP client settings to use.  This name
@@ -78,7 +79,7 @@ Puppet::Type.newtype(:ldap) do
         end
 
         validate do |value|
-          unless valid_ip?(value) || valid_hostname?(value)
+          unless validator.valid_ip?(value) || validator.valid_hostname?(value)
             raise Puppet::Error, "default_server entry:  #{value} is invalid"
           end
         end
@@ -117,7 +118,7 @@ Puppet::Type.newtype(:ldap) do
         end
 
         validate do |value|
-            unless  valid_ip?(value) || valid_hostname?(value)
+            unless validator.valid_ip?(value) || validator.valid_hostname?(value)
                 raise Puppet::Error, "preferred_server entry: #{value} is
                     invalid"
             end

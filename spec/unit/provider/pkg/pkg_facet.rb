@@ -42,7 +42,7 @@ describe Puppet::Type.type(:pkg_facet).provider(:pkg_facet) do
 
   [ "value", "exists?", "create", "destroy" ].each do |method|
     it "should have a #{method} method" do
-      provider.class.method_defined?(method).should == true
+      expect(provider.class.method_defined?(method)).to eq(true)
     end
   end
 end

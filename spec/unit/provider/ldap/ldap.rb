@@ -21,21 +21,21 @@ describe Puppet::Type.type(:ldap).provider(:ldap) do
       pg = Puppet::Type.type(:ldap).propertybyname(field).pg
 
       it "should be able to see the #{pg}/#{field} SMF property" do
-        (props =~ /tm_proppat_nt_#{pg}_#{field.to_s}\/name/).should_not == nil
+        expect(props =~ /tm_proppat_nt_#{pg}_#{field.to_s}\/name/).not_to eq(nil)
       end 
 
       it "should find a reader for #{field}" do
-        provider.class.method_defined?(field.to_s).should == true
+        expect(provider.class.method_defined?(field.to_s)).to eq(true)
       end
 
       it "should find a writer for #{field}" do
-        provider.class.method_defined?(field.to_s+"=").should == true
+        expect(provider.class.method_defined?(field.to_s+"=")).to eq(true)
       end
     end  # validproperties
   end  # validating default values
 
   it "should have a flush method" do
-    provider.class.method_defined?("flush").should == true
+    expect(provider.class.method_defined?("flush")).to eq(true)
   end
 
 end
