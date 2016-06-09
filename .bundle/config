@@ -1,0 +1,2 @@
+---
+BUNDLE_BUILD__UNF_EXT: "--with-cxxflags=-fPIC"
