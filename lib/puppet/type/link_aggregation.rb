@@ -56,9 +56,9 @@ Puppet::Type.newtype(:link_aggregation) do
         end
 
         # dladm returns multivalue entries delimited with a space
-        def delimiter
-            " "
-        end
+       # def delimiter
+       #     " "
+       # end
 
     end
 
