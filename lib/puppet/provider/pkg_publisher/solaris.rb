@@ -1,22 +1,18 @@
 #
-# CDDL HEADER START
 #
-# The contents of this file are subject to the terms of the
-# Common Development and Distribution License (the "License").
-# You may not use this file except in compliance with the License.
+# Copyright [yyyy] [name of copyright owner]
 #
-# You can obtain a copy of the license at usr/src/OPENSOLARIS.LICENSE
-# or http://www.opensolaris.org/os/licensing.
-# See the License for the specific language governing permissions
-# and limitations under the License.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
 #
-# When distributing Covered Code, include this CDDL HEADER in each
-# file and include the License file at usr/src/OPENSOLARIS.LICENSE.
-# If applicable, add the following below this CDDL HEADER, with the
-# fields enclosed by brackets "[]" replaced with your own identifying
-# information: Portions Copyright [yyyy] [name of copyright owner]
+#     http://www.apache.org/licenses/LICENSE-2.0
 #
-# CDDL HEADER END
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 #
 
 #
@@ -59,7 +55,7 @@ Puppet::Type.type(:pkg_publisher).provide(:pkg_publisher) do
                 publishers[name] = {'sticky' => sticky, 'enable' => enabled,
                                     'origin' => Array[],
 				    'mirror' => Array[]}
-					
+
 		if type.eql? "mirror"
                     publishers[name]["mirror"] << origin
 		else
@@ -129,15 +125,15 @@ Puppet::Type.type(:pkg_publisher).provide(:pkg_publisher) do
 
     def build_origin
         origins = []
-	
-        # add all the origins from the manifest 
+
+        # add all the origins from the manifest
         if !@resource[:origin].nil?
 	   for o in @resource[:origin] do
                origins << "-g" << o
            end
 	end
 
-        # add all the mirrors from the manifest 
+        # add all the mirrors from the manifest
 	if !@resource[:mirror].nil?
 	    for o in @resource[:mirror] do
                 origins << "-m" << o
@@ -264,7 +260,7 @@ Puppet::Type.type(:pkg_publisher).provide(:pkg_publisher) do
             end
         end
     end
-    
+
     def mirror=(value)
         create
     end
