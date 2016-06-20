@@ -20,7 +20,7 @@
 #
 
 #
-# Copyright (c) 2013, 2015, 2106, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2013, 2106, Oracle and/or its affiliates. All rights reserved.
 #
 
 # Puppet 4 renames Puppetx to PuppetX
@@ -58,6 +58,24 @@ class PuppetX::Oracle::SolarisProviders::Util::Validation
   def valid_ip?(value)
     begin
       IPAddr.new(value)
+    rescue
+      return false
+    end
+    return true
+  end
+
+  def valid_ipv4?(value)
+    begin
+      return false unless IPAddr.new(value).ipv4?
+    rescue
+      return false
+    end
+    return true
+  end
+
+  def valid_ipv6?(value)
+    begin
+      return false unless IPAddr.new(value).ipv6?
     rescue
       return false
     end
