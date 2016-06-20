@@ -1,9 +1,8 @@
 #!/usr/bin/env ruby
 
 require 'spec_helper'
-provider_class = Puppet::Type.type(:svccfg).provider(:svccfg)
 
-describe provider_class do
+describe Puppet::Type.type(:svccfg).provider(:svccfg) do
 
   let(:resource) do
     Puppet::Type.type(:svccfg).new(
@@ -33,12 +32,12 @@ describe provider_class do
 
   describe ".instances" do
     it "should have an instances method" do
-      expect(provider_class).to respond_to :instances
+      expect(described_class).to respond_to :instances
     end
 
     describe "should get a list of service properties" do
-      provider_class.expects(:svcprop).with("-a", "-f", "*").returns File.read(my_fixture('svcprop_a_f.txt'))
-      instances = provider_class.instances.map { |p|
+      described_class.expects(:svcprop).with("-a", "-f", "*").returns File.read(my_fixture('svcprop_a_f.txt'))
+      instances = described_class.instances.map { |p|
         {
           :name => p.get(:name),
           :fmri => p.get(:fmri),
@@ -221,6 +220,7 @@ describe provider_class do
         end
       end
         end
+  end
     context "#create" do
       it "should execute svccfg setprop" do
         Puppet::Util::Execution.expects(:execute).with(
@@ -230,8 +230,8 @@ describe provider_class do
             "=", "#{resource[:type]}:",
             resource[:value]] * " "
         )
-        provider_class.expects(:svccfg).with("-s", resource[:fmri], "refresh")
-        provider_class.expects(:svcprop).with("-f", resource[:prop_fmri])
+        described_class.expects(:svccfg).with("-s", resource[:fmri], "refresh")
+        described_class.expects(:svcprop).with("-f", resource[:prop_fmri])
         expect(provider.create).to eq(nil)
       end
       it "should execute svccfg setprop with a list value" do
@@ -245,7 +245,7 @@ describe provider_class do
             "\\(#{resource[:value]}\\)"
         ] * " "
         )
-        provider_class.expects(:svccfg).with("-s", resource[:fmri], "refresh")
+        described_class.expects(:svccfg).with("-s", resource[:fmri], "refresh")
         expect(provider.create).to eq(nil)
       end
       it "should execute svccfg setprop with a string value" do
@@ -259,10 +259,23 @@ describe provider_class do
             resource[:value]
         ] * " "
         )
-        provider_class.expects(:svccfg).with("-s", resource[:fmri], "refresh")
+        described_class.expects(:svccfg).with("-s", resource[:fmri], "refresh")
         expect(provider.create).to eq(nil)
       end
-      it "should execute svccfg with :type missing"
+      it "should execute svccfg with :type missing" do
+        resource.delete(:type)
+        resource[:value]    = "this is an astring"
+        Puppet::Util::Execution.expects(:execute).with(
+          ["/usr/sbin/svccfg", "-s", resource[:fmri],
+            "setprop",
+            resource[:property],
+            "=",
+            resource[:value]
+        ] * " "
+        )
+        described_class.expects(:svccfg).with("-s", resource[:fmri], "refresh")
+        expect(provider.create).to eq(nil)
+      end
 
       it "should execute svccfg addpg" do
         resource[:property] = "tm_proppat_nt_config_user"
@@ -275,20 +288,20 @@ describe provider_class do
             resource[:type]
         ] * " "
         )
-        provider_class.expects(:svccfg).with("-s", resource[:fmri], "refresh")
+        described_class.expects(:svccfg).with("-s", resource[:fmri], "refresh")
         expect(provider.create).to eq(nil)
       end
     end
     context "#destroy" do
       it "should execute svccfg delprop" do
-        provider_class.expects(:svccfg).with("-s",resource[:fmri],"delprop",resource[:property])
-        provider_class.expects(:svccfg).with("-s",resource[:fmri],"refresh")
+        described_class.expects(:svccfg).with("-s",resource[:fmri],"delprop",resource[:property])
+        described_class.expects(:svccfg).with("-s",resource[:fmri],"refresh")
         expect(provider.destroy).to eq(nil)
       end
       it "should execute svccfg delpg" do
         resource[:property] = "tm_proppat_nt_config_user"
-        provider_class.expects(:svccfg).with("-s",resource[:fmri],"delpg",resource[:property])
-        provider_class.expects(:svccfg).with("-s",resource[:fmri],"refresh")
+        described_class.expects(:svccfg).with("-s",resource[:fmri],"delpg",resource[:property])
+        described_class.expects(:svccfg).with("-s",resource[:fmri],"refresh")
         expect(provider.destroy).to eq(nil)
       end
     end
@@ -296,5 +309,4 @@ describe provider_class do
       it "should delcust"
       it "should delcust property"
     end
-  end
 end
