@@ -25,6 +25,8 @@ Puppet::Type.type(:address_object).provide(:address_object) do
     defaultfor :osfamily => :solaris, :kernelrelease => ['5.11', '5.12']
     commands :ipadm => '/usr/sbin/ipadm'
 
+    mk_resource_methods
+
     def self.instances
         ipadm("show-addr", "-p", "-o", "addrobj,type,state,addr").split(
               "\n").collect do |line|
@@ -78,15 +80,9 @@ Puppet::Type.type(:address_object).provide(:address_object) do
         end
     end
 
-    # property getters
-    Puppet::Type.type(:address_object).validproperties.each do |field|
-        next if field == :ensure
-        define_method(field) do
-            @property_hash[field]
-        end
-    end
-
     def enable=(value)
+        # only enable for temporary interfaces
+        return unless temporary == :true
         if value == :true
             ipadm("enable-addr", "-t", @resource[:name])
         elsif value == :false

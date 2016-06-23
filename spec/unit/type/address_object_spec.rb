@@ -360,7 +360,7 @@ describe Puppet::Type.type(:address_object) do
       error_pattern = /enable.*Invalid/m
 
       def validate(enab)
-         @class.new(:name => @profile_name, :enable => enab)
+         @class.new(:name => @profile_name, :enable => enab, :temporary => :true)
       end
 
       [ "true", "false" ].each do |follow_val|
@@ -373,6 +373,17 @@ describe Puppet::Type.type(:address_object) do
         expect { validate("foobar") }.to raise_error(Puppet::ResourceError,
                                                        error_pattern)
       end
+
+      it "should raise an error if :temporary == :false" do
+        expect { @class.new(:name => @profile_name, :enable => :true, :temporary => :false) }.to raise_error(Puppet::ResourceError,
+                                                       /cannot specify/)
+      end
+
+      it "should raise an error if :temporary is not set" do
+        expect { @class.new(:name => @profile_name, :enable => :true) }.to raise_error(Puppet::ResourceError,
+                                                       /cannot specify/)
+      end
+
     end  # enable
 
     describe "for stateful" do
