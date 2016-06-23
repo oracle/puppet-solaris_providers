@@ -187,7 +187,7 @@ Puppet::Type.newtype(:address_object) do
       }
       @type_props.freeze
 
-      # Select params which defined but invalid for the address_type
+      # Select params which are defined but invalid for the address_type
       invalid = @check_props.select { |cp|
         # Valid type if property is not found
         next unless @type_props[type].index(cp).nil?
@@ -231,6 +231,9 @@ Puppet::Type.newtype(:address_object) do
           #fail("cannot specify any values with :address_type = #{self[:address_type]}")
         end
       end
+
+    fail("cannot specify :enable when :temporary != :true") if [:true,:false].include?(self[:enable]) &&
+      self[:temporary] != :true
 
     }
 end
