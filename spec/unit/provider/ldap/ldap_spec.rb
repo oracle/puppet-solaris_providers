@@ -13,16 +13,14 @@ describe Puppet::Type.type(:ldap).provider(:ldap) do
     described_class.new(:ldap)
   end
 
-  svcprop = '/usr/bin/svcprop'
-
-  describe "when validating defined properties" do
-    props = `svcprop -a svc:/network/ldap/client`
+  xdescribe "when validating defined properties" do
+    #props = `svcprop -a svc:/network/ldap/client`
     Puppet::Type.type(:ldap).validproperties.each do |field|
       pg = Puppet::Type.type(:ldap).propertybyname(field).pg
 
       it "should be able to see the #{pg}/#{field} SMF property" do
         expect(props =~ /tm_proppat_nt_#{pg}_#{field.to_s}\/name/).not_to eq(nil)
-      end 
+      end
 
       it "should find a reader for #{field}" do
         expect(provider.class.method_defined?(field.to_s)).to eq(true)

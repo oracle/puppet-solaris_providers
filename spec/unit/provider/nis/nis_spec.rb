@@ -13,12 +13,10 @@ describe Puppet::Type.type(:nis).provider(:nis) do
     described_class.new(:nis)
   end
 
-  svcprop = '/usr/bin/svcprop'
-
-  describe "when validating defined properties" do
+  xdescribe "when validating defined properties" do
     props = ""
     [Client_fmri, Domain_fmri].each do |svc|
-      props = props + `svcprop -a #{svc}`
+      #props = props + `svcprop -a #{svc}`
     end
 
     Puppet::Type.type(:nis).validproperties.each do |field|
@@ -26,7 +24,7 @@ describe Puppet::Type.type(:nis).provider(:nis) do
 
       it "should be able to see the #{pg}/#{field} SMF property" do
         expect(props =~ /tm_proppat_nt_#{pg}_#{field.to_s}\/name/).not_to eq(nil)
-      end 
+      end
 
       it "should find a reader for #{field}" do
         expect(provider.class.method_defined?(field.to_s)).to eq(true)
