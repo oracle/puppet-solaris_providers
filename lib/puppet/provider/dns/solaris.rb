@@ -30,13 +30,15 @@ Puppet::Type.type(:dns).provide(:dns) do
     def self.instances
         props = {}
         svcprop("-p", "config", Dns_fmri).split("\n").each do |line|
-            fullprop, type, value = line.split(" ", 2)
-            pg, prop = fullprop.split("/")
+            fullprop, _type, value = line.split(" ", 3)
+            _pg, prop = fullprop.split("/")
+            prop = prop.intern
             props[prop] = value \
                 if Puppet::Type.type(:dns).validproperties.include? prop
         end
 
         props[:name] = "current"
+        props[:ensure] = :present
         return Array new(props)
     end
 

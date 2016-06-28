@@ -1,0 +1,5 @@
+config/nameserver net_address 10.1.1.197 10.2.2.198 192.3.3.132
+config/options astring retrans:1\ retry:2
+config/search astring us.oracle.com oracle.com 
+config/value_authorization astring solaris.smf.value.name-service.dns.client
+config/domain astring oracle.com
