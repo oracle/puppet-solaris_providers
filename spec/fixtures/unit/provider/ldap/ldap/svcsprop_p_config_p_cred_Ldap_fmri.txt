@@ -1,0 +1,19 @@
+cred/bind_dn astring cn=admin,ou=users,dc=foo,dc=com
+cred/bind_passwd astring {NS1}c2ab9ff37b69c4b5a665a2b15d003bba0779
+cred/read_authorization astring solaris.smf.value.name-service.ldap.client
+cred/value_authorization astring solaris.smf.value.name-service.ldap.client
+config/authentication_method astring tls:simple
+config/bind_time_limit integer 10
+config/credential_level astring proxy
+config/follow_referrals boolean false
+config/preferred_server_list host lc-bar-02.us.foo.com \ lc-foo-02.us.foo.com \ lc-foo-01.us.foo.com
+config/profile astring bar-tls
+config/profile_ttl astring 43200
+config/read_authorization astring solaris.smf.value.name-service.ldap.client
+config/search_base astring dc=foo,dc=com
+config/search_scope astring one
+config/search_time_limit integer 30
+config/server_list host lc-bar-02.us.foo.com \ lc-foo-02.us.foo.com \ lc-foo-01.us.foo.com
+config/service_search_descriptor astring passwd:dc=foo,dc=com?sub? shadow:dc=foo,dc=com?sub? rpc:ou=rpc,ou=foo.corp.com,o=nl,dc=foo,dc=com amgh:nismapname=amgh,ou=foo.corp.com,o=nl,dc=foo,dc=com protocols:ou=protocols,ou=foo.corp.com,o=nl,dc=foo,dc=com services:ou=services,ou=foo.corp.com,o=nl,dc=foo,dc=com aliases:ou=aliases,ou=foo.corp.com,o=nl,dc=foo,dc=com netgroup:ou=netgroup,dc=foo,dc=com auto_share:automountmapname=auto_share,ou=it.bar.sun.com,o=nl,dc=foo,dc=com auto_re:automountmapname=auto_re,ou=foo.corp.com,o=nl,dc=foo,dc=com auto_master:automountmapname=auto_master,ou=it.bar.sun.com,o=nl,dc=foo,dc=com auto_home:automountmapname=auto_home,ou=it.bar.sun.com,o=nl,dc=foo,dc=com auto_direct:automountmapname=auto_direct,ou=it.bar.sun.com,o=nl,dc=foo,dc=com auto_galileo:automountmapname=auto_galileo,ou=it.bar.sun.com,o=nl,dc=foo,dc=com auto_java:automountmapname=auto_java,ou=it.bar.sun.com,o=nl,dc=foo,dc=com auto_ws:automountmapname=auto_ws,ou=it.bar.sun.com,o=nl,dc=foo,dc=com auto_wwss:automountmapname=auto_wwss,ou=it.bar.sun.com,o=nl,dc=foo,dc=com auto_scde:automountmapname=auto_scde,ou=it.bar.sun.com,o=nl,dc=foo,dc=com auto_micro:automountmapname=auto_micro,ou=automount,ou=pd_sca,ou=foo.corp.com,o=nl,dc=foo,dc=com auto_shared:automountmapname=auto_shared,ou=it.bar.sun.com,o=nl,dc=foo,dc=com auto_src:automountmapname=auto_src,ou=it.bar.sun.com,o=nl,dc=foo,dc=com auto_workspace:automountmapname=auto_workspace,ou=foo.corp.com,o=nl,dc=foo,dc=com auto_micro_people:automountmapname=auto_micro_people,ou=automount,ou=pd_sca,ou=foo.corp.com,o=nl,dc=foo,dc=com auto_ON:automountmapname=auto_ON,ou=it.bar.sun.com,o=nl,dc=foo,dc=com auto_import:automountmapname=auto_import,ou=it.bar.sun.com,o=nl,dc=foo,dc=com printers:ou=printers,ou=foo.corp.com,o=nl,dc=foo,dc=com group:ou=groups,dc=foo,dc=com
+config/value_authorization astring solaris.smf.value.name-service.ldap.client
+config/version astring 2.0
