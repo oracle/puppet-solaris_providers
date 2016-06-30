@@ -27,55 +27,63 @@ Puppet::Type.type(:ldap).provide(:ldap) do
 
     Ldap_fmri = "svc:/network/ldap/client"
 
-    def initialize(resource)
+    mk_resource_methods
+
+    # default resource to nil for provider initilization
+    def initialize(resource=nil)
         super
         @refresh_needed = false
     end
 
     def self.instances
         if Process.euid != 0
-            return []
+          # Failure is presumed to be better than returning the empty
+          # set. We expect Puppet needs to always run as root so this
+          # may be moot outside of testing
+          fail "LDAP configuration is not availble to non-root users"
         end
         props = {}
         validprops = Puppet::Type.type(:ldap).validproperties
-
-        svcprop("-p", "config", Ldap_fmri).split("\n").collect do |line|
+        svcprop("-p", "config", "-p", "cred", Ldap_fmri).split("\n").collect do |line|
             data = line.split()
             fullprop = data[0]
-            type = data[1]
+            _type = data[1]
             if data.length > 2
                 value = data[2..-1].join(" ")
             else
                 value = nil
             end
 
-            pg, prop = fullprop.split("/")
-            props[prop] = value if validprops.include? prop.to_sym
-        end
+            _pg, prop = fullprop.split("/")
+            prop = prop.intern
 
-        # attempt to set the cred/bind_passwd value
-        begin
-            props[:bind_passwd] = svcprop("-p", "cred/bind_passwd",
-                                          "svc:/network/ldap/client").strip()
-        rescue
-            props[:bind_passwd] = nil
+            props[prop] = value if validprops.include? prop
         end
 
         props[:name] = "current"
+        props[:ensure] = :present
         return Array new(props)
     end
 
+    def self.prefetch(resources)
+      # pull the instances on the system
+      inst = instances
+
+      # set the provider for the resource to set the property_hash
+      resources.keys.each do |name|
+        if provider = inst.find{ |i| i.name == name}
+          resources[name].provider = provider
+        end
+      end
+    end
+
+    # Define getters and setters
     Puppet::Type.type(:ldap).validproperties.each do |field|
+        next if [:ensure].include?(field)
         # get the property group
         pg = Puppet::Type.type(:ldap).propertybyname(field).pg
-        define_method(field) do
-            begin
-                svcprop("-p", pg + "/" + field.to_s, Ldap_fmri).strip()
-            rescue
-                # if the property isn't set, don't raise an error
-                nil
-            end
-        end
+
+        # Don't define accessors, mk_resource_methods and instances pre-populate
 
         define_method(field.to_s + "=") do |should|
             begin
