@@ -1,8 +1,6 @@
 #!/usr/bin/env ruby
 
 require 'spec_helper'
-require_relative  '../../../../lib/puppet/type/nis'
-require_relative '../../../../lib/puppet/provider/nis/solaris.rb'
 
 describe Puppet::Type.type(:nis).provider(:nis) do
 
@@ -12,6 +10,13 @@ describe Puppet::Type.type(:nis).provider(:nis) do
     @provider.stubs(:suitable?).returns true
     described_class.new(:nis)
   end
+
+  [:domainname, :ypservers, :securenets, :use_broadcast, :use_ypsetme].each { |method|
+    it { is_expected.to respond_to(method) }
+    it { is_expected.to respond_to("#{method}=".to_sym) }
+  }
+
+    it { is_expected.to respond_to(:flush) }
 
   xdescribe "when validating defined properties" do
     props = ""
@@ -26,18 +31,6 @@ describe Puppet::Type.type(:nis).provider(:nis) do
         expect(props =~ /tm_proppat_nt_#{pg}_#{field.to_s}\/name/).not_to eq(nil)
       end
 
-      it "should find a reader for #{field}" do
-        expect(provider.class.method_defined?(field.to_s)).to eq(true)
-      end
-
-      it "should find a writer for #{field}" do
-        expect(provider.class.method_defined?(field.to_s+"=")).to eq(true)
-      end
     end  # validproperties
   end  # validating default values
-
-  it "should have a flush method" do
-    expect(provider.class.method_defined?("flush")).to eq(true)
-  end
-
 end
