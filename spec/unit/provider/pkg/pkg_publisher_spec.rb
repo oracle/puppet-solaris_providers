@@ -10,7 +10,20 @@ describe Puppet::Type.type(:pkg_publisher).provider(:pkg_publisher) do
     { :name => 'mypub',
     }
   )}
-  let(:provider) { resource.provider }
+  let(:provider) { described_class.new(resource) }
+
+  context "responds to" do
+    [:exists?, :build_origin, :build_flags,
+      :create, :destroy ].each do |method|
+      it method do is_expected.to respond_to(method) end
+      end
+
+    [:sticky, :enable, :origin, :mirror, :proxy, :searchfirst, :searchafter,
+      :searchbefore, :sslkey, :sslcert].each do |method|
+      it method do is_expected.to respond_to(method) end
+      it "#{method}=" do is_expected.to respond_to("#{method}=") end
+      end
+  end
 
 
   context 'with one mirrored publisher' do
@@ -18,11 +31,11 @@ describe Puppet::Type.type(:pkg_publisher).provider(:pkg_publisher) do
       described_class.stubs(:pkg).with(:publisher, "-H", "-F", "tsv").returns "solaris	true	false	true	origin	online	http://pkgserver.foobar.com/	-\nsolaris	true	false	true	mirror	online	http://pkgserver2.foobar.com	-"
     end
 
-    it 'should find one publisher' do
+    it 'finds one publisher' do
       expect(described_class.instances.size).to eq(1)
     end
 
-    it 'should parse the publisher properly' do
+    it 'parses the publisher properly' do
       expect(described_class.instances[0].instance_variable_get("@property_hash")).to eq( {
         :name => "solaris",
         :enable => "true",
@@ -46,11 +59,11 @@ describe Puppet::Type.type(:pkg_publisher).provider(:pkg_publisher) do
       described_class.stubs(:pkg).with(:publisher, "-H", "-F", "tsv").returns "solaris	true	false	true	origin	online	http://pkgserver.foobar.com/	-\nextra	true	false	true	origin	online	http://extra.foobar.com	-"
     end
 
-    it 'should find two publisher' do
+    it 'finds two publishers' do
       expect(described_class.instances.size).to eq(2)
     end
 
-    it 'should parse the first publisher properly' do
+    it 'parses the first publisher properly' do
       expect(described_class.instances[0].instance_variable_get("@property_hash")).to eq( {
         :name => "solaris",
         :enable => "true",
@@ -67,7 +80,7 @@ describe Puppet::Type.type(:pkg_publisher).provider(:pkg_publisher) do
       } )
     end
 
-    it 'should parse the second publisher properly' do
+    it 'parses the second publisher properly' do
       expect(described_class.instances[1].instance_variable_get("@property_hash")).to eq( {
         :name => "extra",
         :enable => "true",
@@ -86,24 +99,4 @@ describe Puppet::Type.type(:pkg_publisher).provider(:pkg_publisher) do
   end
 
 
-  [ "exists?", "build_origin", "build_flags", 
-    "create", "destroy" ].each do |method|
-    it "should have a #{method} method" do
-      expect(provider.class.method_defined?(method)).to eq(true)
-    end
-  end
-
-  [:sticky, :enable, :origin, :mirror, :proxy, :searchfirst, :searchafter,
-     :searchbefore, :sslkey, :sslcert].each do |property|
-      it "should find a reader for #{property}" do
-        expect(provider.class.method_defined?(property)).to eq(true)
-      end
-  end
-
-  [:sticky, :enable, :mirror, :proxy, :searchfirst, :searchafter,
-     :searchbefore, :sslkey, :sslcert].each do |property|
-      it "should find a writer for #{property}" do
-        expect(provider.class.method_defined?(property.to_s+"=")).to eq(true)
-      end
-  end
 end

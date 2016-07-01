@@ -6,8 +6,11 @@ group(:development, :test) do
   gem 'rspec', :require => false
   gem 'rake', :require => false
   gem 'pry', :require => false
+  gem 'pry-rescue', :require => false
+  gem 'pry-stack_explorer', :require => false
   gem 'psych', :require => false
-  gem 'puppet', :require => true
+  gem 'puppet', '3.8.6', :require => true
+  gem 'pkg-config', :require => false
 end
 
 gem "rubocop", "~> 0.26.1", :platforms => [:ruby]

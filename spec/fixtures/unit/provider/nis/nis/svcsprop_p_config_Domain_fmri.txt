@@ -1,0 +1,2 @@
+config/domainname hostname oracle.com
+config/value_authorization astring solaris.smf.value.name-service.nis.domain

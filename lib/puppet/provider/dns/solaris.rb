@@ -30,9 +30,8 @@ Puppet::Type.type(:dns).provide(:dns) do
     def self.instances
         props = {}
         svcprop("-p", "config", Dns_fmri).split("\n").each do |line|
-            fullprop, _type, value = line.split(" ", 3)
-            _pg, prop = fullprop.split("/")
-            prop = prop.intern
+            fullprop, value = line.split(" ", 3).values_at(0,2)
+            prop = fullprop.split("/")[1].intern
             props[prop] = value \
                 if Puppet::Type.type(:dns).validproperties.include? prop
         end
@@ -74,9 +73,7 @@ Puppet::Type.type(:dns).provide(:dns) do
                            "config/" + field.to_s, "=", value)
                 end
             rescue => detail
-                raise Puppet::Error,
-                    "Unable to set #{field.to_s} to #{should.inspect}\n"
-                    "#{detail}\n"
+                fail "value: #{should.inspect}\n#{detail}\n"
             end
         end
     end

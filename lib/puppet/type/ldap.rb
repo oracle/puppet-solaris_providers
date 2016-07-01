@@ -26,6 +26,8 @@ Puppet::Type.newtype(:ldap) do
     @doc = "Manage the configuration of the LDAP client for Oracle Solaris"
     validator = PuppetX::Oracle::SolarisProviders::Util::Validation.new
 
+    ensurable
+
     newparam(:name) do
         desc "The symbolic name for the LDAP client settings to use.  This name
               is used for human reference only."
@@ -74,9 +76,11 @@ Puppet::Type.newtype(:ldap) do
             end
         end
 
-        validate do |value|
-          unless validator.valid_ip?(value) || validator.valid_hostname?(value)
-            raise Puppet::Error, "default_server entry:  #{value} is invalid"
+        validate do |val|
+          [val].flatten.each do |value|
+            unless validator.valid_ip?(value) || validator.valid_hostname?(value)
+              fail "value: #{value} is invalid"
+            end
           end
         end
     end
@@ -113,11 +117,12 @@ Puppet::Type.newtype(:ldap) do
             end
         end
 
-        validate do |value|
+        validate do |val|
+          [val].flatten.each do |value|
             unless validator.valid_ip?(value) || validator.valid_hostname?(value)
-                raise Puppet::Error, "preferred_server entry: #{value} is
-                    invalid"
+              fail "value: #{value} is invalid"
             end
+          end
         end
     end
 

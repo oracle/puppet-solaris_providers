@@ -26,6 +26,8 @@ Puppet::Type.newtype(:nis) do
     @doc = "Manage the configuration of the NIS client for Oracle Solaris"
     validator = PuppetX::Oracle::SolarisProviders::Util::Validation.new
 
+    ensurable
+
     newparam(:name) do
        desc "The symbolic name for the NIS domain and client settings to use.
               This name is used for human reference only."

@@ -51,17 +51,16 @@ describe Puppet::Type.type(:ldap).provider(:ldap) do
     FileTest.stubs(:executable?).with('/usr/bin/svcprop').returns true
   end
 
-  describe "properties" do
-
     # ensure we have all listed properties, addition of new properties will result
     # in an error here and require the various property arrays to be updated
-    it "has only expected properties" do
+    it "has only expected methods" do
       expect(properties).to eq(expectedproperties)
     end
 
+    context "responds to" do
     # No setter methods
     [:ensure,:flush].each { |method|
-      it { is_expected.to respond_to(method) }
+      it method do is_expected.to respond_to(method) end
     }
 
     # This is duplicated due to scoping
@@ -73,19 +72,13 @@ describe Puppet::Type.type(:ldap).provider(:ldap) do
       :admin_bind_dn, :admin_bind_passwd, :host_certpath]
 
     @properties.each { |method|
-      it { is_expected.to respond_to(method) }
-      it { is_expected.to respond_to("#{method}=".to_sym) }
+      it method do is_expected.to respond_to(method) end
+      it "#{method}=".intern do is_expected.to respond_to("#{method}=".to_sym) end
     }
 
     end # properties
 
   describe ".instances" do
-    before(:all) do
-      # LDAP provider checks the euid of the running process
-      Process.stubs(:euid).returns(0)
-    end
-
-
     it "returns one instance" do
       expect(instances.size).to eq(1)
     end
@@ -122,14 +115,34 @@ describe Puppet::Type.type(:ldap).provider(:ldap) do
         :host_certpath => :absent
       }.each_pair do |field,value|
         pg = Puppet::Type.type(:ldap).propertybyname(field).pg rescue "unknown"
-
         it "#{pg}/#{field}" do
           expect(instances[0][field]).to eq(value)
         end
-
-
       end  # validproperties
     end
   end  # validating instances
 
+  describe "property=" do
+    it "formats string arguments" do
+      resource[:search_base] = %q(dc=foo,dc=com)
+      newval = %q(dc=bar,dc=com)
+      described_class.expects(:svccfg).with("-s", Ldap_fmri, "setprop", "config/search_base", "=", newval )
+      expect(provider.search_base=newval).to eq(newval)
+    end
+
+    it "formats array arguments" do
+      resource[:server_list] = "foo.com"
+      newval = %w(baz.com quux.com)
+      testval = %Q^( \"baz.com\" \"quux.com\" )^
+      described_class.expects(:svccfg).with("-s", Ldap_fmri, "setprop", "config/server_list", "=", testval )
+      expect(provider.server_list=newval).to eq(newval)
+    end
+
+    it "formats empty arguments" do
+      resource[:profile] = "bar-tls"
+      newval = %q("")
+      described_class.expects(:svccfg).with("-s", Ldap_fmri, "setprop", "config/profile", "=", newval )
+      expect(provider.profile=newval).to eq(newval)
+    end
+  end
   end

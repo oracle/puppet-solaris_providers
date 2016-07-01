@@ -1,0 +1,1 @@
+config/value_authorization astring solaris.smf.value.name-service.nis.client

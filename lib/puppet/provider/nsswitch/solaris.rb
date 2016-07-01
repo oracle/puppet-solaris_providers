@@ -31,8 +31,8 @@ Puppet::Type.type(:nsswitch).provide(:nsswitch) do
     def self.instances
         props = {}
         svcprop("-p", "config", Nsswitch_fmri).each_line.collect do |line|
-            fullprop, type, value = line.split(" ", 2)
-            pg, prop = fullprop.split("/")
+            fullprop, value = line.split(" ", 2).values_at(0,2)
+            prop = fullprop.split("/")[1].intern
             props[prop] = value \
                 if Puppet::Type.type(:nsswitch).validproperties.include? prop
         end
@@ -58,9 +58,7 @@ Puppet::Type.type(:nsswitch).provide(:nsswitch) do
                 svccfg("-s", Nsswitch_fmri, "setprop",
                        "config/" + field.to_s, "=", '"' + should + '"')
             rescue => detail
-                raise Puppet::Error,
-                    "Unable to set #{field.to_s} to #{should.inspect}\n"
-                    "#{detail}\n"
+                fail "value: #{should.inspect}\n#{detail}\n"
             end
         end
     end

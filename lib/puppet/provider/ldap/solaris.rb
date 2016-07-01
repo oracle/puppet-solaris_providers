@@ -29,12 +29,6 @@ Puppet::Type.type(:ldap).provide(:ldap) do
 
     mk_resource_methods
 
-    # default resource to nil for provider initilization
-    def initialize(resource=nil)
-        super
-        @refresh_needed = false
-    end
-
     def self.instances
         if Process.euid != 0
           # Failure is presumed to be better than returning the empty
@@ -89,35 +83,32 @@ Puppet::Type.type(:ldap).provide(:ldap) do
             begin
                 if should.is_a? Array
                     arr = should.collect {|val| '"' + val.to_s + '"'}
-                    arr[0] = "(" + arr[0]
-                    arr[-1] = arr[-1] + ")"
+                    arr.unshift "("
+                    arr.push ")"
 
                     svccfg("-s", Ldap_fmri, "setprop",
-                           pg + "/" + field.to_s, "=", arr)
+                           pg + "/" + field.to_s, "=", arr * " ")
                 else
                     # Puppet seems to get confused about when to pass an empty
                     # string or "\"\"".  Catch either condition to handle
                     # passing values to SMF correctly
                     if should.to_s.empty? or should.to_s == '""'
                         value = should.to_s
-                    else
+                    elsif should.match(/['"]/)
                         value = "\"" + should.to_s + "\""
+                    else
+                        value = should.to_s
                     end
                     svccfg("-s", Ldap_fmri, "setprop",
                            pg + "/" + field.to_s, "=", value)
                 end
-                @refresh_needed = true
             rescue => detail
-                raise Puppet::Error,
-                    "Unable to set #{field.to_s} to #{should.inspect}\n"
-                    "#{detail}\n"
+                fail "value: #{should.inspect}\n#{detail}\n"
             end
         end
     end
 
     def flush
-        if @refresh_needed == true
             svccfg("-s", Ldap_fmri, "refresh")
-        end
     end
 end
