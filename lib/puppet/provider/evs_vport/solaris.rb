@@ -35,23 +35,22 @@ Puppet::Type.type(:evs_vport).provide(:evs_vport) do
 
     def self.get_vport_list
         begin
-            vport_list = evsadm("show-vport", "-c", "-o", 
+            vport_list = evsadm("show-vport", "-c", "-o",
                 "name,tenant,status").split("\n")
         rescue Puppet::ExecutionFailure => e
             raise Puppet::Error, "unable to populate VPort instances: \n" \
                 "#{e.inspect}"
-            return nil
         end
         vport_list
     end
-   
+
     def self.get_vport_properties(vport, tenant, status, ensure_val)
         vport_props = {}
         vport_fullname = tenant + "/" + vport
         vport_props[:name] = vport_fullname
         vport_props[:status] = status
         vport_props[:ensure] = ensure_val
-        
+
         evsadm("show-vportprop", "-f", "tenant=#{tenant}", "-c", "-o",
             "property,value", vport).split("\n").collect do |each_prop|
             property, value = each_prop.split(":", 2)
@@ -87,8 +86,8 @@ Puppet::Type.type(:evs_vport).provide(:evs_vport) do
             vport_props = get_vport_properties(vport, tenant, status, :present)
             new(vport_props) # Create a provider instance
         end
-    end        
-        
+    end
+
     def self.prefetch(resources)
         instances.each do |inst|
             if resource = resources[inst.name]
@@ -130,7 +129,7 @@ Puppet::Type.type(:evs_vport).provide(:evs_vport) do
         @resource[:ensure] = :present
         Puppet::notice "The VPort has been successfully reset."
     end
-    
+
     ### Define Setters ###
     ## read/write properties (always updatable) ##
     def cos=(value)
@@ -140,11 +139,11 @@ Puppet::Type.type(:evs_vport).provide(:evs_vport) do
     def maxbw=(value)
         @property_flush[:maxbw] = value
     end
-    
+
     def priority=(value)
         @property_flush[:priority] = value
     end
-    
+
     def protection=(value)
         @property_flush[:protection] = value
     end
@@ -168,7 +167,7 @@ Puppet::Type.type(:evs_vport).provide(:evs_vport) do
             evsadm("add-vport", "-T", tenant, properties, vport)
         rescue Puppet::ExecutionFailure => e
             # Pass up the exception to upper level
-            raise
+            raise e
         end
     end
 
@@ -176,17 +175,17 @@ Puppet::Type.type(:evs_vport).provide(:evs_vport) do
     def delete_vport(tenant, vport)
         begin
             evsadm("remove-vport", "-T", tenant, vport)
-        rescue Puppet::ExecutionFailure => e
+        rescue Puppet::ExecutionFailure
             # Pass up the exception to upper level
             raise
         end
     end
-    
-    # set read/write property 
+
+    # set read/write property
     def set_vportprop(tenant, vport, property)
         begin
             evsadm("set-vportprop", "-T", tenant, property, vport)
-        rescue Puppet::ExecutionFailure => e
+        rescue Puppet::ExecutionFailure
             # Pass up the exception to upper level
             raise
         end
@@ -213,8 +212,8 @@ Puppet::Type.type(:evs_vport).provide(:evs_vport) do
             source[:ipaddr] = source[:ipaddr].split('/')[0]
         end
         prop_list = {
-            "cos" => source[:cos], 
-            "maxbw" => source[:maxbw], 
+            "cos" => source[:cos],
+            "maxbw" => source[:maxbw],
             "priority" => source[:priority],
             "protection" => source[:protection],
             "ipaddr" => source[:ipaddr],
@@ -226,13 +225,13 @@ Puppet::Type.type(:evs_vport).provide(:evs_vport) do
             p << "#{key}=#{value}"
         end
         return [] if p.empty?
-        properties = Array["-p", p.join(",")]
+        Array["-p", p.join(",")]
     end
 
     # Update property change
     def flush
         tenant, vport = get_tenant_and_vport_name
-       
+
         # Update property values when specified
         unless @property_flush.empty?
             # update multiple property values iteratively

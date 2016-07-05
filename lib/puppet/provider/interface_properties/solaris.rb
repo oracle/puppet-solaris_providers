@@ -69,8 +69,8 @@ Puppet::Type.type(:interface_properties).provide(:interface_properties) do
     end
 
     def properties=(value)
-        value.each do |key, value|
-            ipadm("set-ifprop", "-p", "#{key}=#{value}", @resource[:name])
+        value.each do |key, val|
+            ipadm("set-ifprop", "-p", "#{key}=#{val}", @resource[:name])
         end
     end
 

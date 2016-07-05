@@ -60,11 +60,13 @@ Puppet::Type.newtype(:ipmp_interface) do
             output = Puppet::Util::Execution.execute(cmd).split("\n")
             if name.class == Array
                 check = output - name
-                raise Puppet::Error, "Invalid interface(s) specified:  "
-                    "#{check.inspect}" if not check.empty?
+                unless check.empty?
+                  fail "Invalid interface(s) specified: #{check.inspect}"
+                end
             else
-                raise Puppet::Error, "Invalid interface specified: #{name}" \
-                    if not output.include?(name)
+                unless output.include?(name)
+                  fail "Invalid interface specified: #{name}"
+                end
             end
         end
     end

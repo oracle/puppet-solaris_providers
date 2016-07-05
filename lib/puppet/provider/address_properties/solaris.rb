@@ -69,8 +69,8 @@ Puppet::Type.type(:address_properties).provide(:address_properties) do
     end
 
     def properties=(value)
-        value.each do |key, value|
-            ipadm("set-addrprop", "-p", "#{key}=#{value}", @resource[:name])
+        value.each do |key, val|
+            ipadm("set-addrprop", "-p", "#{key}=#{val}", @resource[:name])
         end
     end
 

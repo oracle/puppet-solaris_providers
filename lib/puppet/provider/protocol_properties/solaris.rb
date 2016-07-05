@@ -69,8 +69,8 @@ Puppet::Type.type(:protocol_properties).provide(:protocol_properties) do
     end
 
     def properties=(value)
-        value.each do |key, value|
-            ipadm("set-prop", "-p", "#{key}=#{value}", @resource[:name])
+        value.each do |key, val|
+            ipadm("set-prop", "-p", "#{key}=#{val}", @resource[:name])
         end
     end
 
