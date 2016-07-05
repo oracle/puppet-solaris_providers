@@ -5,10 +5,11 @@ group(:development, :test) do
   gem 'rspec-puppet', :require => true
   gem 'rspec', :require => false
   gem 'rake', :require => false
-  gem 'pry', :require => false
   gem 'psych', :require => false
   gem 'puppet', :require => true
+  gem 'pkg-config', :require => false
 end
 
 gem "rubocop", "~> 0.26.1", :platforms => [:ruby]
+
 gem 'beaker-rspec', :require => false, :group => :acceptance

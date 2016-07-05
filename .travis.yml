@@ -1,0 +1,31 @@
+language: ruby
+sudo: false
+before_install:
+  - gem install bundler -v 1.10
+bundler_args: --without acceptance
+script:
+  - "bundle exec rake $CHECK"
+notifications:
+  email: false
+rvm:
+  - 2.3.0-dev
+  - 2.2.4
+  - 2.1.6
+  - 1.9.3
+
+gemfile: 
+  - Gemfile
+  - Gemfiles/puppet-3.6.2
+  - Gemfiles/puppet-4.x
+
+env:
+  - "CHECK=spec"
+
+matrix:
+  allow_failures:
+    - env: "CHECK=rubocop"
+  include:
+    # Add one run of rubocop
+    - rvm: 2.1.6
+      gemfile: Gemfile
+      env: CHECK=rubocop
