@@ -3,7 +3,7 @@
 require 'spec_helper'
 describe Puppet::Type.type(:link_aggregation).provider(:link_aggregation) do
 
-  let!(:resource) do
+  let(:resource) do
     Puppet::Type.type(:link_aggregation).new(
       :name => "aggr10",
       :ensure => :present,
@@ -15,7 +15,7 @@ describe Puppet::Type.type(:link_aggregation).provider(:link_aggregation) do
       :lacptimer => "short"
     )
       end
-  let!(:provider) { resource.provider = described_class.new(resource) }
+  let(:provider) { resource.provider = described_class.new(resource) }
 
 
   before(:each) do

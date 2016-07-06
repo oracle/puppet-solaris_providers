@@ -10,7 +10,7 @@ describe Puppet::Type.type(:zone).provider(:solaris) do
     { :name => 'foo',
     }
   )}
-  let(:provider) { resource.provider }
+  let(:provider) { described_class.new(resource) }
 
 
   describe "when validating defined properties" do

@@ -1,16 +1,20 @@
 #!/usr/bin/env ruby
 
 require 'spec_helper'
-require_relative  '../../../../lib/puppet/type/pkg_facet'
-require_relative '../../../../lib/puppet/provider/pkg_facet/solaris.rb'
-
 describe Puppet::Type.type(:pkg_facet).provider(:pkg_facet) do
 
   let(:resource) { Puppet::Type.type(:pkg_facet).new(
-    { :name => 'foo'
-    }
-  )}
+     :name => 'foo',
+     :ensure => :present)
+  }
+
   let(:provider) { resource.provider }
+
+  context "responds to" do
+  [ :value, :exists?, :create, :destroy ].each do |method|
+    it method do is_expected.to respond_to(method) end
+  end
+  end
 
 
   context 'with two facets' do
@@ -18,11 +22,11 @@ describe Puppet::Type.type(:pkg_facet).provider(:pkg_facet) do
       described_class.stubs(:pkg).with(:facet, "-H", "-F", "tsv").returns "facet.version-lock.system/foo/bar     True    local\nfacet.version-lock.system/foo2/bar     False    local"
     end
 
-    it 'should find two facets' do
+    it 'finds two facets' do
       expect(described_class.instances.size).to eq(2)
     end
 
-    it 'should parse the first facet properly' do
+    it 'parses the first facet' do
       expect(described_class.instances[0].instance_variable_get("@property_hash")).to eq( {
         :name => 'facet.version-lock.system/foo/bar',
         :ensure   => :present,
@@ -30,7 +34,7 @@ describe Puppet::Type.type(:pkg_facet).provider(:pkg_facet) do
       } )
     end
 
-    it 'should parse the second facet properly' do
+    it 'parses the second facet' do
       expect(described_class.instances[1].instance_variable_get("@property_hash")).to eq( {
         :name => 'facet.version-lock.system/foo2/bar',
         :ensure   => :present,
@@ -40,9 +44,4 @@ describe Puppet::Type.type(:pkg_facet).provider(:pkg_facet) do
 
   end
 
-  [ "value", "exists?", "create", "destroy" ].each do |method|
-    it "should have a #{method} method" do
-      expect(provider.class.method_defined?(method)).to eq(true)
-    end
-  end
 end

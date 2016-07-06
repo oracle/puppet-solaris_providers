@@ -4,6 +4,13 @@ require 'spec_helper'
 
 describe Puppet::Type.type(:dns).provider(:dns) do
 
+  let(:resource) do
+    Puppet::Type.type(:dns).new(
+      :name => "current",
+      :ensure => :present
+    )
+      end
+
   let(:provider) do
     described_class.new(:dns)
   end
@@ -13,9 +20,22 @@ describe Puppet::Type.type(:dns).provider(:dns) do
     FileTest.stubs(:executable?).with('/usr/bin/svcprop').returns true
   end
 
+  # Validate properties
+  [:nameserver, :domain, :search, :sortlist, :options].each { |method|
+    it { is_expected.to respond_to(method) }
+    it { is_expected.to respond_to("#{method}=".to_sym) }
+  }
+
+  # There is no setter method for flush
+  it { is_expected.to respond_to(:flush) }
+
+
   describe "#instances" do
-    described_class.expects(:svcprop).with("-p", "config", Dns_fmri).returns File.read(my_fixture('svcprop_p_config_Dns_fmri.txt'))
-    props = described_class.instances.map { |p|
+    described_class.expects(:svcprop).with(
+      "-p", "config", Dns_fmri).returns File.read(
+      my_fixture('svcprop_p_config_Dns_fmri.txt'))
+
+    instances = described_class.instances.map { |p|
     {
           :ensure => p.get(:ensure),
           :name => p.get(:name),
@@ -28,7 +48,7 @@ describe Puppet::Type.type(:dns).provider(:dns) do
     }
 
       it "should only have one result" do
-        expect(props.size).to eq(1)
+        expect(instances.size).to eq(1)
       end
 
   describe "when validating defined properties" do
@@ -36,22 +56,10 @@ describe Puppet::Type.type(:dns).provider(:dns) do
       pg = "config"
 
       it "should be able to see the #{pg}/#{field} SMF property" do
-        expect(props[0][field]).not_to eq(nil)
-      end
-
-      it "should find a reader for #{field}" do
-        expect(provider.class.method_defined?(field.to_s)).to eq(true)
-      end
-
-      it "should find a writer for #{field}" do
-        expect(provider.class.method_defined?(field.to_s+"=")).to eq(true)
+        expect(instances[0][field]).not_to eq(nil)
       end
     end  # validproperties
   end  # validating default values
-  end
-
-  it "should have a flush method" do
-    expect(provider.class.method_defined?("flush")).to eq(true)
   end
 
 end

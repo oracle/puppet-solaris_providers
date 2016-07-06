@@ -1,6 +1,5 @@
 #
-#
-# Copyright [yyyy] [name of copyright owner]
+# Copyright (c) 2013, 2015, Oracle and/or its affiliates. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,21 +14,19 @@
 # limitations under the License.
 #
 
-#
-# Copyright (c) 2013, 2015, Oracle and/or its affiliates. All rights reserved.
-#
-
 Puppet::Type.type(:pkg_publisher).provide(:pkg_publisher) do
     desc "Provider for Solaris publishers"
     confine :operatingsystem => [:solaris]
     defaultfor :osfamily => :solaris, :kernelrelease => ['5.11', '5.12']
     commands :pkg => '/usr/bin/pkg'
 
+    mk_resource_methods
+
     def self.instances
         publishers = {}
         publisher_order = []
         pkg(:publisher, "-H", "-F", "tsv").split("\n").collect do |line|
-            name, sticky, syspub, enabled, type, status, origin, proxy = \
+            name, sticky, _syspub, enabled, type, _status, origin, proxy = \
                 line.split("\t")
 
             # set the order of the publishers
@@ -99,18 +96,6 @@ Puppet::Type.type(:pkg_publisher).provide(:pkg_publisher) do
         resources.keys.each do |name|
             if provider = publishers.find{ |publisher| publisher.name == name}
                 resources[name].provider = provider
-            end
-        end
-    end
-
-    # property getters - each getter does exactly the same thing so create
-    # dynamic methods to handle them
-    [:sticky, :enable, :origin, :mirror, :proxy, :searchfirst, :searchafter,
-     :searchbefore, :sslkey, :sslcert].each do |property|
-        define_method(property) do
-            begin
-                @property_hash[property]
-            rescue
             end
         end
     end

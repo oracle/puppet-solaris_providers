@@ -1,6 +1,5 @@
 #
-#
-# Copyright [yyyy] [name of copyright owner]
+# Copyright (c) 2013, 2015, Oracle and/or its affiliates. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,16 +14,14 @@
 # limitations under the License.
 #
 
-#
-# Copyright (c) 2013, 2015, Oracle and/or its affiliates. All rights reserved.
-#
-
 require File.expand_path(File.join(File.dirname(__FILE__), '..','..','puppet_x/oracle/solaris_providers/util/validation.rb'))
 require 'puppet/property/list'
 
 Puppet::Type.newtype(:nis) do
     @doc = "Manage the configuration of the NIS client for Oracle Solaris"
     validator = PuppetX::Oracle::SolarisProviders::Util::Validation.new
+
+    ensurable
 
     newparam(:name) do
        desc "The symbolic name for the NIS domain and client settings to use.

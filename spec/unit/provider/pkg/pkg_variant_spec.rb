@@ -1,8 +1,6 @@
 #!/usr/bin/env ruby
 
 require 'spec_helper'
-require_relative  '../../../../lib/puppet/type/pkg_variant'
-require_relative '../../../../lib/puppet/provider/pkg_variant/solaris.rb'
 
 describe Puppet::Type.type(:pkg_variant).provider(:pkg_variant) do
 
@@ -10,7 +8,7 @@ describe Puppet::Type.type(:pkg_variant).provider(:pkg_variant) do
     { :name => 'foo',
     }
   )}
-  let(:provider) { resource.provider }
+  let(:provider) { described_class.new(resource) }
 
 
   context 'with two variants' do

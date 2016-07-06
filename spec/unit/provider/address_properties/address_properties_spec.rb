@@ -1,16 +1,16 @@
 #!/usr/bin/env ruby
 
 require 'spec_helper'
-require_relative  '../../../../lib/puppet/type/address_properties'
-require_relative '../../../../lib/puppet/provider/address_properties/solaris.rb'
 
 describe Puppet::Type.type(:address_properties).provider(:address_properties) do
 
-  let(:resource) { Puppet::Type.type(:address_properties).new(
-    { :name => 'myobj',
-    }
-  )}
-  let(:provider) { resource.provider }
+  let(:resource) {
+    Puppet::Type.type(:address_properties).new(
+     :name => 'myobj',
+     :ensure => :present,
+    )
+  }
+  let(:provider) { described_class.new(resource) }
 
 
   context 'with a multi-property interface' do
