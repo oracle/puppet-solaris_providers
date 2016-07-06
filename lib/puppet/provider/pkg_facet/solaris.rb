@@ -1,18 +1,23 @@
+#
+# Copyright (c) 2013, 2016, Oracle and/or its affiliates. All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+Puppet::Type.type(:pkg_facet).provide(:pkg_facet) do
     desc "Provider for Oracle Solaris facets"
     confine :operatingsystem => [:solaris]
     defaultfor :osfamily => :solaris, :kernelrelease => ['5.11', '5.12']
-# file and include the License file at usr/src/OPENSOLARIS.LICENSE.
-# If applicable, add the following below this CDDL HEADER, with the
-# fields enclosed by brackets "[]" replaced with your own identifying
-# information: Portions Copyright [yyyy] [name of copyright owner]
-#
-# CDDL HEADER END
-#
-
-#
-# Copyright (c) 2013,2016 Oracle and/or its affiliates. All rights reserved.
-#
-
     commands :pkg => '/usr/bin/pkg'
 
     # Defined classvar once. Access must be via Klass.send to prevent
