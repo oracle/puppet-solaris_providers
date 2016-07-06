@@ -1,6 +1,5 @@
 #
-#
-# Copyright [yyyy] [name of copyright owner]
+# Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,15 +14,11 @@
 # limitations under the License.
 #
 
-#
-# Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
-#
-
 Puppet::Type.newtype(:evs_properties) do
-    @doc = "Manage global properties of EVS(Elastic Virtual Switch) for both 
-            client and controller. There are two instances associated with 
+    @doc = "Manage global properties of EVS(Elastic Virtual Switch) for both
+            client and controller. There are two instances associated with
             contoller and client properties respectively"
-    
+
     ## This is a property setter, thus not ensurable ##
     newparam(:name) do
         desc "Type of properties\n"\
@@ -38,7 +33,7 @@ Puppet::Type.newtype(:evs_properties) do
             end
         end
     end
-    
+
     ## Properties associated with "controller_property" ##
     ## All the properties are read/write
     newproperty(:l2_type) do
@@ -46,7 +41,7 @@ Puppet::Type.newtype(:evs_properties) do
             "(controller_property)"
         newvalues("vlan", "vxlan", "flat", "")
     end
-    
+
     newproperty(:uplink_port) do
         desc "Specifies the datalink to be used for VLANs or VXLANs "\
             "(controller_property)\n"\
@@ -71,7 +66,7 @@ Puppet::Type.newtype(:evs_properties) do
             end
         end
     end
-    
+
     newproperty(:uri_template) do
         desc "URI for per-EVS Node RAD Connection (controller_property)\n"\
             "The syntax of the uri_template value will be of the form:\n"\
@@ -94,7 +89,7 @@ Puppet::Type.newtype(:evs_properties) do
             end
         end
     end
-    
+
 
     newproperty(:vlan_range) do
         desc "List of VLAN ID ranges that will be used for creating EVS "\
@@ -141,8 +136,8 @@ Puppet::Type.newtype(:evs_properties) do
             "(controller_property)\n"\
             "The maximum valid range is 0-16777215"
     end
-    
-    
+
+
     ### The read/write property associated with "client_property" ###
     newproperty(:controller) do
         desc "SSH address of EVS controller server (client_property)"

@@ -1,7 +1,6 @@
-# See the License for the specific language governing permissions
-# and limitations under the License.
-#
-# When distributing Covered Code, include this CDDL HEADER in each
+    desc "Provider for Oracle Solaris facets"
+    confine :operatingsystem => [:solaris]
+    defaultfor :osfamily => :solaris, :kernelrelease => ['5.11', '5.12']
 # file and include the License file at usr/src/OPENSOLARIS.LICENSE.
 # If applicable, add the following below this CDDL HEADER, with the
 # fields enclosed by brackets "[]" replaced with your own identifying
@@ -14,10 +13,6 @@
 # Copyright (c) 2013,2016 Oracle and/or its affiliates. All rights reserved.
 #
 
-Puppet::Type.type(:pkg_facet).provide(:pkg_facet) do
-    desc "Provider for Oracle Solaris facets"
-    confine :operatingsystem => [:solaris]
-    defaultfor :osfamily => :solaris, :kernelrelease => ['5.11', '5.12']
     commands :pkg => '/usr/bin/pkg'
 
     # Defined classvar once. Access must be via Klass.send to prevent

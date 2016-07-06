@@ -1,6 +1,5 @@
 #
-#
-# Copyright [yyyy] [name of copyright owner]
+# Copyright (c) 2013, 2014, Oracle and/or its affiliates. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,10 +12,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-#
-
-#
-# Copyright (c) 2013, 2014, Oracle and/or its affiliates. All rights reserved.
 #
 
 Puppet::Type.type(:boot_environment).provide(:boot_environment) do
@@ -88,7 +83,7 @@ Puppet::Type.type(:boot_environment).provide(:boot_environment) do
                     { |line| line.split(";")[0] == clone_be }
                         flags << "-e" << clone_be
                 else
-                    Puppet.warning "BE #{clone_be} not found.  Skipping -e 
+                    Puppet.warning "BE #{clone_be} not found.  Skipping -e
                                     argument."
                 end
             end
@@ -123,7 +118,7 @@ Puppet::Type.type(:boot_environment).provide(:boot_environment) do
 
     def destroy
         if beadm(:list, "-H", @resource[:name]).split(";")[2] =~ /N/
-            Puppet.warning "Unable to destroy #{@resource[:name]} as it is 
+            Puppet.warning "Unable to destroy #{@resource[:name]} as it is
                             the active BE."
         else
             beadm(:destroy, "-f", "-F", @resource[:name])

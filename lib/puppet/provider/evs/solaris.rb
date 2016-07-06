@@ -1,6 +1,5 @@
 #
-#
-# Copyright [yyyy] [name of copyright owner]
+# Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,10 +12,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-#
-
-#
-# Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
 #
 
 Puppet::Type.type(:evs).provide(:evs) do
@@ -48,10 +43,10 @@ Puppet::Type.type(:evs).provide(:evs) do
         evs_fullname = tenant + "/" + evs
 
         evs_properties[:name] = evs_fullname
-        evs_properties[:status] = status 
+        evs_properties[:status] = status
         evs_properties[:ensure] = ensure_val
-        
-        evsadm("show-evsprop", "-f", "tenant=#{tenant}", "-c", "-o", 
+
+        evsadm("show-evsprop", "-f", "tenant=#{tenant}", "-c", "-o",
             "property,value", evs).split("\n").collect do |each_evsprop|
             property, value = each_evsprop.split(":")
             value = "" if value.nil?
@@ -74,11 +69,11 @@ Puppet::Type.type(:evs).provide(:evs) do
                 evs_properties[:uuid] = value
             end
         end
-        
+
         Puppet.debug "EVS Properties: #{evs_properties.inspect}"
         evs_properties
     end
-    
+
     def self.instances
         get_evs_list.collect do |each_evs|
             evs, tenant, status = each_evs.strip.split(":")
@@ -94,7 +89,7 @@ Puppet::Type.type(:evs).provide(:evs) do
             end
         end
     end
-    
+
     def exists?
         @property_hash[:ensure] == :present
     end
@@ -126,28 +121,28 @@ Puppet::Type.type(:evs).provide(:evs) do
     def priority=(value)
         @property_flush[:priority] = value
     end
-    
+
     def protection=(value)
         @property_flush[:protection] = value
     end
-    
+
     ## read-only properties (settable upon creation) ##
     def l2_type=(value)
         raise Puppet::Error, "l2_type property is settable only upon creation"
     end
-    
+
     def vlanid=(value)
         raise Puppet::Error, "valid property is settable only upon creation"
     end
-    
+
     def vni=(value)
         raise Puppet::Error, "vni property is settable only upon creation"
     end
-    
+
     def uuid=(value)
         raise Puppet::Error, "uuid property is settable only upon creation"
     end
-   
+
     # Create EVS instance
     def create_evs(tenant, evs, properties)
         begin
@@ -167,7 +162,7 @@ Puppet::Type.type(:evs).provide(:evs) do
             raise
         end
     end
-    
+
     # Set read/write property of EVS instance
     def set_evsprop(tenant, evs, property)
         begin
@@ -186,14 +181,14 @@ Puppet::Type.type(:evs).provide(:evs) do
         else
             raise Puppet::Error, "Invalid EVS name #{@resource[:name]} \n" \
                 "Name convention must be <tenant>/<evs>"
-        end 
+        end
     end
-    
+
     # property setter for EVS creation
     def add_properties(source)
         p = []
         prop_list = {
-            "maxbw" => source[:maxbw], 
+            "maxbw" => source[:maxbw],
             "priority" => source[:priority],
             "protection" => source[:protection],
             "l2-type" => source[:l2_type],
@@ -218,7 +213,7 @@ Puppet::Type.type(:evs).provide(:evs) do
             # update multiple property values iteratively
             @property_flush.each do |key, value|
                 prop = ["-p", "#{key}=#{value}"]
-                begin 
+                begin
                     set_evsprop(tenant, evs, prop)
                 rescue Puppet::ExecutionFailure => e
                     raise Puppet::Error, "Cannot update the property " \

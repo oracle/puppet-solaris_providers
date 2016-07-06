@@ -1,6 +1,5 @@
 #
-#
-# Copyright [yyyy] [name of copyright owner]
+# Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,12 +14,8 @@
 # limitations under the License.
 #
 
-#
-# Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
-#
-
 Puppet::Type.newtype(:evs_ipnet) do
-    @doc = "Manage the configuration of IPnet (subnet of IPv4 or IPv6 
+    @doc = "Manage the configuration of IPnet (subnet of IPv4 or IPv6
             addresses)"
 
     ensurable
@@ -33,12 +28,12 @@ Puppet::Type.newtype(:evs_ipnet) do
             end
         end
     end
-    
+
     ## read-only properties (updatable when idle) ##
     newproperty(:subnet) do
         desc "Subnet (either IPv4 or IPv6) for the IPnet"
     end
-    
+
     newproperty(:defrouter) do
         desc "The IP address of the default router for the given IPnet"
     end
@@ -46,7 +41,7 @@ Puppet::Type.newtype(:evs_ipnet) do
     newproperty(:uuid) do
         desc "UUID of the IPnet"
     end
-    
+
     ## read/write property (settable upon creation) ##
     newproperty(:pool) do
         desc "Sub-ranges of IP addresses within a subnet"

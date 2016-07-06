@@ -1,6 +1,5 @@
 #
-#
-# Copyright [yyyy] [name of copyright owner]
+# Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,10 +12,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-#
-
-#
-# Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
 #
 
 Puppet::Type.newtype(:evs) do
@@ -47,9 +42,9 @@ Puppet::Type.newtype(:evs) do
     newproperty(:protection) do
         desc "Enables one or more types of link protection"
         # verify protection value: comma(,) separatable
-        validate do |value| 
+        validate do |value|
             value.split(",").collect do |each_val|
-                if not ["mac-nospoof", "restricted", "ip-nospoof", 
+                if not ["mac-nospoof", "restricted", "ip-nospoof",
                     "dhcp-nospoof", "none", ""].include? each_val
                     raise Puppet::Error, "Invalid value \"#{each_val}\". "\
                         "Valid values are mac-nospoof, restricted, "\
@@ -64,11 +59,11 @@ Puppet::Type.newtype(:evs) do
         desc "Define how an EVS will be implemented across machines"
         newvalues("vlan", "vxlan", "flat", "")
     end
-    
+
     newproperty(:vlanid) do
         desc "VXLAN segment ID used to implement the EVS"
     end
-    
+
     newproperty(:vni) do
         desc "VLAN ID used to implement the EVS"
     end

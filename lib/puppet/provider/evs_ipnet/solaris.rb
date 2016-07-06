@@ -1,6 +1,5 @@
 #
-#
-# Copyright [yyyy] [name of copyright owner]
+# Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,10 +12,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-#
-
-#
-# Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
 #
 
 
@@ -35,7 +30,7 @@ Puppet::Type.type(:evs_ipnet).provide(:evs_ipnet) do
 
     def self.get_ipnet_prop_list
         begin
-            ipnet_list = evsadm("show-ipnet", "-c", "-o", 
+            ipnet_list = evsadm("show-ipnet", "-c", "-o",
                 "name,tenant").split("\n")
         rescue Puppet::ExecutionFailure => e
             raise Puppet::Error,  "Unable to populate IPnet: \n"\
@@ -99,9 +94,9 @@ Puppet::Type.type(:evs_ipnet).provide(:evs_ipnet) do
         if @resource[:subnet].nil?
             raise Puppet::Error, "Subnet value is missing"
         end
-        
+
         tenant, ipnet_name = get_tenant_and_ipnet_name
-        begin 
+        begin
             create_ipnet(tenant, ipnet_name, add_properties(@resource))
         rescue Puppet::ExecutionFailure => e
             raise Puppet::Error, "Cannot add the IPnet: \n #{e.inspect}"
@@ -116,7 +111,7 @@ Puppet::Type.type(:evs_ipnet).provide(:evs_ipnet) do
             raise Puppet::Error, "Cannot remove the IPnet: \n #{e.inspect}"
         end
     end
-   
+
     ## read-only properties (settable upon creation) ##
     def defrouter=(value)
         raise Puppet::Error, "defrouter property is settable only upon creation"
@@ -129,12 +124,12 @@ Puppet::Type.type(:evs_ipnet).provide(:evs_ipnet) do
     def uuid=(value)
         raise Puppet::Error, "uuid property is settable only upon creation"
     end
-    
+
     ## read/write property (always updatable) ##
     def pool=(value)
         @property_flush[:pool] = value
     end
-   
+
     ## Create IPnet instance ##
     def create_ipnet(tenant, ipnet_name, properties)
         begin
@@ -164,11 +159,11 @@ Puppet::Type.type(:evs_ipnet).provide(:evs_ipnet) do
             raise
         end
     end
-    
+
     ## Parse the "name" value from user and yield tenant and IPnet name ##
     def get_tenant_and_ipnet_name
         fullname = @resource[:name]
-        
+
         parsed_val = fullname.strip.split("/")
         if (parsed_val.length != 3)
             raise Puppet::Error, "Invalid IPnet name"
@@ -193,7 +188,7 @@ Puppet::Type.type(:evs_ipnet).provide(:evs_ipnet) do
         return [] if p.empty?
         properties = Array["-p", p.join(",")]
     end
-    
+
     ## Flush when existing property value is updatable ##
     def flush
         tenant, ipnet_name = get_tenant_and_ipnet_name

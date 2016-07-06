@@ -1,6 +1,5 @@
 #
-#
-# Copyright [yyyy] [name of copyright owner]
+# Copyright (c) 2013, Oracle and/or its affiliates. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,10 +12,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-#
-
-#
-# Copyright (c) 2013, Oracle and/or its affiliates. All rights reserved.
 #
 
 Puppet::Type.newtype(:vnic) do
@@ -37,13 +32,13 @@ Puppet::Type.newtype(:vnic) do
     end
 
     newparam(:temporary)  do
-        desc "Optional parameter that specifies that  the  VNIC  is  temporary. 
+        desc "Optional parameter that specifies that  the  VNIC  is  temporary.
               Temporary VNICs last until the next reboot."
         newvalues(:true, :false)
     end
 
     newproperty(:lower_link) do
-        desc "The name of the physical datalink over which the VNIC is 
+        desc "The name of the physical datalink over which the VNIC is
               operating"
         validate do |link_value|
             if not link_value =~ /^[[:alpha:]]([\w.]){1,29}([\d])$/i
@@ -56,7 +51,7 @@ Puppet::Type.newtype(:vnic) do
         desc "Sets the VNIC's MAC address based on  the  specified value."
         validate do |mac_value|
             if not mac_value =~ /^([[:xdigit:]]{1,2}[:-]){5}[[:xdigit:]]{1,2}$/i
-                raise Puppet::Error, "Invalid MAC address: #{mac_value}" 
+                raise Puppet::Error, "Invalid MAC address: #{mac_value}"
             end
         end
     end

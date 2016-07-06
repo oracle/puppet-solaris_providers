@@ -1,6 +1,5 @@
 #
-#
-# Copyright [yyyy] [name of copyright owner]
+# Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,11 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
-#
-# Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
-#
-
 
 Puppet::Type.type(:evs_properties).provide(:evs_properties) do
     desc "Provider for managing Oracle Solaris EVS properties"
@@ -43,10 +37,10 @@ Puppet::Type.type(:evs_properties).provide(:evs_properties) do
         end
 
         property, value = p.strip.split(":", 2)
-        value.gsub! "\\:", ":" 
+        value.gsub! "\\:", ":"
         client_property[:name] = "client_property"
         client_property[:controller] = value
-        
+
         Puppet.debug "Client Property: #{client_property.inspect}"
         client_property
 
@@ -58,7 +52,7 @@ Puppet::Type.type(:evs_properties).provide(:evs_properties) do
         uri_templates = []
         vxlan_addrs = []
         begin
-            evsadm("show-controlprop", "-c", "-o", 
+            evsadm("show-controlprop", "-c", "-o",
                 "property,value,vlan_range,vxlan_range,host,flat").\
                 split("\n").collect do |each_prop|
                 each_prop.gsub! "\\:", "\\"
@@ -109,7 +103,7 @@ Puppet::Type.type(:evs_properties).provide(:evs_properties) do
         prop_instance = []
         client_property = get_client_property
         prop_instance << new(client_property)
-        
+
         begin
             controller_property = get_control_properties
         rescue Puppet::ExecutionFailure => e
@@ -129,18 +123,18 @@ Puppet::Type.type(:evs_properties).provide(:evs_properties) do
             end
         end
     end
-    
+
     ### Define Setters ###
     ## Controller side property setup ##
-    
+
     def l2_type=(value)
         @property_flush[:l2_type] = value
     end
-    
+
     def uplink_port=(value)
         @property_flush[:uplink_port] = value
     end
-    
+
     def uri_template=(value)
         @property_flush[:uri_template] = value
     end
@@ -148,7 +142,7 @@ Puppet::Type.type(:evs_properties).provide(:evs_properties) do
     def vlan_range=(value)
         @property_flush[:vlan_range] = value
     end
-    
+
     def vxlan_addr=(value)
         @property_flush[:vxlan_addr] = value
     end
@@ -156,7 +150,7 @@ Puppet::Type.type(:evs_properties).provide(:evs_properties) do
     def vxlan_ipvers=(value)
         @property_flush[:vxlan_ipvers] = value
     end
-    
+
     def vxlan_mgroup=(value)
         @property_flush[:vxlan_mgroup] = value
     end
@@ -164,7 +158,7 @@ Puppet::Type.type(:evs_properties).provide(:evs_properties) do
     def vxlan_range=(value)
         @property_flush[:vxlan_range] = value
     end
-    
+
     ## Client side property setup: the pointer to the EVS controller ##
     def controller=(value)
         @property_flush[:controller] = value
@@ -195,7 +189,7 @@ Puppet::Type.type(:evs_properties).provide(:evs_properties) do
                 raise Puppet::Error, "controller_property does not have "\
                     "'controller' property. Try client_property"
             end
-            
+
             props = []
             @property_flush.each do |key, value|
                 # Change symbol to string
@@ -224,25 +218,25 @@ Puppet::Type.type(:evs_properties).provide(:evs_properties) do
                 # uri and [host]
                 when "uri-template"
                     uri, host = value.strip().split(";", -1)
-                    
+
                     # store host parameter if exists
                     host = host != "" ? ["-h", host] : []
                     uri = ["-p", "uri-template=#{uri}"]
-                    
+
                     props << [host, uri]
 
                 # vxlan_addr property takes up to three values:
                 # vxlan-addr, [vxlan-range] and [host]
                 when "vxlan-addr"
                     addr, range, host = value.strip().split(";", -1)
-                    
+
                     # store host parameter if exists
                     host = host != "" ? ["-h", host] : []
                     addr = "vxlan-addr=#{addr}"
                     range = range != "" ? ",vxlan-range=#{range}" : ""
-                    
+
                     p = ["-p", "#{addr}#{range}"]
-                    
+
                     props << [host, p]
 
                 # l2-type, vlan-range, vxlan-range, vxlan-ipvers
@@ -275,12 +269,12 @@ Puppet::Type.type(:evs_properties).provide(:evs_properties) do
             end
             prop = "controller=#{@property_flush[:controller]}"
             begin
-                set_client_property(prop) 
+                set_client_property(prop)
             rescue Puppet::ExecutionFailure => e
                 raise Puppet::Error, "Cannot apply the property:\n #{e.inspect}"
             end
         end
-        
+
         # Synchronize all the SHOULD values to IS values
         @property_hash = resource.to_hash
     end

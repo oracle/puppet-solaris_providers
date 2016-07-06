@@ -1,6 +1,5 @@
 #
-#
-# Copyright [yyyy] [name of copyright owner]
+# Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,10 +14,6 @@
 # limitations under the License.
 #
 
-#
-# Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
-#
-
 Puppet::Type.newtype(:evs_vport) do
     @doc = "Manage the configuration of EVS VPort"
 
@@ -26,11 +21,11 @@ Puppet::Type.newtype(:evs_vport) do
         newvalue(:present) do
             provider.create
         end
-        
+
         newvalue(:absent) do
             provider.destroy
         end
-        
+
         # Resets the specified VPort
         newvalue(:reset) do
             provider.reset
@@ -66,9 +61,9 @@ Puppet::Type.newtype(:evs_vport) do
     newproperty(:protection) do
         desc "Enables one or more types of link protection"
         # verify protection value: comma(,) separable
-        validate do |value| 
+        validate do |value|
             value.split(",").collect do |each_val|
-                if not ["mac-nospoof", "restricted", "ip-nospoof", 
+                if not ["mac-nospoof", "restricted", "ip-nospoof",
                     "dhcp-nospoof", "none", ""].include? each_val
                     raise Puppet::Error, "Invalid value \"#{each_val}\". "\
                         "Valid values are mac-nospoof, restricted, "\
