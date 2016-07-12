@@ -14,7 +14,11 @@
 # limitations under the License.
 #
 
+
+
 Puppet::Type.newtype(:zfs_acl) do
+  require Pathname.new(__FILE__).dirname + '../../' + 'puppet/type/zfs_acl/ace'
+
   @doc = "Manage NFSv4 ACL Specifications and system attributes on ZFS Files.
   See chmod(1), acl(7)
 
@@ -47,20 +51,9 @@ Puppet::Type.newtype(:zfs_acl) do
   end
 
   newproperty(:acl, :array_matching => :all) do
-
     def initialize(args)
       super(args)
-      @target = [ 'owner@', 'group@', 'everyone@', 'owner', 'group', 'everyone' ]
-      @target_patterns = [ /^user:.+/, /^group:.+/ ]
-      @perms = [
-        'read_data', 'write_data', 'append_data', 'read_xattr', 'write_xattr',
-        'execute', 'delete_child', 'read_attributes', 'write_attributes',
-        'delete', 'read_acl', 'write_acl', 'write_owner', 'synchronize',
-        'list_directory', 'add_file', 'add_subdirectory', 'absent'
-      ]
-      @perm_sets = [ 'full_set', 'modify_set', 'read_set', 'write_set' ]
-      @inheritance = [ 'file_inherit', 'dir_inherit', 'inherit_only', 'no_propagate', 'absent' ]
-      @perm_type = [ 'allow', 'deny', 'audit', 'alarm' ]
+      @ace_valid = Puppet::Type::ZfsAcl::Ace::Util
     end
 
     desc <<-HEREDOC
@@ -73,7 +66,7 @@ Puppet::Type.newtype(:zfs_acl) do
         target        => "<target_string>",
         perms         => [<perms_array>],
         inheritance   => [<flags_array>],
-        perm_type          => <:allow|:deny|:audit|:alarm>
+        perm_type          => <'allow'|'deny'|'audit'|'alarm'>
       }
 
       Target string: Target string includes the standard owner@, group@,
@@ -85,82 +78,91 @@ Puppet::Type.newtype(:zfs_acl) do
 
       Perms:
          Individual Permissions:
-             :read_data, :write_data, :append_data, :read_xattr, :write_xattr,
-             :execute, :delete_child, :read_attributes, :write_attributes,
-             :delete, :read_acl, :write_acl, :write_owner, :synchronize
+             'read_data', 'write_data', 'append_data', 'read_xattr', 'write_xattr',
+             'execute', 'delete_child', 'read_attributes', 'write_attributes',
+             'delete', 'read_acl', 'write_acl', 'write_owner', 'synchronize'
 
          Special Sets:
-             :full_set, :modify_set, :read_set, and :write_set
+             'full_set', 'modify_set', 'read_set', and 'write_set'
 
-         :full_set
+         'full_set'
              All permissions.
 
-         :modify_set
+         'modify_set'
              All permissions except write_acl and write_owner.
              Approximately: rwx
 
-         :read_set
+         'read_set'
              read_data, read_acl, read_attributes, and read_xattr.
              Approximately: r--
 
-         :write_set
+         'write_set'
              write_data, append_data, write_attributes, and write_xattr
              Approximately: -w-
 
-      Inheritance: :file_inherit, :dir_inherit, :inherit_only, :no_propagate, :absent
+      Inheritance: 'file_inherit', 'dir_inherit', 'inherit_only', 'no_propagate', 'absent'
 
-      Perm Type: :allow, :deny, :audit, :alarm
+      Perm Type: 'allow', 'deny', 'audit', 'alarm'
           Currently, Solaris does not generate alarms.
 
       See chmod(1) NFSv4 ACL Specification for additional details
 
-      HEREDOC
+    HEREDOC
 
-      munge { |value|
-        case value[:target]
-        when /:/
-          # do nothing
-        when 'everyone', 'group', 'owner'
-          # allow the string but convert to ...@ syntax
-          value[:target] = "#{value[:target]}@"
-        end
-        value
+    munge { |value|
+      Puppet::Type::ZfsAcl::Ace.new(value,provider)
+    }
+
+
+    # output similar to ls -v output as ACE hashes is unreadable
+    def is_to_s(value)
+      value.each_with_index.collect { |val,idx| [idx,val.to_s] * ":" }
+    end
+    def should_to_s(value)
+      value.each_with_index.collect { |val,idx| [idx,val.to_s] * ":" }
+    end
+
+    validate { |value|
+      fail "value: #{val}:#{val.class} must be a hash" unless value.kind_of?(Hash)
+      # Keys needs to be munged back into strings if they came from
+      # the provider adding new ACEs
+      value.dup.each_pair {|k,v|
+        next if k.kind_of?(String)
+        value.delete(k)
+        value[k.to_s] = v
       }
+      fail "#{value} target must be defined" unless value['target']
+      fail "perms must be defined" unless value['perms']
+      fail "perm_type must be defined" unless value['perm_type']
 
-      validate { |value|
-          fail "value: #{val}:#{val.class} must be a hash" unless value.kind_of?(Hash)
-          fail "#{value} target must be defined" unless value['target']
-          fail "perms must be defined" unless value['perms']
-          fail "perm_type must be defined" unless value['perm_type']
+      # Check target value
+      unless @ace_valid.target.include?(value['target']) ||
+        value['target'].match(Regexp.union(@ace_valid.target_patterns))
+        fail "Invalid target: #{value['target']}"
+      end
 
-          # Check target value
-          unless @target.include?(value['target']) ||
-            value['target'].match(Regexp.union(@target_patterns))
-            fail "Invalid target: #{value['target']}"
-          end
+      # Check Permissions
+      bad_perms = []
+      bad_perms = bad_perms + ([value['perms']].flatten.compact -
+                               @ace_valid.all_perms)
+      fail "Invalid perms: #{bad_perms}" unless bad_perms.empty?
 
-          # Check Permissions
-          bad_perms = []
-          bad_perms = bad_perms + ([value['perms']].flatten.compact -
-                                   (@perms + @perm_sets))
-          fail "Invalid perms: #{bad_perms}" unless bad_perms.empty?
+      # Check Inheritance
+      bad_inh = []
+      [value['inheritance']].flatten.compact.each do |thing|
+        bad_inh = bad_inh + (value['inheritance'] - @ace_valid.inheritance)
+      end
+      fail "Invalid Inheritance: #{bad_inh}" unless bad_inh.empty?
 
-          # Check Inheritance
-          bad_inh = []
-          [value['inheritance']].flatten.compact.each do |thing|
-            bad_inh = bad_inh + (value['inheritance'] - @inheritance)
-          end
-          fail "Invalid Inheritance: #{bad_inh}" unless bad_inh.empty?
+      # Check perm_type
+      unless @ace_valid.perm_type.include?(value['perm_type'])
+        fail "Invalid perm_type: #{value['perm_type']}"
+      end
+    }
 
-          # Check perm_type
-          unless @perm_type.include?(value['perm_type'])
-            fail "Invalid perm_type: #{value['perm_type']}"
-          end
-      }
-
-      #XXX def insync
-      #XXX delimeter
-   end
+    #XXX def insync
+    #XXX delimeter
+  end
 
   newparam(:set_default_perms) do
     desc <<-HEREDOC
@@ -185,33 +187,37 @@ Puppet::Type.newtype(:zfs_acl) do
          perm_type  => 'allow'
        }
     HEREDOC
-    defaultto :true
-    newvalues(:true,:false)
+    defaultto 'true'
+    newvalues('true','false')
+    munge { |value|
+      return value if [TrueClass,FalseClass].include?(value.class)
+      value == 'true'  ? true : false
+    }
   end
 
   newparam(:purge_acl) do
     desc "Clear all ACEs which are not explicitly defined for this resource.
     is the only implemented behavior"
-    defaultto :true
-    newvalues(:true)
+    defaultto 'true'
+    newvalues('true')
   end
 
   autorequire(:file) do
-   # Expand path may not be required here.
-   # We are already expecting file to be absolute
-   [File.expand_path(self[:file]).to_s]
+    # Expand path may not be required here.
+    # We are already expecting file to be absolute
+    [File.expand_path(self[:file]).to_s]
   end
 
   autorequire(:user) do
     self[:acl].each_with_object([]) do |ace,arr|
-      next unless ace['target'].match(/^user:(.*)/)
+      next unless ace.target.match(/^user:(.*)/)
       arr.push($1)
     end
   end
 
-  autorequire(:group) do
+  autorequire('group') do
     self[:acl].each_with_object([]) do |ace,arr|
-      next unless ace['target'].match(/^group:(.*)/)
+      next unless ace.target.match(/^group:(.*)/)
       arr.push($1)
     end
   end
