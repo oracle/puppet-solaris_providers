@@ -1,0 +1,87 @@
+---
+- :target: user:sferry
+  :perms:
+  - :read_data
+  - :write_data
+  - :append_data
+  - :read_xattr
+  - :write_xattr
+  :inheritance:
+  - :file_inherit
+  :perm_type: :allow
+- :target: user:bob
+  :perms:
+  - :read_data
+  - :write_data
+  :inheritance:
+  - :file_inherit
+  :perm_type: :allow
+- :target: group:sys
+  :perms:
+  - :read_data
+  :inheritance:
+  - :file_inherit
+  :perm_type: :allow
+- :target: user:sferry
+  :perms:
+  - :read_data
+  - :write_data
+  - :append_data
+  - :read_xattr
+  - :write_xattr
+  - :execute
+  - :delete_child
+  - :read_attributes
+  - :write_attributes
+  - :delete
+  - :read_acl
+  - :write_acl
+  - :write_owner
+  - :synchronize
+  :inheritance:
+  - :file_inherit
+  :perm_type: :deny
+- :target: group:root
+  :perms:
+  - :read_data
+  :inheritance:
+  - :file_inherit
+  - :no_propagate
+  :perm_type: :allow
+- :target: owner@
+  :perms:
+  - :read_data
+  - :write_data
+  - :append_data
+  - :read_xattr
+  - :write_xattr
+  - :execute
+  - :read_attributes
+  - :write_attributes
+  - :read_acl
+  - :write_acl
+  - :write_owner
+  - :synchronize
+  :inheritance:
+  - :absent
+  :perm_type: :allow
+- :target: group@
+  :perms:
+  - :read_xattr
+  - :execute
+  - :read_attributes
+  - :read_acl
+  - :synchronize
+  :inheritance:
+  - :absent
+  :perm_type: :allow
+- :target: everyone@
+  :perms:
+  - :read_xattr
+  - :execute
+  - :read_attributes
+  - :read_acl
+  - :synchronize
+  :inheritance:
+  - :absent
+  :perm_type: :allow

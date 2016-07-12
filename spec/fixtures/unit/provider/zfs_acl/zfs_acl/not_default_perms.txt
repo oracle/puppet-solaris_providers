@@ -1,0 +1,6 @@
+-rwx--x--x+  1 root     root           0 Jul  7 09:38 /tmp/foo
+     0:owner@:read_data/write_data/append_data/read_xattr/write_xattr/execute
+         /write_attributes/read_acl/write_acl/write_owner
+         /synchronize:allow
+     1:group@:read_xattr/execute/read_attributes/read_acl:allow
+     2:everyone@:read_xattr/execute/read_attributes/synchronize:allow
