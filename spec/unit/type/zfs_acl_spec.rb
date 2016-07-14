@@ -21,6 +21,11 @@ describe Puppet::Type.type(:zfs_acl) do
   let(:resource) { Puppet::Type.type(:zfs_acl).new(params) }
   let(:provider) { Puppet::Provider.new(resource) }
   let(:catalog) { Puppet::Resource::Catalog.new }
+  let(:acl) {
+    params.each.collect do |param|
+      Puppet::Type::ZfsAcl::Ace.new(param[:acl])
+    end
+  }
 
 
   let(:error_pattern) { /Invalid/ }
@@ -96,8 +101,7 @@ describe Puppet::Type.type(:zfs_acl) do
             "write_data", "append_data", "read_xattr", "write_xattr",
             "execute", "delete_child", "read_attributes",
             "write_attributes", "delete", "read_acl", "write_acl",
-            "write_owner", "synchronize", "list_directory",
-            "add_file", "add_subdirectory"])
+            "write_owner", "synchronize"])
         end
 
         it "modify_set" do
@@ -106,8 +110,7 @@ describe Puppet::Type.type(:zfs_acl) do
             "write_data", "append_data", "read_xattr", "write_xattr",
             "execute", "delete_child", "read_attributes",
             "write_attributes", "delete", "read_acl",
-            "synchronize", "list_directory",
-            "add_file", "add_subdirectory"])
+            "synchronize"])
         end
         it "modify_set+" do
           params[:acl][0]['perms']= ['modify_set','write_owner']

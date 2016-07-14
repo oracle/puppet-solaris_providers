@@ -15,19 +15,81 @@
 #
 
 
-
 Puppet::Type.newtype(:zfs_acl) do
   require Pathname.new(__FILE__).dirname + '../../' + 'puppet/type/zfs_acl/ace'
-
-  @doc = "Manage NFSv4 ACL Specifications and system attributes on ZFS Files.
+  @doc = <<-HEREDOC
+  Manage NFSv4 ACL Specifications on ZFS Files.
   See chmod(1), acl(7)
+
+  Simple examples:
+
+   This is a contrived example to show setting permissions equavalent to 755
+   it could be more easily acomplished via the File provider. Once any acl
+   customization is required all permissions must be managed via this provider.
+
+    zfs_acl { '/root/foo':
+      ensure => 'present',
+      acl    => [
+        {
+         'target' => 'owner@',
+         'perm_type' => 'allow',
+         'perms' => ['read_data', 'write_data', 'append_data', 'execute'],
+        },
+        {
+         'target' => 'group@',
+         'perm_type' => 'allow',
+         'perms' => ['read_data', 'execute'],
+        },
+        {
+         'target' => 'everyone@',
+         'perm_type' => 'allow',
+         'perms' => ['read_data', 'execute'],
+        },
+     ],
+    }
+
+  The following example sets permissions equavalent to 755 and also grants
+  the full set of permissions to user jack but removes the write_acl
+  permission. The *_set permissions are expended internally and applied
+  individually.
+
+    zfs_acl { '/root/foo':
+      ensure => 'present',
+      acl    => [
+        {
+          'target' => 'user:jack',
+          'perm_type' => 'deny',
+          'perms' => 'write_acl',
+        },
+        {
+          'target' => 'user:jack',
+          'perm_type' => 'allow',
+          'perms' => 'full_set',
+        },
+        {
+         'target' => 'owner@',
+         'perm_type' => 'allow',
+         'perms' => ['read_data', 'write_data', 'append_data', 'execute'],
+        },
+        {
+         'target' => 'group@',
+         'perm_type' => 'allow',
+         'perms' => ['read_data', 'execute'],
+        },
+        {
+         'target' => 'everyone@',
+         'perm_type' => 'allow',
+         'perms' => ['read_data', 'execute'],
+        },
+     ],
+    }
 
   **Autorequires:** If Puppet is managing the file of a zfs_acl resource or
   the user or group of an ACE, the zfs_acl type will autorequire them.
 
   **Note:** Use of the File provider to manage permissions in addition to this type
   may result in changes being applied at every catalog application.
-  "
+  HEREDOC
 
   ensurable
 
@@ -48,12 +110,30 @@ Puppet::Type.newtype(:zfs_acl) do
 
   newproperty(:file) do
     desc "Fully specified path to the file to be managed"
+    newvalues(/^\/.*/)
   end
 
   newproperty(:acl, :array_matching => :all) do
     def initialize(args)
       super(args)
       @ace_valid = Puppet::Type::ZfsAcl::Ace::Util
+    end
+
+    def insync?(current)
+      # We need to add default perms to @should to keep
+      # insync? working as expected
+      if provider.set_default_perms
+        @should = provider.add_default_perms(should)
+      end
+
+      return false unless current.length == should.length
+
+      # Map to_s to flatten differences between directory and file
+      # permission sets. Order matters so we can't just compare hashes
+      (0..current.length).each { |idx|
+        return false unless current[idx].to_s == should[idx].to_s
+      }
+      return true
     end
 
     desc <<-HEREDOC
@@ -66,10 +146,10 @@ Puppet::Type.newtype(:zfs_acl) do
         target        => "<target_string>",
         perms         => [<perms_array>],
         inheritance   => [<flags_array>],
-        perm_type          => <'allow'|'deny'|'audit'|'alarm'>
+        perm_type     => <'allow'|'deny'|'audit'|'alarm'>
       }
 
-      Target string: Target string includes the standard owner@, group@,
+      Target: Target string includes the standard owner@, group@,
           and everyone@ as well as the fine grained user:<username> and
           group:<groupname> targets. The usersid:, groupsid:, and sid: targets
           are not supported by this module.
@@ -81,6 +161,9 @@ Puppet::Type.newtype(:zfs_acl) do
              'read_data', 'write_data', 'append_data', 'read_xattr', 'write_xattr',
              'execute', 'delete_child', 'read_attributes', 'write_attributes',
              'delete', 'read_acl', 'write_acl', 'write_owner', 'synchronize'
+
+         Directory Permissions:
+             'list_directory', 'add_subdirectory', 'add_file'
 
          Special Sets:
              'full_set', 'modify_set', 'read_set', and 'write_set'
@@ -110,7 +193,7 @@ Puppet::Type.newtype(:zfs_acl) do
     HEREDOC
 
     munge { |value|
-      Puppet::Type::ZfsAcl::Ace.new(value,provider)
+      Puppet::Type::ZfsAcl::Ace.new(value,self)
     }
 
 
@@ -159,14 +242,17 @@ Puppet::Type.newtype(:zfs_acl) do
         fail "Invalid perm_type: #{value['perm_type']}"
       end
     }
-
-    #XXX def insync
-    #XXX delimeter
   end
 
   newparam(:set_default_perms) do
     desc <<-HEREDOC
-      Use the default set of permissions in addition to specified ACEs
+      Use the default set of permissions in addition to specified ACEs,
+      where applicable directory permissions are automatically granted
+      from the listed set.
+
+      **Note** Only explicitly defined permissions will be shown in change
+      output.
+
       Default: true
       Equavalent to:
        {
@@ -187,11 +273,11 @@ Puppet::Type.newtype(:zfs_acl) do
          perm_type  => 'allow'
        }
     HEREDOC
-    defaultto 'true'
-    newvalues('true','false')
+    defaultto :true
+    newvalues(:true,:false)
     munge { |value|
       return value if [TrueClass,FalseClass].include?(value.class)
-      value == 'true'  ? true : false
+      value == :true || value == 'true'  ? true : false
     }
   end
 

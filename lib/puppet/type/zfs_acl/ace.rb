@@ -34,8 +34,11 @@ class Puppet::Type::ZfsAcl
         read_data write_data append_data read_xattr write_xattr
         execute delete_child read_attributes write_attributes
         delete read_acl write_acl write_owner synchronize
-        list_directory add_file add_subdirectory absent
+        absent
     )
+    @dir_perms = %w( list_directory add_subdirectory add_file )
+    @read_set = %w(read_data read_acl read_attributes read_xattr)
+    @write_set = %w(write_data append_data write_attributes write_xattr)
     @target = %w( owner@ group@ everyone@ owner group everyone )
     @target_patterns = [ /^user:.+/, /^group:.+/ ]
     @perm_sets = %w( full_set modify_set read_set write_set )
@@ -43,16 +46,77 @@ class Puppet::Type::ZfsAcl
     @perm_type = %w( allow deny audit alarm )
     class << self
       attr_reader :perms, :target, :target_patterns, :perm_sets, :inheritance,
-        :perm_type, :default_perms
+        :perm_type, :default_perms, :write_set, :read_set
     end
     def self.all_perms
-      @perms + @perm_sets
+      @perms + @perm_sets + @dir_perms
+    end
+
+    def self.compact_perms(value)
+      # Use compact format for comparisons and actual application
+      # Otherwise the difference between files and directories is
+      # problematic
+
+      cperms=Array.new(14).fill('-')
+      value.each { |perm|
+        # ordering isn't strictly important but is probably useful visually
+        # for the end user rwxpdDaARWcCos
+        case perm
+        when 'read_data','list_directory'
+          cperms[0] = :r
+        when 'write_data','add_file'
+          cperms[1] = :w
+        when 'execute'
+          cperms[2] = :x
+        when 'append_data','add_subdirectory'
+          cperms[3] = :p
+        when 'delete'
+          cperms[4] = :d
+        when 'delete_child'
+          cperms[5] = :D
+        when 'read_attributes'
+          cperms[6] = :a
+        when 'write_attributes'
+          cperms[7] = :A
+        when 'read_xattr'
+          cperms[8] = :R
+        when 'write_xattr'
+          cperms[9] = :W
+        when 'read_acl'
+          cperms[10] = :c
+        when 'write_acl'
+          cperms[11] = :C
+        when 'write_owner'
+          cperms[12] = :o
+        when 'synchronize'
+          cperms[13] = :s
+        end
+      }
+      cperms
+    end
+    def self.compact_inh(value)
+      cinh=Array.new(6).fill('-')
+      value.each { |inh|
+        # There are six positions...
+        case inh
+        when 'file_inherit'
+          cinh[0] = :f
+        when 'dir_inherit'
+          cinh[1] = :d
+        when 'inherit_only'
+          cinh[2] = :i
+        when 'no_propagate'
+          cinh[3] = :n
+        end
+      }
+     cinh
     end
   end
 
   # ACE is an access control entry
   class Ace < Hash
-    def initialize(hash,provider=nil)
+    attr_reader :provider
+    def initialize(hash,resource=[])
       if hash.kind_of?(Hash)
         # do nothing, we expect a hash
       elsif hash.kind_of?(String)
@@ -66,9 +130,8 @@ class Puppet::Type::ZfsAcl
         hash[k.intern] = v
       }
 
-
       @hash=hash
-      @hash['provider'] = provider
+      @provider = (resource[:provider] rescue nil)
       @hash[:perm_type].freeze
 
       # Munge values
@@ -83,32 +146,30 @@ class Puppet::Type::ZfsAcl
       @hash[:target].freeze
 
       if @hash[:perms].include?('full_set')
-        @hash[:perms] = (@hash[:perms] + Ace::Util.perms).uniq
-        @hash[:perms] = @hash[:perms] - %w(full_set absent)
+        @hash[:perms] << Ace::Util.perms
+        @hash[:perms] = (@hash[:perms].flatten - %w(full_set absent)).uniq
       end
 
       if @hash[:perms].include?('modify_set')
-        @hash[:perms] = (@hash[:perms] +
-                         (Ace::Util.perms - ['write_acl', 'write_owner'])
-                        ).uniq
-                        @hash[:perms] = @hash[:perms] - %w(modify_set absent)
+        @hash[:perms] << Ace::Util.perms - %w(write_acl write_owner)
+        @hash[:perms] = (@hash[:perms].flatten - %w(modify_set absent)).uniq
       end
 
       if @hash[:perms].include?('read_set')
-        @hash[:perms] = (@hash[:perms] +
-                         %w(read_data read_acl read_attributes
-                       read_xattr)).uniq
-        @hash[:perms] = @hash[:perms] - ['read_set']
+        @hash[:perms] << Ace::Util.read_set
+        @hash[:perms] = (@hash[:perms].flatten - ['read_set']).uniq
       end
+
       if @hash[:perms].include?('write_set')
-        @hash[:perms] = (@hash[:perms] +
-                         %w(write_data append_data write_attributes
-               write_xattr)).uniq
-        @hash[:perms] = @hash[:perms] - ['write_set']
+        @hash[:perms] << Ace::Util.write_set
+        @hash[:perms] = (@hash[:perms].flatten - ['write_set']).uniq
       end
+
+      @hash[:inheritance] ||= ['absent']
 
       super(@hash)
     end
+
 
     # This is a class method used to generate the hash from the
     # raw acl output from ls
@@ -181,6 +242,9 @@ class Puppet::Type::ZfsAcl
 
     # Act like a hash
     def [](key)
+      if key == "provider"
+        return @provider
+      end
       @hash[key]
     end
 
@@ -194,8 +258,8 @@ class Puppet::Type::ZfsAcl
       # are empty
       _str = "%s:%s:%s:%s" % [
         target,
-        perms_to_s,
-        inheritance_to_s,
+        Ace::Util.compact_perms(perms) * "",
+        Ace::Util.compact_inh(inheritance) * "",
         perm_type
       ]
     end
@@ -215,9 +279,8 @@ class Puppet::Type::ZfsAcl
     # Return only ACE keys in the order they are found in an
     # ACE entry
     def inspect
-      hash = @hash
       return_value = [:target, :perms, :inheritance, :perm_type].collect do |key|
-        key_value = hash[key]
+        key_value = @hash[key]
         if key_value.is_a? Array
           "#{key} => #{key_value}\n"
         else
@@ -227,16 +290,5 @@ class Puppet::Type::ZfsAcl
 
       "\n { #{return_value} }"
     end
-
-    private
-
-    def perms_to_s
-      perms.index('absent') ? "" :  perms * "/"
-    end
-
-    def inheritance_to_s
-      ace['inheritance'].index('absent') ? "" :  ace['inheritance'] * "/" rescue ""
-    end
-
   end
 end

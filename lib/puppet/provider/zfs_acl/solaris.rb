@@ -62,14 +62,16 @@ Puppet::Type.type(:zfs_acl).provide(:zfs_acl) do
   end
 
   def acl
-    return @property_hash[:acl] if @property_hash[:acl]
+    return @property_hash[:acl] if @property_hash[:acl] &&
+      ! @property_hash[:acl].empty?
+
     line_expr = %r(^\d+:|^/|^:)
 
-    entries = ls("-v", @resource[:file]).
+    entries = ls("-d", "-v", @resource[:file]).
       each_line.
       each_with_object([]) do |line,arr|
       line.strip!
-      # Skip the first line of output
+      # Skip any unexpected lines
       next unless lmatch = line.match(line_expr)
 
       # lines which begin with a number are the start of an ACE
@@ -81,12 +83,11 @@ Puppet::Type.type(:zfs_acl).provide(:zfs_acl) do
       end
       end
 
-    # When applied these entries must be reversed so the last
-    # entry is first
     entries.each_with_object(@property_hash[:acl]=[]) do |ace,arr|
       arr.push(
         Puppet::Type::ZfsAcl::Ace.new(
-          Puppet::Type::ZfsAcl::Ace.split_ace(ace)
+          Puppet::Type::ZfsAcl::Ace.split_ace(ace),
+          @resource
         )
       )
     end
@@ -95,18 +96,21 @@ Puppet::Type.type(:zfs_acl).provide(:zfs_acl) do
   def acl=(value)
     args=[@resource[:file]]
 
+    if @resource[:set_default_perms] == true
+      value = add_default_perms(value)
+    end
 
     # we are always doing this
     if @resource[:purge_acl]
       str="A="
-      str << value.reverse.map { |ace| ace.to_s }.join(",")
+      str << value.map { |ace| ace.to_s }.join(",")
       args.unshift str
     end
 
     chmod(*args)
 
-    # Refresh the ACL if a change was made
-    @property_hash.delete(:acl) && acl
+    # Refresh the ACL; a change was made
+    @property_hash[:acl] = [] && acl
   end
 
   def merge_acl
@@ -114,10 +118,6 @@ Puppet::Type.type(:zfs_acl).provide(:zfs_acl) do
   end
 
   def create
-    if @resource[:set_default_perms] == true
-      add_default_perms
-    end
-
       self.acl= @resource[:acl]
       return nil
   end
@@ -184,7 +184,7 @@ Puppet::Type.type(:zfs_acl).provide(:zfs_acl) do
     return false
   end
 
-  def add_default_perms
+  def add_default_perms(value=@resource[:acl])
     owner_found = false
     group_found = false
     everyone_found = false
@@ -193,13 +193,16 @@ Puppet::Type.type(:zfs_acl).provide(:zfs_acl) do
     _acl = []
     _default = []
     # Add the default permission set to the first acl entry for owner, everyone and group
-    @resource[:acl].each { |ace|
-      next unless ace.perm_type == 'allow'
+    value.each { |ace|
+      unless ace.perm_type == 'allow'
+        _acl.push(ace)
+        next
+      end
       case ace.target
       when "owner@"
         owner_found = true
         ace.perms=(ace.perms + Ace::Util.default_perms['owner']).uniq
-        _default[2] = ace
+        _default[0] = ace
       when "group@"
         group_found = true
         ace.perms=(ace.perms + Ace::Util.default_perms['group']).uniq
@@ -207,7 +210,7 @@ Puppet::Type.type(:zfs_acl).provide(:zfs_acl) do
       when "everyone@"
         everyone_found = true
         ace.perms=(ace.perms + Ace::Util.default_perms['everyone']).uniq
-        _default[0] = ace
+        _default[2] = ace
       else
         _acl.push ace
       end
@@ -215,7 +218,7 @@ Puppet::Type.type(:zfs_acl).provide(:zfs_acl) do
 
     # Order here is also important or it will never match the default
     unless owner_found
-    _default[2] = Ace.new({ 'target' => 'owner',
+    _default[0] = Ace.new({ 'target' => 'owner',
       'perms' => Ace::Util.default_perms['owner'], 'perm_type' => 'allow' },
                 provider)
     end
@@ -225,14 +228,12 @@ Puppet::Type.type(:zfs_acl).provide(:zfs_acl) do
                 provider)
     end
     unless everyone_found
-    _default[0] = Ace.new({ 'target' => 'everyone',
+    _default[2] = Ace.new({ 'target' => 'everyone',
       'perms' => Ace::Util.default_perms['everyone'], 'perm_type' => 'allow' },
                 provider)
     end
 
     # Replace the ACL with our updated version
-    @resource[:acl] = (_default + _acl).map { |ace| ace.to_h }
-
-    nil
+    _acl + _default
   end
 end
