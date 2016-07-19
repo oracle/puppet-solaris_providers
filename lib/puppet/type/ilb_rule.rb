@@ -16,9 +16,12 @@
 
 
 require File.expand_path(File.join(File.dirname(__FILE__), '..','..','puppet_x/oracle/solaris_providers/util/validation.rb'))
+require File.expand_path(File.join(File.dirname(__FILE__), '..','..','puppet_x/oracle/solaris_providers/util/ilb.rb'))
+require 'ipaddr'
 
 Puppet::Type.newtype(:ilb_rule) do
   @doc = "Manage Solaris Integrated Load Balancer (ILB) rule configuration"
+  validator = PuppetX::Oracle::SolarisProviders::Util::Validation.new
 
   ensurable
 
@@ -33,8 +36,8 @@ Puppet::Type.newtype(:ilb_rule) do
   newproperty(:vip) do
     desc "(Virtual) destination IP address"
 
-    validation do |value|
-      fail "Invalid IP #{value}" unless validation.valid_ip?(value)
+    validate do |value|
+      fail "Invalid IP #{value}" unless validator.valid_ip?(value)
     end
   end
 
@@ -42,6 +45,11 @@ Puppet::Type.newtype(:ilb_rule) do
     desc "Port number or name, for example, telnet or dns. A port can be
       specified by port number or symbolic name (as in /etc/services).
       Port number ranges are also supported 'port[-port]'."
+
+      validate do |value|
+        PuppetX::Oracle::SolarisProviders::Util::Ilb.valid_portspec?(value)
+      end
+
   end
 
   newproperty(:protocol) do
@@ -50,27 +58,28 @@ Puppet::Type.newtype(:ilb_rule) do
     newvalues(:tcp,:udp)
   end
 
-  newproperty(:test) do
-    desc "UDP, TCP, external method (script or binary). An external method
-      should be specified with a full path name."
-      newvalues(:tcp,:udp,%r(^/.+))
-  end
-
-  newproperty(:default_ping) do
-    desc "Execute default ping test before high layer health check tests.
-    Default: true"
-    defaultto :true
-    newvalues(:true,:false)
-  end
-
   newproperty(:persistent) do
-    desc "Create the rule as persistent (sticky). The default is that
-    the rule exists only for the current session (false).
+    # It's not fully clear why one must use -p when using pmask, it's just what
+    # it says in the docs
+    desc "Create a persistent rule.
+    When provided a pmask value this enables session persistence
+    Default: false
 
-    Optionally apply a pmask(stickiness). The argument is a prefix
-    length in CIDR notation; that is, 0–32 for IPv4 and 0–128 for IPv6"
+
+    Pmask: The argument is a prefix length in CIDR notation; that is, 0–32 for IPv4 and 0–128 for IPv6.
+    The larger the mask the more of the IP address is used to generate the session mapping.
+    i.e. An IPv4 address has 32 bits
+    "
     defaultto :false
-    newvalues(:false,:true,/\d\+/)
+
+    newvalues(:true,:false,/^\d+$/)
+
+    validate do |value|
+      # Let newvalues check general input first
+      super(value)
+      next unless value.match(/^\d+$/)
+      fail "Invalid pmask #{value}" unless (0..128).include?(value.to_i)
+    end
   end
 
   #
@@ -93,6 +102,19 @@ Puppet::Type.newtype(:ilb_rule) do
     desc "Required for full NAT only. Specifies the IP address range
     to use as the proxy source address range. The range is limited to
     ten IP addresses."
+
+    validate do |value|
+      ips = value.split('-')
+      fail "Invalid IP range #{value}" if ips.length > 2
+      ips.each { |ip|
+        fail "Invalid IP #{ip}" unless validator.valid_ip?(ip)
+      }
+      if ips.length == 2
+        if (range = (IPAddr.new(ips[0])..IPAddr.new(ips[1])).to_a.length) > 10
+          fail "Invalid range > 10 addresses (#{range}) in range #{value}"
+        end
+      end
+    end
   end
 
   newproperty(:servergroup) do
@@ -100,6 +122,7 @@ Puppet::Type.newtype(:ilb_rule) do
     specified by the incoming packet spec. Specify a single server group as
     target. The server group must already have been created. Any matching
     ilb_servergroup resource will be auto required"
+    newvalues(/^\p{Alnum}+$/)
   end
 
   #
@@ -108,8 +131,11 @@ Puppet::Type.newtype(:ilb_rule) do
 
   newproperty(:hc_name) do
     desc "Specifies the name of a predefined health check method"
+    newvalues(/^\p{Alnum}+$/)
   end
 
+  # With dependencies enforcing resource existence it may be possible
+  # to check if this port is indeed valid in the server group
   newproperty(:hc_port) do
     desc "Specifies the port(s) for the HC test program
     to check. The value can be keywords ALL or ANY, or a specific port number
@@ -132,7 +158,7 @@ Puppet::Type.newtype(:ilb_rule) do
   state remains stable until the connection has been idle for the period
   nat-timeout.
     HEREDOC
-    newvalue(/^\d+$/)
+    newvalues(/^\d+$/)
   end
 
   newproperty(:nat_timeout) do
@@ -151,5 +177,11 @@ Puppet::Type.newtype(:ilb_rule) do
     newvalues(/^\d+$/)
   end
 
-  # XXX autorequire
+  autorequire(:ilb_servergroup) do
+    [self[:servergroup]]
+  end
+
+  autorequire(:ilb_healthcheck) do
+    [self[:hc_name]]
+  end
 end

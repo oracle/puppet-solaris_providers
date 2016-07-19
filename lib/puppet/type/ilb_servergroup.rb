@@ -16,6 +16,7 @@
 
 
 require File.expand_path(File.join(File.dirname(__FILE__), '..','..','puppet_x/oracle/solaris_providers/util/validation.rb'))
+require File.expand_path(File.join(File.dirname(__FILE__), '..','..','puppet_x/oracle/solaris_providers/util/ilb.rb'))
 require 'puppet/property/list'
 
 Puppet::Type.newtype(:ilb_servergroup) do
@@ -67,25 +68,7 @@ Puppet::Type.newtype(:ilb_servergroup) do
         fail "Invalid host or IP #{_host}"
       end
       if _port && !_port.empty?
-        # Check port ranges
-        if _port.match(/\d+-\d+/)
-          _port.split('-').each { |prt|
-            unless prt.match(/^\d+$/)
-              fail "Invalid port spec #{_port} -> #{prt}"
-            end
-            unless (1...65535).include?(prt.to_i)
-              fail "Invalid port #{prt} out of range 1-65535"
-            end
-          }
-        elsif _port.match(/^\d+$/)
-          # Check purely numeric ports
-          unless (1...65535).include?(_port.to_i)
-            fail "Invalid port #{_port} out of range 1-65535"
-          end
-        elsif !_port.match(/^\p{Alnum}+$/)
-          # Sort of check other options
-            fail "Invalid port #{_port} is not numeric or alpha numeric"
-        end
+        PuppetX::Oracle::SolarisProviders::Util::Ilb.valid_portspec?(_port)
       end
     end
   end
