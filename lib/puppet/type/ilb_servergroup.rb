@@ -16,6 +16,7 @@
 
 
 require File.expand_path(File.join(File.dirname(__FILE__), '..','..','puppet_x/oracle/solaris_providers/util/validation.rb'))
+require 'puppet/property/list'
 
 Puppet::Type.newtype(:ilb_servergroup) do
   @doc = "Manage Solaris Integrated Load Balancer (ILB) server group Gconfiguration."
@@ -39,24 +40,52 @@ Puppet::Type.newtype(:ilb_servergroup) do
     specified, a number in the range 1–65535 is used.
     HEREDOC
 
-    # Only validating the hostspec here
+    # Only validating the hostspec and numerical portspec
+    # string portspecs are passed through
     validate do |value|
       value.strip!
       _host = ""
       _port = ""
       if idx = value.index(']:')
+        # IPv6 hostspec and port
         _host = value.slice(1,idx-1)
         _port = value.split(":")[-1]
 
         # Make sure we used all the characters
-        if idx.length != _host.length + _port.length + 3
-          fail "Could not consume entire value: #{value} got #{_host} #{port}"
+        if value.length != _host.length + _port.length + 3
+          fail "Invalid spec could not consume entire value: #{value} got #{_host} #{_port}"
         end
+      elsif value[-1] == ']'
+        # IPv6 hostspec only
+        _host = value.tr('[]','')
       else
-        _host = value.split(":")[0]
+        # IPv4 hostspec and maybe portspec
+        fail "Invalid hostspec: #{value}. IPv6 addresses must be wrapped in []s" if value.split(':').length > 2
+        _host,_port = value.split(":")
       end
       unless ( validator.valid_hostname?(_host) || validator.valid_ip?(_host) )
         fail "Invalid host or IP #{_host}"
+      end
+      if _port && !_port.empty?
+        # Check port ranges
+        if _port.match(/\d+-\d+/)
+          _port.split('-').each { |prt|
+            unless prt.match(/^\d+$/)
+              fail "Invalid port spec #{_port} -> #{prt}"
+            end
+            unless (1...65535).include?(prt.to_i)
+              fail "Invalid port #{prt} out of range 1-65535"
+            end
+          }
+        elsif _port.match(/^\d+$/)
+          # Check purely numeric ports
+          unless (1...65535).include?(_port.to_i)
+            fail "Invalid port #{_port} out of range 1-65535"
+          end
+        elsif !_port.match(/^\p{Alnum}+$/)
+          # Sort of check other options
+            fail "Invalid port #{_port} is not numeric or alpha numeric"
+        end
       end
     end
   end
