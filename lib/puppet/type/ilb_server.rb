@@ -20,19 +20,27 @@ require File.expand_path(File.join(File.dirname(__FILE__), '..','..','puppet_x/o
 require 'puppet/property/list'
 
 Puppet::Type.newtype(:ilb_server) do
-  @doc = "Manage Solaris Integrated Load Balancer (ILB) back end server configuration.
-  Backend servers can only belong to one servergroup and are internally identified as
+  @doc = <<-HEREDOC
+  Manage Solaris Integrated Load Balancer (ILB) back end server configuration.
+  Backend servers can only belong to one server group and are internally identified as
   the combination of server and server group.
-  "
+  HEREDOC
+
   validator = PuppetX::Oracle::SolarisProviders::Util::Validation.new
 
   ensurable
 
-  # XXX add title patterns
+  def self.title_patterns
+    [
+      [%r(((.+)\|(.+)\|(.+))),[:name,:servergroup,:server,:port]],
+      [%r(((.+)\|(.+))),[:name,:servergroup,:server]],
+      [%r(.+),[:name]]
+    ]
+  end
 
   newparam(:name, :namevar => true) do
     desc <<-HEREDOC
-    Name for the server, The name of the server definition is aribitrairy.
+    Name for the server, The name of the server definition is arbitrary.
     ** Title Patterns **
     Strings which do not match the pattern will only populate the name
     Specific patterns will be split to auto populate fields
@@ -50,8 +58,6 @@ Puppet::Type.newtype(:ilb_server) do
     Server is a hostspec in the format hostname or IP address.
     HEREDOC
 
-    # Only validating the hostspec and numerical portspec
-    # string portspecs are passed through
     validate do |value|
       value.strip!
       if value[-1] == ']'
@@ -68,12 +74,15 @@ Puppet::Type.newtype(:ilb_server) do
 
   newproperty(:port) do
     desc <<-HEREDOC
-    Port is the service name or port number to use for the backend server.
+    Port is the service name or port number to use for the back end server.
 
-    Port is a service name, port number, or range port-port. If the port number is not
-    specified, a number in the range 1–65535 is used.
+    Port is a service name, port number, or range port-port. If the port
+    number is not specified, a number in the range 1–65535 is used.
 
-    Service names are not validated.
+    ** Note **
+    The use of numerical ports is recommended. Service names are not
+    validated at compilation time and may fail on individual nodes.
+
     HEREDOC
     validate do |value|
         PuppetX::Oracle::SolarisProviders::Util::Ilb.valid_portspec?(value)
@@ -82,9 +91,22 @@ Puppet::Type.newtype(:ilb_server) do
 
   newproperty(:servergroup) do
     desc <<-HEREDOC
-    Servergroup is the name of the servergroup this server definition belongs to
+    Servergroup is the name of the server group this server definition
+    belongs to. Servers may be defined in multiple server groups.
+
+    ** Autorequires **
+    Server group will automatically require any matching ilb_servergroup
+    resource.
     HEREDOC
+
+    validate do |value|
+      fail "Must be defined" unless value
+      fail "Must be defined" unless value.match(/\p{Alnum}/)
+    end
   end
 
-  # XXX autorequire servergroup
+  autorequire(:ilb_servergroup) do
+    [self[:servergroup]]
+  end
+
 end

@@ -7,7 +7,7 @@ describe Puppet::Type.type(:ilb_server) do
   # before it is generated
   let(:params) do
     {
-      :name => "sg1:localhost:2000-2100",
+      :name => "sg1|localhost|2000-2100",
       :ensure => :present
     }
       end
@@ -31,6 +31,30 @@ describe Puppet::Type.type(:ilb_server) do
         expect(described_class.attrtype(prop)).to be == :property
       end
     }
+  end
+
+  describe "title patterns" do
+    it "parses sg1" do
+      params[:name] = 'sg1'
+      expect(resource[:name]).to eq 'sg1'
+      expect(resource[:servergroup]).to eq nil
+      expect(resource[:server]).to eq nil
+      expect(resource[:port]).to eq nil
+    end
+    it "parses sg1|localhost" do
+      params[:name] = 'sg1|localhost'
+      expect(resource[:name]).to eq 'sg1|localhost'
+      expect(resource[:servergroup]).to eq 'sg1'
+      expect(resource[:server]).to eq 'localhost'
+      expect(resource[:port]).to eq nil
+    end
+    it "parses sg1|localhost|2000-2100" do
+      params[:name] = 'sg1|localhost|2000-2100'
+      expect(resource[:name]).to eq 'sg1|localhost|2000-2100'
+      expect(resource[:servergroup]).to eq 'sg1'
+      expect(resource[:server]).to eq 'localhost'
+      expect(resource[:port]).to eq '2000-2100'
+    end
   end
 
   describe "parameter validation" do
@@ -87,5 +111,28 @@ describe Puppet::Type.type(:ilb_server) do
         end
       end
     end # Rejects Port
+  end
+  describe "autorequire" do
+    context "servergroup" do
+      def add_servergroup(name="sg1")
+        sg = Puppet::Type.type('ilb_servergroup').new(:name => name)
+        catalog.add_resource sg
+        sg
+      end
+      it "does not require servergroup when no matching resource exists" do
+        add_servergroup("sg2")
+        catalog.add_resource resource
+        expect(resource.autorequire).to be_empty
+      end
+      it "requires servergroup when matching resource exists" do
+        # dafault params use sg1 for all examples
+        sg = add_servergroup
+        catalog.add_resource resource
+        reqs = resource.autorequire
+        expect(reqs.count).to eq 1
+        expect(reqs[0].source).to eq sg
+        expect(reqs[0].target).to eq resource
+      end
+    end
   end
 end
