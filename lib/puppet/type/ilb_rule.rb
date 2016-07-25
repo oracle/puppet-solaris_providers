@@ -42,9 +42,15 @@ Puppet::Type.newtype(:ilb_rule) do
   end
 
   newproperty(:port) do
-    desc "Port number or name, for example, telnet or dns. A port can be
-      specified by port number or symbolic name (as in /etc/services).
-      Port number ranges are also supported 'port[-port]'."
+    desc <<-HEREDOC
+    Port number or name, for example, telnet or dns. A port can be
+    specified by port number or symbolic name (as in /etc/services).
+    Port number ranges are also supported 'port[-port]'.
+
+    ** Note **
+    The use of numerical ports is recommended. Service names are not
+    validated at compilation time and may fail on individual nodes.
+    HEREDOC
 
       validate do |value|
         PuppetX::Oracle::SolarisProviders::Util::Ilb.valid_portspec?(value)

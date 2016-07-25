@@ -199,7 +199,6 @@ describe Puppet::Type.type(:zfs_acl).provider(:zfs_acl) do
           params[:set_default_perms] = false
         end
         it "creates a simple ACL" do
-          params[:directory] = true
           described_class.expects(:chmod).with(
             'A=everyone@:r-------------:------:allow', params[:file])
           expect(provider.create).to eq nil
