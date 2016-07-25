@@ -14,9 +14,8 @@
 # limitations under the License.
 #
 
-#XXX this is now ilb_server
-Puppet::Type.type(:ilb_servergroup).provide(:ilb_servergroup) do
-  @doc = "Provider to manage Solaris Integrated Load Balancer (ILB) server group configuration."
+Puppet::Type.type(:ilb_server).provide(:ilb_server) do
+  @doc = "Provider to manage Solaris Integrated Load Balancer (ILB) server configuration."
   confine :operatingsystem => [:solaris]
   defaultfor :osfamily => :solaris, :kernelrelease => ['5.11', '5.12']
   commands :ilbadm => '/usr/sbin/ilbadm'
@@ -24,41 +23,59 @@ Puppet::Type.type(:ilb_servergroup).provide(:ilb_servergroup) do
   mk_resource_methods
 
   def self.instances
-    groups=Hash.new(Hash.new())
+    groups=Hash.new { |h,k| h[k] = {} }
 
-    ilbadm("show-servergroup","-o","all","-p").each_line do |line|
-      name, sid, minp, maxp, ip = line.split
-      groups=[name][sid] = {
-        :ip => ip,
+    ilbadm("show-servergroup", "-o","SGNAME,SERVERID,MINPORT,MAXPORT,IP_ADDRESS", "-p").each_line { |line|
+      sgname, sid, minp, maxp, ip = line.strip.split(":",5)
+      groups[sgname][sid] = {
+        # colons in IPv6 are esacped with \
+        :ip => ip.tr('\\',''),
         :minp => (minp != '--' ? minp : nil),
         :maxp => (maxp != '--' ? maxp : nil),
+        :ensure => :present,
+        :enabled => :unassigned
       }
-    end
+    }
 
-    ilbadm("show-server","-o","servergroup,serverid,status","-p").each_line do |line|
-      name,sid,status = line.split
-      groups=[name][sid][:status] = status
-    end
+    # Enabled/Disabled in only available for servers assigned to rules
+    # Only entries assigned to rules are returned by show-server
+    ilbadm("show-server","-o","servergroup,serverid,status", "-p").each_line { |line|
+      sgname,sid,status = line.strip.split(":")
+      if status == 'D'
+        groups[sgname][sid][:enabled] = :false
+      else
+        groups[sgname][sid][:enabled] = :true
+      end
+    }
 
-    return groups.each_pair.collect { |name,srv_hsh|
-      server = srv_hsh.each_value.collect { |srv|
+    servers=[]
+    groups.each_pair { |sgname,srv_hsh|
+      srv_hsh.each_pair.collect { |sid,srv|
         # This could create a server resource to support
         # individually enabling/disabling servers in a more
         # granular way
 
         # Port is optional, build it up as needed
-        port = ""
-        if minp
-          str << ":" << minp
-          if maxp && maxp != minp
-            str << "-" << maxp
+        port = nil
+        if srv[:minp]
+          port = srv[:minp]
+          if srv[:maxp] && srv[:maxp] != srv[:minp]
+            port << "-" << srv[:maxp]
           end
         end
 
-        "%s%s" * [srv[:ip], port]
+        servers.push(new(
+          :name => [sgname,srv[:ip],port] * "|",
+          :server => srv[:ip],
+          :port => port,
+          :servergroup => sgname,
+          :ensure => srv[:ensure],
+          :enabled => srv[:enabled],
+          :sid => sid)
+                    )
       }
-      new(:name => name, :server => server.join(","), :ensure => :present)
     }
+    return servers
   end
 
   def self.prefetch(resources)
@@ -70,31 +87,18 @@ Puppet::Type.type(:ilb_servergroup).provide(:ilb_servergroup) do
     end
   end
 
+  def exists?
+    @property_hash[:ensure] == @resource[:ensure]
+  end
+
   def create
-    ilbadm("create-servergroup", "-s",
-           "server=" << @resource[:server].join(","),
-           @resource[:name])
+    ilbadm("add-server", "-s", "server=#{@resource[:server]}",
+           @resource[:servergroup])
     nil
   end
 
   def destroy
-     ilbadm("delete-servergroup", @resource[:name])
-     nil
-  end
-
-  def server=(value)
-    unless (remove = server - @resource[:server]).empty?
-      # is - should
-      ilbadm("remove-server", "-s",
-             "server=" << remove.join(","),
-             @resource[:name])
-    end
-    unless (add = @resource[:server] - server).empty?
-      # should - is
-      ilbadm("add-server", "-s",
-             "server=" << add.join(","),
-             @resource[:name])
-    end
-    nil
+    ilbadm("remove-server", "-s", "server=#{@resource[:sid]}",
+           @resource[:servergroup])
   end
 end

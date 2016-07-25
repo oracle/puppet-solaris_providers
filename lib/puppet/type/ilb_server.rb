@@ -24,6 +24,10 @@ Puppet::Type.newtype(:ilb_server) do
   Manage Solaris Integrated Load Balancer (ILB) back end server configuration.
   Backend servers can only belong to one server group and are internally identified as
   the combination of server and server group.
+
+  ** Note **
+  Creation of server groups without assigned rules will result in catalog
+  changes for every run as puppet tries to enable the server.
   HEREDOC
 
   validator = PuppetX::Oracle::SolarisProviders::Util::Validation.new
@@ -48,8 +52,6 @@ Puppet::Type.newtype(:ilb_server) do
       <servergroup>|<server>|<port>
     HEREDOC
   end
-
-  #XXX ensure present, absent, disabled, enabled
 
   newproperty(:server) do
     desc <<-HEREDOC
@@ -103,6 +105,17 @@ Puppet::Type.newtype(:ilb_server) do
       fail "Must be defined" unless value
       fail "Must be defined" unless value.match(/\p{Alnum}/)
     end
+  end
+
+  newproperty(:enabled) do
+    desc "Should this server be enabled.
+    If this server is a member of an unassigned servergroup the value
+    will be unassigned"
+    newvalues(:true,:false,:unassigned)
+  end
+
+  newparam(:sid) do
+    desc "System generated ServerID"
   end
 
   autorequire(:ilb_servergroup) do

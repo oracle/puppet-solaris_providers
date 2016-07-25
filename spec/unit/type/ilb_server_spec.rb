@@ -26,7 +26,7 @@ describe Puppet::Type.type(:ilb_server) do
   end
 
   describe "has property" do
-    [ :server, :port ].each { |prop|
+    [ :server, :port, :enabled ].each { |prop|
       it prop do
         expect(described_class.attrtype(prop)).to be == :property
       end
