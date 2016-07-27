@@ -48,7 +48,7 @@ describe Puppet::Type.type(:ilb_servergroup).provider(:ilb_servergroup) do
   end
   describe ".create" do
     it "creates a server group" do
-      described_class.expects(:ilbadm).with('create-servergroup', '-s', params[:name])
+      described_class.expects(:ilbadm).with('create-servergroup', params[:name])
       expect(provider.create).to eq nil
     end
   end

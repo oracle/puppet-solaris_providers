@@ -30,7 +30,7 @@ Puppet::Type.type(:ilb_servergroup).provide(:ilb_servergroup) do
 
   def self.prefetch(resources)
     _instances = instances
-    resources.each_pair do |name|
+    resources.keys.each do |name|
       if provider = _instances.find { |_resource| _resource.name == name }
         resources[name].provider = provider
       end
@@ -43,12 +43,14 @@ Puppet::Type.type(:ilb_servergroup).provide(:ilb_servergroup) do
 
   def create
     # This creates an empty group ilb_server populates it
-    ilbadm("create-servergroup", "-s", @resource[:name])
+    ilbadm("create-servergroup", @resource[:name])
+    @property_hash[:ensure] = :present
     nil
   end
 
   def destroy
      ilbadm("delete-servergroup", @resource[:name])
+     @property_hash[:ensure] = :absent
      nil
   end
 end
