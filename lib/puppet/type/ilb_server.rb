@@ -36,8 +36,8 @@ Puppet::Type.newtype(:ilb_server) do
 
   def self.title_patterns
     [
-      [%r(((.+)\|(.+)\|(.+))),[:name,:servergroup,:server,:port]],
-      [%r(((.+)\|(.+))),[:name,:servergroup,:server]],
+      [%r((^(.+)\|(.+)\|(.+))$),[:name,:servergroup,:server,:port]],
+      [%r((^(.+)\|(.+))$),[:name,:servergroup,:server]],
       [%r(.+),[:name]]
     ]
   end
@@ -60,9 +60,18 @@ Puppet::Type.newtype(:ilb_server) do
     Server is a hostspec in the format hostname or IP address.
     HEREDOC
 
+    munge do |value|
+      return value if value[0] == '['
+      if validator.valid_ipv6?(value)
+        value.insert(0,'[')
+        value.insert(-1,']')
+      end
+      value
+    end
+
     validate do |value|
       value.strip!
-      if value[-1] == ']'
+      if value[0] == '['
         # IPv6 hostspec only
         _host = value.tr('[]','')
       else
@@ -110,12 +119,14 @@ Puppet::Type.newtype(:ilb_server) do
   newproperty(:enabled) do
     desc "Should this server be enabled.
     If this server is a member of an unassigned servergroup the value
-    will be unassigned"
+    will be unassigned.
+
+    **Note:** It it not possible to create a sever in the disabled state."
     newvalues(:true,:false,:unassigned)
   end
 
   newparam(:sid) do
-    desc "System generated ServerID"
+    desc "System generated ServerID. Value is ignored if manually specified"
   end
 
   autorequire(:ilb_servergroup) do

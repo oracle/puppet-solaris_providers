@@ -55,6 +55,20 @@ describe Puppet::Type.type(:ilb_server) do
       expect(resource[:server]).to eq 'localhost'
       expect(resource[:port]).to eq '2000-2100'
     end
+    it "parses sg1|127.0.0.1|2000-2100" do
+      params[:name] = 'sg1|127.0.0.1|2000-2100'
+      expect(resource[:name]).to eq 'sg1|127.0.0.1|2000-2100'
+      expect(resource[:servergroup]).to eq 'sg1'
+      expect(resource[:server]).to eq '127.0.0.1'
+      expect(resource[:port]).to eq '2000-2100'
+    end
+    it "parses sg1|fe80::3e07:54ff:fe53:c704|80" do
+      params[:name] = 'sg1|fe80::3e07:54ff:fe53:c704|80'
+      expect(resource[:name]).to eq 'sg1|fe80::3e07:54ff:fe53:c704|80'
+      expect(resource[:servergroup]).to eq 'sg1'
+      expect(resource[:server]).to eq '[fe80::3e07:54ff:fe53:c704]'
+      expect(resource[:port]).to eq '80'
+    end
   end
 
   describe "parameter validation" do

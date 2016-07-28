@@ -27,6 +27,7 @@ Puppet::Type.type(:ilb_server).provide(:ilb_server) do
 
     ilbadm("show-servergroup", "-o","SGNAME,SERVERID,MINPORT,MAXPORT,IP_ADDRESS", "-p").each_line { |line|
       sgname, sid, minp, maxp, ip = line.strip.split(":",5)
+      ip.insert(0,'[').insert(-1,']') if ip.index(':')
       groups[sgname][sid] = {
         # colons in IPv6 are esacped with \
         :ip => ip.tr('\\',''),
@@ -51,10 +52,6 @@ Puppet::Type.type(:ilb_server).provide(:ilb_server) do
     servers=[]
     groups.each_pair { |sgname,srv_hsh|
       srv_hsh.each_pair.collect { |sid,srv|
-        # This could create a server resource to support
-        # individually enabling/disabling servers in a more
-        # granular way
-
         # Port is optional, build it up as needed
         port = nil
         if srv[:minp]
@@ -80,25 +77,35 @@ Puppet::Type.type(:ilb_server).provide(:ilb_server) do
 
   def self.prefetch(resources)
     _instances = instances
-    resources.each_pair do |name|
+    resources.keys.each do |name|
       if provider = _instances.find { |_resource| _resource.name == name }
         resources[name].provider = provider
       end
     end
   end
 
+  def enabled=(value)
+    # Use property sid, not resource. User cannot specify sid
+    if value == :true
+      ilbadm("enable-server", sid)
+    elsif value == :false
+      ilbadm("disable-server", sid)
+    end
+  end
+
+
   def exists?
-    @property_hash[:ensure] == @resource[:ensure]
+    @property_hash[:ensure] == :present
   end
 
   def create
-    ilbadm("add-server", "-s", "server=#{@resource[:server]}",
+    ilbadm("add-server", "-s", "server=#{@resource[:server]}:#{@resource[:port]}",
            @resource[:servergroup])
     nil
   end
 
   def destroy
-    ilbadm("remove-server", "-s", "server=#{@resource[:sid]}",
+    ilbadm("remove-server", "-s", "server=#{sid}",
            @resource[:servergroup])
   end
 end
