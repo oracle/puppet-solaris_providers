@@ -70,5 +70,5 @@ These modules were created for use on Oracle Solaris 11 and 12.
 ## Development
 
 Contributors should issue pull requests via Github.  See the project page at:
-https://github.com/oracle/puppet-module
+https://github.com/oracle/puppet-solaris_providers
 
