@@ -19,19 +19,7 @@ Puppet::Type.newtype(:ilb_servergroup) do
   ensurable
 
   newparam(:name, :namevar => true) do
-    desc "Name for the server group. Name automatically populates servergroup"
+    desc "Name for the server group."
   end
 
-  newproperty(:servergroup) do
-    desc <<-HEREDOC
-    Name of the servergroup
-
-    ** Note **
-    * Attempts to remove a server group associated with an existing rule will fail.
-    HEREDOC
-
-    validate do |value|
-      return false unless value.match(/^\p{Alnum}+$/)
-    end
-  end
 end

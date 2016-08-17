@@ -112,7 +112,7 @@ Puppet::Type.newtype(:ilb_server) do
 
     validate do |value|
       fail "Must be defined" unless value
-      fail "Must be defined" unless value.match(/\p{Alnum}/)
+      fail "Must be defined" unless value.match(/[\p{Alnum}_]+/)
     end
   end
 
