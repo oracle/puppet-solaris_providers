@@ -20,13 +20,20 @@ require File.expand_path(File.join(File.dirname(__FILE__), '..','..','puppet_x/o
 require 'ipaddr'
 
 Puppet::Type.newtype(:ilb_rule) do
-  @doc = "Manage Solaris Integrated Load Balancer (ILB) rule configuration"
+  @doc = "Manage Solaris Integrated Load Balancer (ILB) rule configuration.
+  Existing rules cannot be modified they will be removed and re-created"
+
   validator = PuppetX::Oracle::SolarisProviders::Util::Validation.new
 
   ensurable
 
   newparam(:name, :namevar => true) do
     desc "Name for the ilb rule"
+  end
+
+  newproperty(:enabled) do
+    desc "Indicates if the rule should be enabled or disabled"
+    newvalues(:true,:false)
   end
 
   #
@@ -78,12 +85,12 @@ Puppet::Type.newtype(:ilb_rule) do
     "
     defaultto :false
 
-    newvalues(:true,:false,/^\d+$/)
+    newvalues(:true,:false,%r(/\d+$))
 
     validate do |value|
       # Let newvalues check general input first
       super(value)
-      next unless value.match(/^\d+$/)
+      next unless value.match(%r(/\d+$))
       fail "Invalid pmask #{value}" unless (0..128).include?(value.to_i)
     end
   end
@@ -182,6 +189,16 @@ Puppet::Type.newtype(:ilb_rule) do
     removed. The default is 60."
     newvalues(/^\d+$/)
   end
+
+  # Top level post parameter validation
+  validate {
+    # Skip validation if there is no catalog
+    # i.e. puppet resource ilb_rule
+    next if @cagtalog == nil
+    [:vip, :port, :lbalg, :topo_type, :servergroup].each do |thing|
+      fail("#{thing} must be defined") unless self[thing]
+    end
+  }
 
   autorequire(:ilb_servergroup) do
     [self[:servergroup]]
