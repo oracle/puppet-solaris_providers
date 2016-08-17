@@ -230,7 +230,7 @@ describe Puppet::Type.type(:ilb_rule) do
     }
     [:persistent].each { |type|
       context "accepts #{type}" do
-        %w(true false 0 128).each do |thing|
+        %w(true false /0 /128).each do |thing|
           it thing.inspect do
             params[type] = thing
             expect { resource }.not_to raise_error
@@ -238,7 +238,7 @@ describe Puppet::Type.type(:ilb_rule) do
         end
       end
       context "rejects #{type}" do
-        %w(yes no 129).each do |thing|
+        %w(yes no /129).each do |thing|
           it thing.inspect do
             params[type] = thing
             expect { resource }.to raise_error(Puppet::Error, error_pattern)
@@ -262,6 +262,27 @@ describe Puppet::Type.type(:ilb_rule) do
       it "requires servergroup when matching resource exists" do
         # dafault params use sg1 for all examples
         sg = add_servergroup
+        catalog.add_resource resource
+        reqs = resource.autorequire
+        expect(reqs.count).to eq 1
+        expect(reqs[0].source).to eq sg
+        expect(reqs[0].target).to eq resource
+      end
+    end
+    context "server" do
+      def add_server(name="sg1|10.1.1.3|21")
+        sg = Puppet::Type.type('ilb_server').new(:name => name)
+        catalog.add_resource sg
+        sg
+      end
+      it "does not require server when no matching resource exists" do
+        add_server("sg2|10.1.1.3|21")
+        catalog.add_resource resource
+        expect(resource.autorequire).to be_empty
+      end
+      it "requires server when matching resource exists" do
+        # dafault params use sg1 for all examples
+        sg = add_server
         catalog.add_resource resource
         reqs = resource.autorequire
         expect(reqs.count).to eq 1

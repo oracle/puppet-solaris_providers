@@ -91,7 +91,7 @@ Puppet::Type.newtype(:ilb_rule) do
       # Let newvalues check general input first
       super(value)
       next unless value.match(%r(/\d+$))
-      fail "Invalid pmask #{value}" unless (0..128).include?(value.to_i)
+      fail "Invalid pmask #{value}" unless (0..128).include?(value.slice(1..-1).to_i)
     end
   end
 
@@ -135,7 +135,7 @@ Puppet::Type.newtype(:ilb_rule) do
     specified by the incoming packet spec. Specify a single server group as
     target. The server group must already have been created. Any matching
     ilb_servergroup resource will be auto required"
-    newvalues(/^\p{Alnum}+$/)
+    newvalues(/^[\p{Alnum}_]+$/)
   end
 
   #
@@ -199,6 +199,16 @@ Puppet::Type.newtype(:ilb_rule) do
       fail("#{thing} must be defined") unless self[thing]
     end
   }
+
+  autorequire(:ilb_server) do
+    children = catalog.resources.select { |resource|
+      resource.type == :ilb_server &&
+      resource[:servergroup] == self[:servergroup]
+    }
+    children.each.collect { |child|
+      child[:name]
+    }
+  end
 
   autorequire(:ilb_servergroup) do
     [self[:servergroup]]

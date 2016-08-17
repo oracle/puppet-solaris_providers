@@ -100,20 +100,6 @@ Puppet::Type.type(:ilb_rule).provide(:ilb_rule) do
     @property_hash[:ensure] == :present
   end
 
-  def insync?
-    [
-      :persistent,
-      :vip, :port, :protocol,
-      :lbalg, :topo_type, :proxy_src, :persistent,
-      :hc_name, :hc_port,
-      :conn_drain, :nat_timeout, :persist_timeout
-    ].each { |fld|
-      debug("#{self.send(fld)} == #{@resource[fld]}")
-      return false unless self.send(fld) == @resource[fld]
-    }
-    return true
-  end
-
   def i_args
     # There will always be -i args
     _args = [:vip, :port, :protocol].each.collect { |field|
@@ -126,12 +112,11 @@ Puppet::Type.type(:ilb_rule).provide(:ilb_rule) do
     # There will always be -m args
     _args = [:lbalg, :proxy_src].each.
       collect { |field|
-      @resource[field] ? "#{field}=#{@resource[field]}" : next
+      @resource[field] ? "#{field.to_s.tr('_','-')}=#{@resource[field]}" : next
     }
 
-      _args.push "type=#{@resource[:topo_type]}"
-
-      if @resource[:persistent] && @resource[:persistent].match(/^\d+$/)
+      _args.insert(1,"type=#{@resource[:topo_type]}")
+      if @resource[:persistent] && @resource[:persistent].match(%r(^/\d+$))
         _args.push "pmask=#{@resource[:persistent]}"
       end
 
@@ -176,9 +161,9 @@ Puppet::Type.type(:ilb_rule).provide(:ilb_rule) do
       _args.push('-p')
     end
     _args.push(i_args, m_args, h_args, t_args)
-    _args.push('-o', @resource[:servergroup], @resource[:name])
+    _args.push('-o', "servergroup=#{@resource[:servergroup]}")
 
-    ilbadm(*(_args.flatten.compact))
+    ilbadm(*(_args.flatten.compact), @resource[:name])
 
     nil
   end

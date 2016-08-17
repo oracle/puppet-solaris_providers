@@ -89,10 +89,10 @@ describe Puppet::Type.type(:ilb_rule).provider(:ilb_rule) do
       described_class.expects(:ilbadm).with(
         'create-rule', '-e', '-p',
         '-i', 'vip=81.0.0.10,port=5000-5009,protocol=tcp',
-        '-m', 'lbalg=roundrobin,proxy_src=60.0.0.101-60.0.0.104,type=nat',
+        '-m', 'lbalg=roundrobin,type=nat,proxy-src=60.0.0.101-60.0.0.104,pmask=/24',
         '-h', 'hc-name=hc1,hc-port=any',
         '-t', 'conn-drain=180,nat-timeout=180,persist-timeout=180',
-        '-o', 'sg10', 'nat1'
+        '-o', 'servergroup=sg10', 'nat1'
       )
       expect(provider.create).to eq nil
     end
@@ -133,10 +133,10 @@ describe Puppet::Type.type(:ilb_rule).provider(:ilb_rule) do
         described_class.expects(:ilbadm).with(
           'create-rule', '-e', '-p',
           '-i', 'vip=81.0.0.10,port=5000-5009,protocol=tcp',
-          '-m', 'lbalg=roundrobin,proxy_src=60.0.0.101-60.0.0.104,type=nat',
+          '-m', 'lbalg=roundrobin,type=nat,proxy-src=60.0.0.101-60.0.0.104,pmask=/24',
           '-h', 'hc-name=hc1,hc-port=any',
           '-t', 'conn-drain=180,nat-timeout=180,persist-timeout=180',
-          '-o', 'sg10', 'nat1'
+          '-o', 'servergroup=sg10', 'nat1'
         )
         # There is no validation in the setter methods only in the resource
         # creation
