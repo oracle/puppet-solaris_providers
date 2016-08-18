@@ -16,7 +16,12 @@
 
 Puppet::Type.newtype(:system_attributes) do
   @doc = "Manage system attributes on ZFS files. See chmod(1)
-  Autorequires the referenced file if it is managed by Puppet."
+  Autorequires the referenced file if it is managed by Puppet.
+
+  **Note** Default behavior affects only the explicitly defined
+  attributes. See the 'strict' and 'ignore_*' parameters to change
+  default behaviors.
+  "
 
   ensurable
 

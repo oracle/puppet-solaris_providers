@@ -30,8 +30,6 @@ Puppet::Type.type(:ilb_rule).provide(:ilb_rule) do
       field, value = line.strip.tr(' ','').split(":",2)
       field = field.downcase.tr('-','_')
 
-      # Skip unset values
-      next if value == '--'
 
       # Process
       case field
@@ -61,7 +59,11 @@ Puppet::Type.type(:ilb_rule).provide(:ilb_rule) do
       when 'protocol', 'lbagl'
         value = value.downcase.intern
       when 'pmask'
-        rules[_currrule][:persistent] = value
+        if value == '--'
+          rules[_currrule][:persistent] = 'false'
+        else
+          rules[_currrule][:persistent] = value
+        end
         next
       when 'hc_port'
         # Support 'any' and 'all' keywords
@@ -69,6 +71,9 @@ Puppet::Type.type(:ilb_rule).provide(:ilb_rule) do
           value = value.downcase.intern
         end
       end
+
+      # Skip unset values
+      next if value == '--'
 
       # Collect remaining/munged values
       rules[_currrule][field.intern] = value
@@ -157,7 +162,7 @@ Puppet::Type.type(:ilb_rule).provide(:ilb_rule) do
     # Build up args, stirctly speaking this could be done less stepwise
     # but it is even uglier
     _args = ["create-rule", "-e"]
-    unless [:false,:absent].include?(@resource[:persistent])
+    unless [:false,:absent,'false'].include?(@resource[:persistent])
       _args.push('-p')
     end
     _args.push(i_args, m_args, h_args, t_args)

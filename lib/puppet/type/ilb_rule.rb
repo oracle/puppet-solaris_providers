@@ -83,9 +83,9 @@ Puppet::Type.newtype(:ilb_rule) do
     The larger the mask the more of the IP address is used to generate the session mapping.
     i.e. An IPv4 address has 32 bits
     "
-    defaultto :false
+    defaultto 'false'
 
-    newvalues(:true,:false,%r(/\d+$))
+    newvalues(/true/i,/false/i,%r(/\d+$))
 
     validate do |value|
       # Let newvalues check general input first
