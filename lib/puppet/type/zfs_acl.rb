@@ -105,7 +105,7 @@ Puppet::Type.newtype(:zfs_acl) do
   newparam(:name) do
     isnamevar
     desc "The name for the set of ACLs to set on the file.
-    Fully qualified paths will be propigated to the file parameter"
+    Fully qualified paths will be propagated to the file parameter"
   end
 
   newproperty(:file) do
@@ -283,7 +283,7 @@ Puppet::Type.newtype(:zfs_acl) do
 
   newparam(:purge_acl) do
     desc "Clear all ACEs which are not explicitly defined for this resource.
-    is the only implemented behavior"
+    This is the only implemented behavior"
     defaultto 'true'
     newvalues('true')
   end
