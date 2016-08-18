@@ -79,7 +79,7 @@ Puppet::Type.newtype(:ilb_rule) do
     Default: false
 
 
-    Pmask: The argument is a prefix length in CIDR notation; that is, 0–32 for IPv4 and 0–128 for IPv6.
+    Pmask: The argument is a prefix length in CIDR notation; that is, 0-32 for IPv4 and 0-128 for IPv6.
     The larger the mask the more of the IP address is used to generate the session mapping.
     i.e. An IPv4 address has 32 bits
     "
