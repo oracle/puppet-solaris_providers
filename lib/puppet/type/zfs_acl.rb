@@ -199,10 +199,10 @@ Puppet::Type.newtype(:zfs_acl) do
 
     # output similar to ls -v output as ACE hashes is unreadable
     def is_to_s(value)
-      value.each_with_index.collect { |val,idx| [idx,val.to_s] * ":" }
+      value.each_with_index.collect { |val,idx| [idx,val.to_s].join(':') }
     end
     def should_to_s(value)
-      value.each_with_index.collect { |val,idx| [idx,val.to_s] * ":" }
+      value.each_with_index.collect { |val,idx| [idx,val.to_s].join(':') }
     end
 
     validate { |value|

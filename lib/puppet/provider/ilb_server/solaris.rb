@@ -62,7 +62,7 @@ Puppet::Type.type(:ilb_server).provide(:ilb_server) do
         end
 
         servers.push(new(
-          :name => [sgname,srv[:ip],port] * "|",
+          :name => [sgname,srv[:ip],port].join("|"),
           :server => srv[:ip],
           :port => port,
           :servergroup => sgname,
