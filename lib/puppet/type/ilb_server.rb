@@ -88,7 +88,7 @@ Puppet::Type.newtype(:ilb_server) do
     Port is the service name or port number to use for the back end server.
 
     Port is a service name, port number, or range port-port. If the port
-    number is not specified, a number in the range 1–65535 is used.
+    number is not specified, a number in the range 1-65535 is used.
 
     ** Note **
     The use of numerical ports is recommended. Service names are not
