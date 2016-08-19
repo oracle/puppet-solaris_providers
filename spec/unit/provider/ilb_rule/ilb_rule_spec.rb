@@ -65,7 +65,7 @@ describe Puppet::Type.type(:ilb_rule).provider(:ilb_rule) do
       end
       it "third instance is rule3 (IPv6)" do
         expect(instances[2]).to eq(
-          {:name=>"rule3", :ensure=>:present, :persistent=>:absent,
+          {:name=>"rule3", :ensure=>:present, :persistent=>'false',
            :enabled=>:true, :vip=>"2003::1", :port=>"21", :protocol=>:tcp,
            :lbalg=>"roundrobin", :topo_type=>:dsr, :proxy_src=>:absent,
            :hc_name=>:absent, :hc_port=>:absent,
@@ -75,7 +75,7 @@ describe Puppet::Type.type(:ilb_rule).provider(:ilb_rule) do
       end
       it "last instance is rule5 (IPv4)" do
         expect(instances[-1]).to eq(
-          {:name=>"rule5", :ensure=>:present, :persistent=>:absent,
+          {:name=>"rule5", :ensure=>:present, :persistent=>'false',
            :enabled=>:true, :vip=>"1.2.3.6", :port=>"21", :protocol=>:tcp,
            :lbalg=>"roundrobin", :topo_type=>:dsr, :proxy_src=>:absent,
            :hc_name=>:absent, :hc_port=>:absent,

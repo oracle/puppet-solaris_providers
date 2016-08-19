@@ -30,6 +30,8 @@ Puppet::Type.type(:ilb_rule).provide(:ilb_rule) do
       field, value = line.strip.tr(' ','').split(":",2)
       field = field.downcase.tr('-','_')
 
+      # Skip unset values
+      next if value == '--' unless field == 'pmask'
 
       # Process
       case field
@@ -72,8 +74,6 @@ Puppet::Type.type(:ilb_rule).provide(:ilb_rule) do
         end
       end
 
-      # Skip unset values
-      next if value == '--'
 
       # Collect remaining/munged values
       rules[_currrule][field.intern] = value
