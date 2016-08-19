@@ -15,158 +15,180 @@
 #
 
 
-require File.expand_path(File.join(File.dirname(__FILE__), '..','..','puppet_x/oracle/solaris_providers/util/validation.rb'))
+require File.expand_path(
+  File.join(File.dirname(__FILE__),
+            '..','..','puppet_x/oracle/solaris_providers/util/validation.rb'))
 
 Puppet::Type.newtype(:vrrp) do
-  @doc = "Manage Solaris Virtual Router Redundancy Protocol (VRRP) configuration"
+  @doc = "Manage Solaris Virtual Router Redundancy Protocol (VRRP)
+  configuration. See vrrpadm(8)"
   validator = PuppetX::Oracle::SolarisProviders::Util::Validation.new
 
   ensurable
 
-  ########################
+  newparam(:name, :namevar=>true) do
+    desc "The name of a VRRP router. This name is used to identify a VRRP
+               router in other vrrpadm subcommands.
 
-  # Type is a parameter, it cannot be changed. It must be defined this way to be
-  # displayed in puppet resource svccfg output
-  newproperty(:type) do
-    desc "Type of the property. Type must be defined for server side :value
-    validation See scf_value_create(3SCF)"
+               The maximum length of a valid router  name  is  31  characters.
+               Legal  characters  are  alphanumeric  (a-z,  A-Z,  0-9) and the
+               underscore ('_')."
 
-    newvalues(:count, :integer, :opaque, :host, :hostname, :net_address,
-              :net_address_v4, :net_address_v6, :time, :astring, :ustring,
-              :boolean, :fmri, :uri, :dependency, :framework, :configfile,
-              :method, :template, :template_pg_pattern,
-              :template_prop_pattern)
+    newvalues(/^[\p{Alnum}_]+$/)
+    validate do |value|
+      super(value)
+      return false if value.length > 31
+    end
+  end
+
+  newproperty(:temporary) do
+    desc "Specifies  that  the  VRRP  router is temporary. Temporary VRRP
+    routers last until the next reboot.
+    Default: false"
+    newvalues(/true/i,/false/i)
+    defaultto :false
+
+    munge do |value| value = value.downcase.intern end
+  end
+
+  newproperty(:enabled) do
+    desc "Enable/Disable Router
+      true        Router is enabled
+      false       Router is disabled
+      temp_true   Router is enabled until next reboot
+      temp_false  Router is disabled until next reboot
+    "
+    newvalues(/(?:temp_)?(?:true|false)/i)
+    munge do |value| value = value.downcase.intern end
+  end
+
+
+  newproperty(:router_type) do
+    desc "VRRP router type. Either l2 or l3.
+    Default: L2"
+    defaultto :l2
+
+    newvalues(/l2/i,/l3/i)
+
+    munge do |value| value = value.downcase.intern end
+  end
+
+  newproperty(:adv_interval) do
+    desc "The advertisement interval in  milliseconds.  Default  is  1000 (one
+    second). The valid interval range is 10-40950."
+    newvalues(/^\d+$/)
+
+    munge do |value| value = value.to_i end
+
+    validate do |value|
+      super(value)
+      unless (10..40950).include?(value.to_i)
+        fail "Invalid value #{value} out of range 10-40950"
+      end
+    end
+  end
+
+  newproperty(:interface_name) do
+    desc "The  interface  on  which  the VRRP router is configured. This
+  determines the LAN this VRRP router is running in. For l2  VRRP router,  the
+  interface can be a physical ethernet interface, a VLAN, or an aggregation.
+  For l3 VRRP  router,  aside  from  the above  types, the interface can also
+  be an IPMP interface, or a physical IB interface."
+    newvalues(/^[\p{Alnum}_]+$/)
+
+    validate do |value|
+      super(value)
+      unless (3..16).include?(value.length)
+        fail "Invalid Value #{value} has unacceptable length (#{value.length}).
+        min/max 3/16"
+      end
+    end
 
   end
 
-  newproperty(:value) do
-    desc "Value of the property. Value types :fmri, :opaque, :host, :hostname,
-      :net_address, :net_address_v4, :net_address_v6, and :uri are treated as
-      lists if they contain whitespace. See scf_value_create(3SCF)"
+  newproperty(:preempt) do
+    desc "Flags: The  preempt  mode  controls whether an
+  enabled higher priority backup router preempts a lower priority master
+  router.
+    See vrrpadm(8) for details.
+    Default: true"
+    defaultto :true
+    newvalues(/(true|false)/i)
+    munge do |value| value = value.downcase.intern end
   end
 
+  newproperty(:accept) do
+    desc "The accept mode controls the local  packet
+  acceptance  of  the virtual  IP  addresses.
+    See vrrpadm(8) for details.
+    Default: true"
+    defaultto :true
+    newvalues(/(true|false)/i)
+    munge do |value| value = value.downcase.intern end
+  end
 
-  validate {
-    # Validation must happen after we have both the type and value.
+  newproperty(:priority) do
+    desc "The priority of the specified VRRP router used in master selec-
+      tion. The higher the value, the  greater  the  possibility  the
+      router is selected as the master.
 
-    # Don't run top level validation unless there is an ensure property
-    unless self[:ensure].nil?
-      if self[:prop_fmri] && ( self[:fmri].nil? || self[:property].nil? )
-        a = self[:prop_fmri].split(%r(/:properties/),2)
-        self[:fmri] ||= a[0]
-        self[:property] ||= a[1]
+      The  default  value  is 255, which indicates the specified VRRP
+      router is the IP Address Owner and  owns  all  the  virtual  IP
+      addresses.
+
+      The range 1-254 is available for VRRP routers backing up a vir-
+      tual router.
+
+      See vrrpadm(8) for details.
+      Default: 255
+    "
+    defaultto 255
+    newvalues(/^\d+/)
+
+    munge do |value| value = value.to_i end
+
+    validate do |value|
+      super(value)
+      unless (1..255).include?(value.to_i)
+        fail "Invalid value #{value} out of range 1-255"
       end
-
-      fail ":fmri is required" unless self[:fmri]
-      fail ":property is required" unless self[:property]
-
-      # Don't check for presence of value for property group types
-      unless [:dependency, :framework, :configfile, :method, :template,
-        :template_pg_pattern, :template_prop_pattern].include?(self[:type])
-        # self.provider.value is set in prefetch
-        fail ":value is required" if self[:value].nil? && self.provider.value.nil?
-      end
-
     end
+  end
 
-    self[:prop_fmri] ||= "#{self[:fmri]}/:properties/#{self[:property]}"
+  newproperty(:vrid) do
+    desc "The virtual router identifier (VRID). Together with the address
+    family, it identifies a virtual router within a LAN."
+    newvalues(/^\d+$/)
+    munge do |value| value = value.to_i end
+  end
 
+  newproperty(:assoc_ipaddrs, :array_matching => :all) do
+    desc "The Array of associated virtual  IP  addresses  protected  by  the
+    VRRP router in the form.  <ipaddr>[/<prefixlen>]>,
+    <hostname>[/<prefixlen>], or 'linklocal'"
 
-    #
-    # Validate Value arguments based on type
-    #
-    # :astring, :ustring, :boolean, :count, :integer, :time are evaluated
-    # as is. Other types are split on whitespace with each component
-    # checked for validity.
-    case self[:type]
-    when :astring, :ustring, :opaque
-
-    when :boolean
-      unless [:true,:false].include?(self[:value].downcase.to_sym)
-        fail "#{self[:type]} must be true or false"
+    validate do |value|
+      super(value)
+      return true if value == 'linklocal'
+      _addr,_prefix = value.split('/',2)
+      unless ( validator.valid_hostname?(_addr) || validator.valid_ip?(value) )
+        fail "Invalid Value #{value} is not a vaild ip or hostname"
       end
-
-    when :count
-      unless self[:value].kind_of?(Integer) || self[:value].match(/\A\d+\Z/)
-        fail "#{self[:type]}:#{self[:value]} must be an integer"
+      if _prefix && !validator.valid_ip?("0::0#{_prefix}")
+        fail "Invalid Value #{_prefix} is not a vaild prefix length"
       end
-      unless self[:value].to_i >= 0
-        fail "#{self[:type]}:#{self[:value]} must be unsigned"
-      end
-
-    when :fmri
-      self[:value].split(/\s+/).each { |v|
-        unless v.match(/\A\p{Alpha}+:\/+\p{Graph}+\Z/)
-          fail "#{self[:type]}:'#{v}' does not appear to be valid"
-        end
-      }
-
-    when :host
-      self[:value].split(/\s+/).each { |v|
-        unless ( validator.valid_hostname?(v) || validator.valid_ip?(v) )
-          fail "#{self[:type]}:#{v} is not a valid hostname or ip address"
-        end
-      }
-
-    when :hostname
-      self[:value].split(/\s+/).each { |v|
-        unless validator.valid_hostname?(v)
-          fail "#{self[:type]}:#{v} is not valid"
-        end
-      }
-
-    when :integer
-      if self[:value].kind_of?(Numeric)
-        unless self[:value].kind_of?(Integer)
-          fail "#{self[:type]} must be an integer"
-        end
-      else
-        unless self[:value].match(/\A-?\d+\Z/)
-          fail "#{self[:type]} must be an integer"
-        end
-      end
-
-    when :net_address
-      self[:value].split(/\s+/).each { |v|
-        unless validator.valid_ip?(v)
-          fail "#{self[:type]}:#{v} is not valid"
-        end
-      }
-
-    when :net_address_v4
-      self[:value].split(/\s+/).each { |v|
-        unless validator.valid_ipv4?(v)
-          fail "#{self[:type]}:#{v} is not valid"
-        end
-      }
-
-    when :net_address_v6
-      self[:value].split(/\s+/).each { |v|
-        unless validator.valid_ipv6?(v)
-          fail "#{self[:type]}:#{v} is not valid"
-        end
-      }
-
-    when :time
-      unless  self[:value].kind_of?(Float) || self[:value].to_f >= 0
-        fail "#{self[:type]}:#{self[:value]} is not valid"
-      end
-
-    when :uri
-      self[:value].split(/\s+/).each { |v|
-        unless v.match(/\A\p{Alpha}+:\p{Graph}+\Z/)
-          fail "#{self[:type]}:#{v} is not valid"
-        end
-      }
-
-    when :dependency, :framework, :configfile, :method, :template,
-      :template_pg_pattern, :template_prop_pattern
-      fail "#{self[:type]} implies a property group. Property group names cannot contain /" if (
-        self[:property].match('/')
-      )
-
-      fail "Property groups do not take values" unless self[:value].nil?
     end
+  end
 
-  }
+  newproperty(:primary_ipaddr) do
+    desc "The  IP  addresses configured over the <ifname> interface which
+               can be potentially selected as the primary IP address  used  to
+               send the VRRP advertisement."
+    validate do |value|
+      super(value)
+      unless  validator.valid_ip?(value)
+        fail "Invalid Value #{value} is not a vaild IP address"
+      end
+    end
+  end
 end
