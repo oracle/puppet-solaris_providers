@@ -21,7 +21,11 @@ require File.expand_path(
 
 Puppet::Type.newtype(:vrrp) do
   @doc = "Manage Solaris Virtual Router Redundancy Protocol (VRRP)
-  configuration. See vrrpadm(8)"
+  configuration. See vrrpadm(8)
+
+  **Note** To use VRRP you must install the vrrp package
+  system/network/routing/vrrp and enable the vrrp service"
+
   validator = PuppetX::Oracle::SolarisProviders::Util::Validation.new
 
   ensurable
