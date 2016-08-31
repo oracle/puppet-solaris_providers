@@ -1,3 +1,19 @@
+#
+# Copyright (c) 2016, Oracle and/or its affiliates. All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
 Puppet::Type.type(:zone).provide(:solaris) do
   desc "Provider for Solaris zones."
 
@@ -37,43 +53,42 @@ Puppet::Type.type(:zone).provide(:solaris) do
   # file or string.
   def configure
 
-    if @resource[:archive].nil? && @resource[:zonecfg_export].nil?
+    if @resource[:zonecfg_archive].nil? && @resource[:zonecfg_export].nil?
       raise Puppet::Error, "No configuration resource is defined."
     end
 
-    command = String.new
+    command = "#{command(:cfg)} -z #{@resource[:name]}"
     if @resource[:clone]
       if !@resource[:zonecfg_export]
         raise Puppet::Error, "A zone configuration must be defined to
         clone a zone."
       end
-      command = "#{command(:cfg)} -z #{@resource[:name]} -f #{@resource[:zonecfg_export]}"
+      command << " -f #{@resource[:zonecfg_export]}"
     else
       unless @resource[:zonecfg_export].nil? || @resource[:zonecfg_export].empty?
         begin
           file = File.open(@resource[:zonecfg_export], "rb")
-          str = file.read.gsub(/[\n]\n*\s*/, "; ")
+          exported_cfg = file.read.gsub(/[\n]\n*\s*/, "; ")
         rescue
-          str = @resource[:zonecfg_export].gsub(/[\n]\n*\s*/, "; ")
+          exported_cfg = @resource[:zonecfg_export].gsub(/[\n]\n*\s*/, "; ")
         ensure
           file.close unless file.nil?
         end
         @property_hash.clear
       end
-
-      unless @resource[:archive].nil? || @resource[:archive].empty?
-        if !str.nil?
-          command = "#{command(:cfg)} -z #{@resource[:name]} \'create -a #{@resource[:archive]};#{str}\'"
-        else
-          command = "#{command(:cfg)} -z #{@resource[:name]} create -a #{@resource[:archive]} "
-        end
+      params = ""
+      if @resource[:zonecfg_archive]
+        params << "create -a #{@resource[:zonecfg_archive]}"
         if @resource[:archived_zonename]
-          command << " -z #{@resource[:archived_zonename]}"
+          params << " -z #{@resource[:archived_zonename]}"
         end
-      end
 
-      if !@resource[:zonecfg_export].nil? && @resource[:archive].nil?
-        command = "#{command(:cfg)} -z #{@resource[:name]} \'#{str}\'"
+        unless exported_cfg.nil?
+          params = " \'" + params + ";#{exported_cfg}\'"
+        end
+        command << params
+      elsif @resource[:zonecfg_export]
+        command << " \'#{exported_cfg}\'"
       end
     end
 
@@ -103,15 +118,17 @@ Puppet::Type.type(:zone).provide(:solaris) do
 
   def install(dummy_argument=:work_arround_for_ruby_GC_bug)
     if ['5.11', '5.12'].include? Facter.value(:kernelrelease)
-       if !@resource[:install_args] and @resource[:config_profile]
-         @resource[:install_args] = " -c " + @resource[:config_profile]
-       elsif !@resource[:install_args] and @resource[:archive]
-         @resource[:install_args] = " -a " + @resource[:archive]
-	     if @resource[:archived_zonename]
-	       @resource[:install_args] << " -z " + @resource[:archived_zonename]
-	     end
-       elsif @resource[:config_profile]
-	     @resource[:install_args] << " -c " + @resource[:config_profile]
+       if @resource[:install_args].nil? || @resource[:install_args].empty?
+          @resource[:install_args] = ""
+       end
+       if @resource[:config_profile]
+          @resource[:install_args] << " -c " + @resource[:config_profile]
+       end
+       if @resource[:archive]
+          @resource[:install_args] << " -a " + @resource[:archive]
+          if @resource[:archived_zonename]
+             @resource[:install_args] << " -z " + @resource[:archived_zonename]
+          end
        end
     end
        
