@@ -1,8 +1,6 @@
 #!/usr/bin/env ruby
 
 require 'spec_helper'
-require_relative  '../../../../lib/puppet/type/zone'
-require_relative '../../../../lib/puppet/provider/zone/solaris.rb'
 
 describe Puppet::Type.type(:zone).provider(:solaris) do
 
