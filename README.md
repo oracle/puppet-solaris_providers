@@ -15,18 +15,62 @@
 ## Overview
 
 The Oracle Solaris Providers module includes Solaris-specific implementations of
-types and providers.  These include some common features as well as features
+types and providers. These include some common features as well as features
 found exclusively on Oracle Solaris.
 
-## Module Description
+## Module Resource Type Reference
+
+
 
 The Oracle Solaris Providers module currently enables configuration of the
 following:
 
-  * DNS, LDAP and NIS naming services
-  * Package facets, mediators, publishers and variants
+  * Boot Environments
+  * Naming Services
+    * DNS
+    * LDAP
+    * NIS
+    * nsswitch
+  * pkg
+    * facet
+    * mediator
+    * publisher
+    * variant
+  * ILB
+    * server
+    * servergroup
+    * healthcheck
+    * rule
+  * EVS (Elastic Virtual Switch)
+    * ipnet
+    * properties
+    * vport
+  * SMF
+    * svccfg
+  * ipadm
+    * address_object
+    * address_properties
+    * interface_properties
+    * ip_interface
+    * ipmp_interface
+    * protocol_properties
+    * vni_interface
+  * dladm
+    * etherstub
+    * ip_interface
+    * ip_tunnel
+    * link_aggregation
+    * link_properties
+    * solaris_vlan
+    * vnic
+  * ZFS
+    * ACL
+    * system_attributes
 
-Many more types and providers will be added in the future.
+
+The Oracle Solaris Providers currently override the core Puppet configuration
+of the following:
+  * zone
 
 ## Setup
 
