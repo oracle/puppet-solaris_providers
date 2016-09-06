@@ -49,15 +49,14 @@ Puppet::Type.newtype(:ilb_rule) do
   end
 
   newproperty(:port) do
-    desc <<-HEREDOC
-    Port number or name, for example, telnet or dns. A port can be
+    desc "Port number or name, for example, telnet or dns. A port can be
     specified by port number or symbolic name (as in /etc/services).
     Port number ranges are also supported 'port[-port]'.
 
     ** Note **
     The use of numerical ports is recommended. Service names are not
     validated at compilation time and may fail on individual nodes.
-    HEREDOC
+    "
 
       validate do |value|
         PuppetX::Oracle::SolarisProviders::Util::Ilb.valid_portspec?(value)
@@ -161,25 +160,23 @@ Puppet::Type.newtype(:ilb_rule) do
   #
 
   newproperty(:conn_drain) do
-    desc <<-HEREDOC
-  If a server's type is NAT or HALF-TYPE, conn-drain is the timeout after which
-  the server's connection state is deleted following the server's removal from
-  a rule. This deletion occurs even if the server is not idle.
+    desc "If a server's type is NAT or HALF-TYPE, conn-drain is the timeout
+    after which the server's connection state is deleted following the server's
+    removal from a rule. This deletion occurs even if the server is not idle.
 
   The default for TCP is that the connection state remains stable until the
   connection is gracefully shutdown. The default for UDP is that the connection
   state remains stable until the connection has been idle for the period
-  nat-timeout.
-    HEREDOC
+  nat-timeout."
+
     newvalues(/^\d+$/)
   end
 
   newproperty(:nat_timeout) do
-    desc <<-HEREDOC
-    Applies only to NAT and half-NAT type connections. If such a connection is
-    idle for the nat-timeout period, the connection state will be removed. The
-    default is 120 for TCP and 60 UDP.
-    HEREDOC
+    desc "Applies only to NAT and half-NAT type connections. If such a
+    connection is idle for the nat-timeout period, the connection state will be
+    removed. The default is 120 for TCP and 60 UDP."
+
     newvalues(/^\d+$/)
   end
 

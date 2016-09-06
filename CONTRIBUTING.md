@@ -48,7 +48,7 @@ for Solaris 10 as long as proper constraints are present.
 ````
 
 * Make sure you have added the necessary tests for your changes.
-  * See: [Testing](docs/TESTING.md)
+  * See: [Testing](TESTING.md)
 * Run _all_ the tests to assure nothing else was accidentally broken.
 * Pull requests will not be accepted if they fail test evaluation in
   [Travis-CI](https://travis-ci.org/)
