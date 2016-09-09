@@ -32,7 +32,7 @@ following:
   * [ldap](doc/ldap.md)
   * [nis](doc/nis.md)
   * [nsswitch](doc/nsswitch.md)
-* Image Pacakging System (IPS) configuration via pkg[g1]
+* Image Pacakging System (IPS) configuration via pkg[^1]
   * [pkg_facet](doc/pkg_facet.md)
   * [pkg_mediator](doc/pkg_mediator.md)
   * [pkg_publisher](doc/pkg_publisher.md)
@@ -77,7 +77,7 @@ Oracle Solaris Providers override the core Puppet providers for:
 
 For Solaris 11.x puppet module install oracle-solaris_providers
 
-For Solaris 12.x pkg install puppet[g2]
+For Solaris 12.x pkg install puppet[^2]
 
 No additional setup or configuration is required.
 
@@ -143,7 +143,7 @@ Contributors should issue pull requests via Github see [contributing](CONTRIBUTI
 
 ----
 
-[g1]: Package installation via Puppet Core package provider
+[^1]: Package installation via Puppet Core package provider
 
-[g2]: Solaris providers are shipped with Solaris in the oracle-solaris_providers IPS package and installed automatically with puppet. Use of the module from the Puppet Forge is possible. However, it will result in errors from pkg verify as the IPS oracle-solaris_providers package cannot be removed.
+[^2]: Solaris providers are shipped with Solaris in the oracle-solaris_providers IPS package and installed automatically with puppet. Use of the module from the Puppet Forge is possible. However, it will result in errors from pkg verify as the IPS oracle-solaris_providers package cannot be removed.
 
