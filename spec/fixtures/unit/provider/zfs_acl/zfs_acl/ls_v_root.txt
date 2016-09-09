@@ -1,0 +1,14 @@
+drwx--x--x+  1 root     root           0 Jul  7 09:38 /root
+     0:user:sferry:read_data/write_data/append_data/read_xattr/write_xattr
+         :file_inherit:allow
+     1:user:bob:read_data/write_data:file_inherit:allow
+     2:group:sys:read_data:file_inherit:allow
+     3:user:sferry:read_data/write_data/append_data/read_xattr/write_xattr
+         /execute/delete_child/read_attributes/write_attributes/delete
+         /read_acl/write_acl/write_owner/synchronize:file_inherit:deny
+     4:group:root:read_data:file_inherit/no_propagate:allow
+     5:owner@:read_data/write_data/append_data/read_xattr/write_xattr/execute
+         /read_attributes/write_attributes/read_acl/write_acl/write_owner
+         /synchronize:allow
+     6:group@:read_xattr/execute/read_attributes/read_acl/synchronize:allow
+     7:everyone@:read_xattr/execute/read_attributes/read_acl/synchronize:allow

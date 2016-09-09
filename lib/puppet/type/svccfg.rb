@@ -54,11 +54,9 @@ Puppet::Type.newtype(:svccfg) do
   end
 
   newparam(:name) do
-    desc <<-HEREDOC
-      The symbolic name for properties to manipulate.  When provided as the
-      fully composed property FMRI <fmri>/properties:/<property> :fmri,
-      :property, and :prop_fmri will be auto-populated.
-    HEREDOC
+    desc "The symbolic name for properties to manipulate.  When provided as the
+    fully composed property FMRI <fmri>/properties:/<property> :fmri,
+    :property, and :prop_fmri will be auto-populated."
 
   end
 
