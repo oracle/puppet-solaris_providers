@@ -4,17 +4,18 @@ require 'spec_helper'
 
 describe Puppet::Type.type(:svccfg).provider(:svccfg) do
 
-  let(:resource) do
-    Puppet::Type.type(:svccfg).new(
+  let(:params) do
+    {
       :name => "foo", :ensure => :present,
       :fmri => "svc:/application/puppet:agent",
       :property => "refresh/timeout_seconds",
       :type => "count",
       :value => 0
-    )
-      end
+    }
+  end
 
-  let(:provider) { resource.provider }
+  let(:resource) { Puppet::Type.type(:svccfg).new(params) }
+  let(:provider) { described_class.new(resource) }
 
   before(:each) do
 
@@ -222,47 +223,78 @@ describe Puppet::Type.type(:svccfg).provider(:svccfg) do
         end
   end
     context "#create" do
-      it "should execute svccfg setprop" do
+      {
+        :astring=> "a string",
+ :ustring=> "still a string",
+ :boolean=> "true",
+ :count=> "1",
+ :integer=> "10",
+ :time => "1339662573.051463000"
+      }.each_pair { |thing,value|
+      it "#{thing} value passes through unmunged" do
+        params[:name]  = "create-#{thing}"
+        params[:type]  = thing
+        params[:value] = value
+        params[:fmri]  = "svc:/bogus/service"
+        params[:property] = "config/something"
         Puppet::Util::Execution.expects(:execute).with(
-          ["/usr/sbin/svccfg", "-s", resource[:fmri],
+          ["/usr/sbin/svccfg", "-s", params[:fmri],
             "setprop",
-            resource[:property],
-            "=", "#{resource[:type]}:",
-            resource[:value]] * " "
+            params[:property],
+            "=", "#{params[:type]}:",
+            params[:value]] * " "
         )
         described_class.expects(:svccfg).with("-s", resource[:fmri], "refresh")
         described_class.expects(:svcprop).with("-f", resource[:prop_fmri])
         expect(provider.create).to eq(nil)
       end
-      it "should execute svccfg setprop with a list value" do
-        resource[:type]     = "net_address"
-        resource[:value]    = "1.2.3.4 5.6.7.8 9.10.11.12"
+      }
+      {
+        :fmri=> ['svc:/foo svc:/bar','svc:/foo'],
+ :opaque=> ['asasd wewerwef','asdasd'],
+ :host=> ['foo.com bar.com','foo.com'],
+ :hostname=> ['a.foo.com b.bar.com','a.foo.com'],
+ :net_address=> ['1.2.3.4 3.4.5.6','1.2.3.4'],
+ :net_address_v4=> ['1.2.3.4 3.4.5.6','1.2.3.4'],
+       :net_address_v6 => ['ff::00 fe::00','ff::00'],
+       :uri => ['thing:/stuff thing:/stuff2','thing:/stuff']
+      }.each { |thing,arry|
+      it "#{thing} value treated as list" do
+        params[:name]  = "create-#{thing}"
+        params[:type]  = thing
+        params[:value] = arry[0]
+        params[:fmri]  = "svc:/bogus/service"
+        params[:property] = "config/something"
         Puppet::Util::Execution.expects(:execute).with(
-          ["/usr/sbin/svccfg", "-s", resource[:fmri],
+          ["/usr/sbin/svccfg", "-s", params[:fmri],
             "setprop",
-            resource[:property],
-            "=", "#{resource[:type]}:",
-            "\\(#{resource[:value]}\\)"
-        ] * " "
+            params[:property],
+            "=", "#{params[:type]}:",
+            "\\(#{params[:value]}\\)"] * " "
         )
         described_class.expects(:svccfg).with("-s", resource[:fmri], "refresh")
+        described_class.expects(:svcprop).with("-f", resource[:prop_fmri])
         expect(provider.create).to eq(nil)
       end
-      it "should execute svccfg setprop with a string value" do
-        resource[:type]     = "astring"
-        resource[:value]    = "this is an astring"
+      it "#{thing} value passes through unmunged" do
+        params[:name]  = "create-#{thing}"
+        params[:type]  = thing
+        params[:value] = arry[1]
+        params[:fmri]  = "svc:/bogus/service"
+        params[:property] = "config/something"
         Puppet::Util::Execution.expects(:execute).with(
-          ["/usr/sbin/svccfg", "-s", resource[:fmri],
+          ["/usr/sbin/svccfg", "-s", params[:fmri],
             "setprop",
-            resource[:property],
-            "=", "#{resource[:type]}:",
-            resource[:value]
-        ] * " "
+            params[:property],
+            "=", "#{params[:type]}:",
+            params[:value]] * " "
         )
         described_class.expects(:svccfg).with("-s", resource[:fmri], "refresh")
+        described_class.expects(:svcprop).with("-f", resource[:prop_fmri])
         expect(provider.create).to eq(nil)
       end
-      it "should execute svccfg with :type missing" do
+      }
+      it "passes unmunged value without type" do
         resource.delete(:type)
         resource[:value]    = "this is an astring"
         Puppet::Util::Execution.expects(:execute).with(
