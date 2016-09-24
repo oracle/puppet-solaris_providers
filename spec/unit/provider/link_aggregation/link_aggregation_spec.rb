@@ -3,8 +3,8 @@
 require 'spec_helper'
 describe Puppet::Type.type(:link_aggregation).provider(:link_aggregation) do
 
-  let(:resource) do
-    Puppet::Type.type(:link_aggregation).new(
+  let(:params) do
+    {
       :name => "aggr10",
       :ensure => :present,
       :lower_links => ["net10", "net20"],
@@ -13,8 +13,9 @@ describe Puppet::Type.type(:link_aggregation).provider(:link_aggregation) do
       :address => "auto",
       :lacpmode => "off",
       :lacptimer => "short"
-    )
-      end
+    }
+  end
+  let(:resource) { Puppet::Type.type(:link_aggregation).new(params) }
   let(:provider) { resource.provider = described_class.new(resource) }
 
 
@@ -26,7 +27,7 @@ describe Puppet::Type.type(:link_aggregation).provider(:link_aggregation) do
   # setter methods because we are overriding them
   [:lower_links, :mode, :policy, :lacpmode, :lacptimer, :address,
     :lower_links=, :mode=, :policy=, :lacpmode=, :lacptimer=, :address=,
-    :is_temporary? ] .each do |method|
+    :recreate_temporary ] .each do |method|
     it { is_expected.to respond_to(method) }
     end
 
@@ -39,6 +40,9 @@ describe Puppet::Type.type(:link_aggregation).provider(:link_aggregation) do
     described_class.expects(:dladm).with("show-aggr", "-p", "-o",
                                          "link,mode,policy,addrpolicy,lacpactivity,lacptimer")
     .returns File.read(my_fixture('dladm_show-aggr-p-o.txt'))
+
+    described_class.expects(:dladm).with("show-aggr", "-P", "-p", "-o", "link")
+    .returns File.read(my_fixture('dladm_show-aggr-P-p-o.txt'))
 
     # Just return the contents of this file for any aggr
     [0,1].each do |num|
@@ -55,7 +59,8 @@ describe Puppet::Type.type(:link_aggregation).provider(:link_aggregation) do
         :policy => p.get(:policy),
         :address => p.get(:address),
         :lacpmode => p.get(:lacpmode),
-        :lacptimer => p.get(:lacptimer)
+        :lacptimer => p.get(:lacptimer),
+        :temporary => p.get(:temporary)
       }
     }
 
@@ -72,7 +77,8 @@ describe Puppet::Type.type(:link_aggregation).provider(:link_aggregation) do
       :policy => :absent,
       :address => :absent,
       :lacpmode => :absent,
-      :lacptimer => :absent
+      :lacptimer => :absent,
+      :temporary => :false
     },
       {
       :name => "aggr1",
@@ -82,7 +88,8 @@ describe Puppet::Type.type(:link_aggregation).provider(:link_aggregation) do
       :policy => "L4",
       :address => "auto",
       :lacpmode => "on",
-      :lacptimer => "long"
+      :lacptimer => "long",
+      :temporary => :true
     }
     ].each_with_index do |h,i|
       it "should parse #{h[:name]}" do
@@ -104,55 +111,54 @@ describe Puppet::Type.type(:link_aggregation).provider(:link_aggregation) do
       expect(provider.destroy).to eq(nil)
     end
 
-    xdescribe 'lower_links=' do
+    describe 'lower_links=' do
       # meddling with pry it's right but it needs property_hash populated to
       # properly execute
       it "should add missing links" do
+            provider.instance_variable_set(
+              :@property_hash, {:lower_links => params[:lower_links] }
+            )
         # net5 will be added
         add_list=["net5"]
-        if_list = resource[:lower_links] + add_list
-        described_class.expects(:dladm).with("show-aggr", "-P", resource.name)
-        described_class.expects(:dladm).with("add-aggr", "-l", *add_list, resource.name)
-        expect(provider.lower_links=if_list).to eq(nil)
+        if_list = params[:lower_links] + add_list
+        described_class.expects(:dladm).with("add-aggr", "-l", *add_list, params[:name])
+        expect(provider.lower_links=if_list).to eq(if_list)
       end
 
       it "should remove extra links" do
+            provider.instance_variable_set(
+              :@property_hash, {:lower_links => params[:lower_links] }
+            )
         # net20 will be removed
         if_list=["net10"]
         remove_list=["net20"]
-        described_class.expects(:dladm).with("show-aggr", "-P", resource.name)
-        described_class.expects(:dladm).with("remove-aggr", "-l", *remove_list, resource.name)
-        expect(provider.lower_links=if_list).to eq(nil)
+        described_class.expects(:dladm).with("remove-aggr", "-l", *remove_list, params[:name])
+        expect(provider.lower_links=if_list).to eq(if_list)
       end
     end
 
     it "should use correct args for mode=" do
-      described_class.expects(:dladm).with("show-aggr", "-P", resource.name)
       described_class.expects(:dladm).with("create-aggr", '-l', 'net10', '-l',
                                            'net20', '-m', :trunk, '-P', 'L4',
                                            '-L', :off, '-T', :short, '-u',
                                            'auto', 'aggr10')
-      described_class.expects(:dladm).with("delete-aggr", resource.name)
+      described_class.expects(:dladm).with("delete-aggr", params[:name])
       expect(provider.mode="trunk").to eq("trunk")
     end
     it "should use correct args for policy=" do
-      described_class.expects(:dladm).with("show-aggr", "-P", resource.name)
-      described_class.expects(:dladm).with("modify-aggr", "-P", "L2", resource.name)
+      described_class.expects(:dladm).with("modify-aggr", "-P", "L2", params[:name])
       expect(provider.policy="L2").to eq("L2")
     end
     it "should use correct args for lacpmode=" do
-      described_class.expects(:dladm).with("show-aggr", "-P", resource.name)
-      described_class.expects(:dladm).with("modify-aggr", '-L', 'off', resource.name)
+      described_class.expects(:dladm).with("modify-aggr", '-L', 'off', params[:name])
       expect(provider.lacpmode="off").to eq("off")
     end
     it "should use correct args for lacptimer=" do
-      described_class.expects(:dladm).with("show-aggr", "-P", resource.name)
-      described_class.expects(:dladm).with("modify-aggr", '-T', 'short', resource.name)
+      described_class.expects(:dladm).with("modify-aggr", '-T', 'short', params[:name])
       expect(provider.lacptimer="short").to eq("short")
     end
     it "should use correct args for address=" do
-      described_class.expects(:dladm).with("show-aggr", "-P", resource.name)
-      described_class.expects(:dladm).with("modify-aggr", '-u', '0e:3b:32:eb:d9:eb', resource.name)
+      described_class.expects(:dladm).with("modify-aggr", '-u', '0e:3b:32:eb:d9:eb', params[:name])
       expect(provider.address="0e:3b:32:eb:d9:eb").to eq("0e:3b:32:eb:d9:eb")
     end
     it "should use correct args for add_options" do
@@ -160,14 +166,18 @@ describe Puppet::Type.type(:link_aggregation).provider(:link_aggregation) do
                                          :trunk, "-P", "L4", "-L", :off, "-T",
                                          :short, "-u", "auto"])
     end
-    it "should fail in is_temporary? for temporary" do
-      described_class.expects(:dladm).with("show-aggr", "-P", resource.name).returns
-      expect(provider.is_temporary?).to eq(nil)
+    it "returns :true for recreate_temporary" do
+      described_class.expects(:dladm).with("delete-aggr", params[:name])
+      described_class.expects(:dladm).with("create-aggr", '-t', '-l', 'net10', '-l',
+                                           'net20', '-m', :trunk, '-P', 'L4',
+                                           '-L', :off, '-T', :short, '-u',
+                                           'auto', 'aggr10')
+      params[:temporary]=:true
+      expect(provider.recreate_temporary).to eq(true)
     end
-    it "should not fail in is_temporary? for non-temporary" do
-      described_class.expects(:dladm).with("show-aggr", "-P", resource.name).returns Puppet::Error
-      expect{provider.is_temporary?}.not_to raise_error
+    it "returns :false for non-temporary" do
+      params[:temporary]=:false
+      expect(provider.recreate_temporary).to eq(false)
     end
   end
-
 end
