@@ -86,6 +86,8 @@ Puppet::Type.type(:svccfg).provide(:svccfg) do
         :net_address_v6, :uri
         if @resource[:value].split(/\s+/).length > 1
           munged << "\\(#{@resource[:value]}\\)"
+        else
+          munged = @resource[:value]
         end
       else
         # without a type pass value unmunged
