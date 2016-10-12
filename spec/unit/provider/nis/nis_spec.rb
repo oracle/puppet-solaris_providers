@@ -92,6 +92,13 @@ describe Puppet::Type.type(:nis).provider(:nis) do
         expect(provider.ypservers=newval).to eq(newval)
       end
 
+      it "formats array of arrays arguments" do
+        newval =  [['host','127.0.0.1'],['255.255.255.0','1.1.1.1']]
+        testval = %Q^( \"host 127.0.0.1\" \"255.255.255.0 1.1.1.1\" )^
+        described_class.expects(:svccfg).with("-s", Domain_fmri, "setprop", "config/securenets", "=", testval )
+        expect(provider.securenets=newval).to eq(newval)
+      end
+
       it "formats empty arguments" do
         resource[:use_broadcast] = "true"
         newval = %q("")

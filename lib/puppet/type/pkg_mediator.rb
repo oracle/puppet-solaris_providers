@@ -35,7 +35,7 @@ Puppet::Type.newtype(:pkg_mediator) do
 
     newproperty(:implementation) do
         desc "The implementation of the mediated interface to use"
-        newvalues(/none/io,/\A[[:alnum:]]+\Z/,/\A[[:alnum:]]+@(?:\d+(?:\.\d+){0,})\Z/)
+        newvalues(/none/io,/\A[[:alnum:]-]+(?:@\d+(?:\.\d+){0,})?\Z/)
         munge do |value|
           return value.downcase.capitalize.to_sym if value.match(/none/i)
           value

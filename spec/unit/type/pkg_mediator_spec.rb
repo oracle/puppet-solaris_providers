@@ -58,7 +58,8 @@ describe Puppet::Type.type(:pkg_mediator) do
          @class.new(:name => @profile_name, :implementation => imp)
       end
 
-      [ "none", "None", "foo", "foo@1", "foo@1.2.3" ].each do |v|
+      [ "none", "None", "foo", "foo@1",
+        "foo@1.2.3", "foo-bar", "foo-bar@1" ].each do |v|
         it "should accept #{v}" do
           expect { validate v }.not_to raise_error
         end
