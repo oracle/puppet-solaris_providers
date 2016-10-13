@@ -64,7 +64,15 @@ Puppet::Type.type(:nis).provide(:nis) do
     # Return a string to pass to setrop ... = <string>
     def format_value(should)
                 if should.is_a? Array
-                    arr = should.collect {|val| '"' + val.to_s + '"'}
+                    arr = should.collect {|val|
+                      str = '"'
+                      if val.kind_of? Array
+                        str << val * ' '
+                      else
+                        str << val.to_s
+                      end
+                      str << '"'
+                    }
                     arr.unshift "("
                     arr.push ")"
 

@@ -61,13 +61,13 @@ Puppet::Type.newtype(:nis) do
     end
 
     newproperty(:securenets) do
-        desc "Entries for /var/yp/securenets.  Each entry must be a hash.
-              The first element in the hash is either a host or a netmask.
-              The second element must be an IP network address.  Specify
-              multiple entries as separate entries in the hash."
+        desc "Array of array entries for /var/yp/securenets. Each entry must
+        be an array.  The first element in the entry array is either 'host' or a
+        netmask.  The second element must be an IP network address.  Specify
+        multiple entries as additional arrays"
 
         def insync?(is)
-            is = {} if is == :absent or is.nil?
+            is = [] if is == :absent or is.nil?
             is.sort == self.should.sort
         end
 
@@ -80,14 +80,14 @@ Puppet::Type.newtype(:nis) do
         end
 
         validate do |value|
-          unless value.kind_of?(Hash)
-            fail("Argument `#{value}`:#{value.class} is not a hash")
+          unless value.kind_of?(Array)
+            fail("Argument `#{value}`:#{value.class} is not an array")
           end
-          value.each_pair do |k,v|
-            unless validator.valid_ip?(v)
-              fail("Invalid address `#{v}` for entry `#{k}`")
+            addr=value[1]
+            addr << "/" << value[0] unless value[0] == 'host'
+            unless validator.valid_ip?(addr)
+              fail("Invalid address `#{addr}` for entry `#{value}`")
             end
-          end
         end
     end
 

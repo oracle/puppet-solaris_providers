@@ -1,0 +1,3 @@
+HCNAME        TIMEOUT COUNT   INTERVAL DEF_PING TEST
+hc1           2       3       10       Y        tcp
+hc2           1       5       20       Y        /bin/false

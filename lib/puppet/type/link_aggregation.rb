@@ -29,7 +29,8 @@ Puppet::Type.newtype(:link_aggregation) do
     newparam(:temporary) do
         desc "Optional parameter that specifies that the aggreation is
               temporary.  Temporary aggregation links last until the next
-              reboot."
+              reboot. Attempts to modify temporary aggregations will result
+              in the aggregation being removed and re-created"
         newvalues(:true, :false)
     end
 
@@ -54,7 +55,9 @@ Puppet::Type.newtype(:link_aggregation) do
     end
 
     newproperty(:mode) do
-        desc "Specifies which mode to set."
+        desc "Specifies which mode to set. Mode can not be changed on an
+        existing aggregation, instead the aggregation will be removed and
+        re-created"
         newvalues(:trunk, :dlmp)
     end
 

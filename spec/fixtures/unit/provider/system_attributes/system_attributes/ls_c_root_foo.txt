@@ -1,0 +1,2 @@
+-rwxr-xr-x   1 root     root         981 Jul 25 12:21 /root/foo
+                {A------m-----}

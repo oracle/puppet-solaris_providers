@@ -1,0 +1,64 @@
+
+ilb_healthcheck
+===============
+Manage Solaris Integrated Load Balancer (ILB) health check configuration.
+See: ilbadm(8)
+**Note**
+* Healthchecks cannot be removed/modified while they are assigned to rules
+* Healthchecks cannot be modified only destroyed and recreated
+* Attempts to modify assigned healthchecks will result in catalog run errors
+
+
+Parameters
+----------
+
+- **count**
+    Maximum number of attempts to run hc-test before
+    marking a server as down. The default value is three iterations.
+    Values can match `/^\d+$/`.
+
+- **default_ping**
+    Execute default ping test before high layer health check tests.
+    Default: true
+Valid values are `true`, `false`. 
+
+- **ensure**
+    The basic property that the resource should be in.
+    Valid values are `present`, `absent`. 
+
+- **interval**
+    Interval between invocations of hc-test. This value must be greater
+    than hc-timeout times hc-count. The default value is 30 seconds.
+    Values can match `/^\d+$/`.
+
+- **name**
+    Name for the health check
+
+- **test**
+    UDP, TCP, external method (script or binary). An external method
+    should be specified with a full path name.
+    Arguments to external methods
+     $1 VIP (literal IPv4 or IPv6 address)
+     $2 Server IP (literal IPv4 or IPv6 address)
+     $3 Protocol (UDP, TCP as a string)
+     $4 Numeric port range (the user-specified value for hc-port)
+     $5 Maximum time (in seconds) that the test must wait before returning
+        a failure. If the test runs beyond the specified time, it might
+        be stopped, and the test is considered failed. This value is
+        user-defined and specified in hc-timeout.
+    The user-supplied test, my-script, may or may not use all the arguments,
+    but it must return one of the following:
+     Round-trip time (RTT) in microseconds
+     0 if the test does not calculate RTT
+     -1 for failure
+    Valid values are `tcp`, `udp`. Values can match `/^\/.+/`.
+
+- **timeout**
+    Threshold at which a test is considered failed
+    following interim failures of hc-test. If you kill an hc-test test, the
+    result is considered a failure. The default value is five seconds.
+    Values can match `/^\d+$/`.
+
+Providers
+---------
+    ilb_healthcheck
