@@ -14,4 +14,5 @@ group(:development, :test) do
 end
 
 gem "rubocop", "~> 0.26.1", :platforms => [:ruby]
-gem 'beaker-rspec', :require => false, :group => :acceptance
+gem 'beaker', '~> 2.0', :require => false, :group => :acceptance
+gem 'beaker-rspec', '5.6.0', :require => false, :group => :acceptance
