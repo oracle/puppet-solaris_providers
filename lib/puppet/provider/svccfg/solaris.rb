@@ -26,7 +26,8 @@ Puppet::Type.type(:svccfg).provide(:svccfg) do
     def exists?
         if @property_hash[:ensure] == :present && ! @resource[:value].nil?
           # property exists and resource has a defined value
-          @property_hash[:value] == @resource[:value]
+          # escape bourne shell characters in the value
+          @property_hash[:value] == @resource[:value].gsub(/([;&()|^<>\n \t\\\"\'`~*\[\]\$\!])/, '\\\\\1')
         else
           # just check for presence
           @property_hash[:ensure] == :present
