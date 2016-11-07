@@ -1,0 +1,8 @@
+lo0:loopback:46--:
+net0:ip:46--:
+net1:ip:46-l:
+net2:ip:46-l:
+net3:ip:46--:
+net1000:ip:----:
+ipmp0:ipmp:46--:net1 net2
+ipmp3:ipmp:----:net3

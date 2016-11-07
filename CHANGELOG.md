@@ -9,6 +9,8 @@
     :securenets => [['host','1.1.1.1'],['255.255.255.0','2.2.2.2']]
     ```
 
+  Puppet 4 related changes are coming
+
   * link_aggregation now strictly checks option combinations which previously
     failed during catalog application.
     i.e. temporary interfaces cannot be enable true/false
@@ -19,10 +21,13 @@
   24836004 '-' is valid in pkg mediator implementation
   24836209 nis provider needs to support multiple securenets entries
   24696809 Puppet link aggregation modules cascading errors
+  25022632 puppet ipmp_interface type should not validate interface existence
+  23593308 rspec tests need to be written for solaris_providers ipmp_interface
 
 1.2.2
 This release unifies the source for the oracle-solaris_providers IPS package.
-Puppet Forge Packages will not be built from this branch until spec testing has been completed.
+~~Puppet Forge Packages will not be built from this branch until
+spec testing has been completed.~~
 
 This release changes embedded licenses from CDDL to Apache 2.0
 

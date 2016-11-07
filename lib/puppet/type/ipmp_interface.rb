@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2013, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2013, 2016, Oracle and/or its affiliates. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,52 +17,61 @@
 require 'puppet/property/list'
 
 Puppet::Type.newtype(:ipmp_interface) do
-    @doc = "Manage the configuration of Oracle Solaris IPMP interfaces"
+  @doc = "Manage the configuration of Oracle Solaris IPMP interfaces"
 
-    ensurable
+  ensurable
 
-    newparam(:name) do
-        desc "The name of the IP interface"
-        isnamevar
+  newparam(:name) do
+    desc "The name of the IP interface"
+    isnamevar
+  end
+
+  newproperty(:temporary)  do
+    desc "Optional parameter that specifies that the IP interface is
+              temporary.  Temporary interfaces last until the next reboot.
+              Temporary interfaces cannot be modified in place. They will be
+              removed and recreated"
+    newvalues(:true, :false)
+  end
+
+  newproperty(:interfaces, :parent => Puppet::Property::List) do
+    desc "An array of interface names to use for the IPMP interface"
+
+    # This doesn't seem to catch 'aaa' or 'Net0'
+    newvalues(/^[a-z][a-z_0-9]+[0-9]+$/)
+
+    # ensure should remains an array
+    def should
+      @should
     end
 
-    newparam(:temporary)  do
-        desc "Optional parameter that specifies that the IP interface is
-              temporary.  Temporary interfaces last until the next reboot."
-        newvalues(:true, :false)
+    def insync?(is)
+      is = [] if is == :absent or is.nil?
+      is.sort == self.should.sort
     end
 
-    newproperty(:interfaces, :parent => Puppet::Property::List) do
-        desc "An array of interface names to use for the IPMP interface"
-
-        # ensure should remains an array
-        def should
-            @should
-        end
-
-        def insync?(is)
-            is = [] if is == :absent or is.nil?
-            is.sort == self.should.sort
-        end
-
-        # ipadm returns multivalue entries delimited with a space
-        def delimiter
-            " "
-        end
-
-        validate do |name|
-            cmd = Array["/usr/sbin/ipadm", "show-if", "-p", "-o", "IFNAME"]
-            output = Puppet::Util::Execution.execute(cmd).split("\n")
-            if name.class == Array
-                check = output - name
-                unless check.empty?
-                  fail "Invalid interface(s) specified: #{check.inspect}"
-                end
-            else
-                unless output.include?(name)
-                  fail "Invalid interface specified: #{name}"
-                end
-            end
-        end
+    # ipadm returns multivalue entries delimited with a space
+    def delimiter
+      " "
     end
+
+    validate do |value|
+      unless (3..16).include? value.length
+        fail "Invalid interface '#{value}' must be 3-16 characters"
+      end
+      unless /^[a-z][a-z_0-9]+[0-9]+$/.match(value)
+        fail "Invalid interface name '#{value}' must match a-z _ 0-9"
+      end
+    end
+  end
+
+  autorequire(:ip_interface) do
+    children = catalog.resources.select { |resource|
+      resource.type == :ip_interface &&
+        self[:interfaces].include?(resource[:name])
+    }
+    children.each.collect { |child|
+      child[:name]
+    }
+  end
 end
