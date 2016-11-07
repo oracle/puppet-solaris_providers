@@ -49,20 +49,15 @@ Puppet::Type.newtype(:ipmp_interface) do
         def delimiter
             " "
         end
-
-        validate do |name|
-            cmd = Array["/usr/sbin/ipadm", "show-if", "-p", "-o", "IFNAME"]
-            output = Puppet::Util::Execution.execute(cmd).split("\n")
-            if name.class == Array
-                check = output - name
-                unless check.empty?
-                  fail "Invalid interface(s) specified: #{check.inspect}"
-                end
-            else
-                unless output.include?(name)
-                  fail "Invalid interface specified: #{name}"
-                end
-            end
-        end
     end
+
+  autorequire(:ip_interface) do
+    children = catalog.resources.select { |resource|
+      resource.type == :ip_interface &&
+        self[:interfaces].include?(resource[:name])
+    }
+    children.each.collect { |child|
+      child[:name]
+    }
+  end
 end
