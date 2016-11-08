@@ -88,6 +88,13 @@ Puppet::Type.newtype(:svccfg) do
     desc "Value of the property. Value types :fmri, :opaque, :host, :hostname,
       :net_address, :net_address_v4, :net_address_v6, and :uri are treated as
       lists if they contain whitespace. See scf_value_create(3SCF)"
+
+      # escape bourne shell characters in the should value
+      def insync?(is)
+          is.to_s == should.to_s.gsub(/([;&()|^<>\n \t\\\"\'`~*\[\]\$\!])/,
+                                      '\\\\\1')
+
+      end
   end
 
 

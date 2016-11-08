@@ -1,3 +1,19 @@
+#
+# Copyright (c) 2016, Oracle and/or its affiliates. All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
 Puppet::Type.type(:zone).provide(:solaris) do
   desc "Provider for Solaris zones."
 
@@ -37,46 +53,51 @@ Puppet::Type.type(:zone).provide(:solaris) do
   # file or string.
   def configure
 
-    if @resource[:archive].nil? && @resource[:zonecfg_export].nil?
+    # make sure there's a zonecfg from some source
+    if @resource[:zonecfg_archive].nil? && @resource[:zonecfg_export].nil?
       raise Puppet::Error, "No configuration resource is defined."
     end
 
-    command = String.new
-    if @resource[:clone]
-      if !@resource[:zonecfg_export]
-        raise Puppet::Error, "A zone configuration must be defined to
-        clone a zone."
-      end
-      command = "#{command(:cfg)} -z #{@resource[:name]} -f #{@resource[:zonecfg_export]}"
-    else
-      unless @resource[:zonecfg_export].nil? || @resource[:zonecfg_export].empty?
-        begin
-          file = File.open(@resource[:zonecfg_export], "rb")
-          str = file.read.gsub(/[\n]\n*\s*/, "; ")
-        rescue
-          str = @resource[:zonecfg_export].gsub(/[\n]\n*\s*/, "; ")
-        ensure
-          file.close unless file.nil?
-        end
-        @property_hash.clear
-      end
-
-      unless @resource[:archive].nil? || @resource[:archive].empty?
-        if !str.nil?
-          command = "#{command(:cfg)} -z #{@resource[:name]} \'create -a #{@resource[:archive]};#{str}\'"
-        else
-          command = "#{command(:cfg)} -z #{@resource[:name]} create -a #{@resource[:archive]} "
-        end
-        if @resource[:archived_zonename]
-          command << " -z #{@resource[:archived_zonename]}"
-        end
-      end
-
-      if !@resource[:zonecfg_export].nil? && @resource[:archive].nil?
-        command = "#{command(:cfg)} -z #{@resource[:name]} \'#{str}\'"
+    # open zonecfg_export as a file if possible or treat it like a string
+    unless @resource[:zonecfg_export].nil? || @resource[:zonecfg_export].empty?
+      begin
+        file = File.open(@resource[:zonecfg_export], "rb")
+        exported_cfg = file.read.gsub(/[\n]\n*\s*/, "; ")
+      rescue
+        exported_cfg = @resource[:zonecfg_export].gsub(/[\n]\n*\s*/, "; ")
+      ensure
+        file.close unless file.nil?
       end
     end
 
+    # start building a command line
+    command = "#{command(:cfg)} -z #{@resource[:name]}"
+
+    # start building the subcommands
+    command << " '"
+
+    # use an archive if specified
+    if !@resource[:zonecfg_archive].nil?
+      # use the config from the archive
+      command << "create -a #{@resource[:zonecfg_archive]}"
+
+      # use an archived zone if specified
+      if !@resource[:archived_zonename].nil?
+        command << " -z #{@resource[:archived_zonename]}"
+      end
+
+      command << ";"
+    end
+
+    # use the exported zonecfg if specified
+    if !@resource[:zonecfg_export].nil? and !exported_cfg.nil?
+      command << " #{exported_cfg}"
+    end
+
+    # end the subcommands
+    command << "'"
+
+    # execute the command to configure the zone
     if command
       r = exec_cmd(:cmd => command)
     end
