@@ -79,7 +79,7 @@ describe Puppet::Type.type(:address_object).provider(:address_object) do
           :name => "lo0/v4",
           :ensure => :present,
           :address => '127.0.0.1/8',
-          :remote_address => nil,
+          :remote_address => :absent,
           :address_type => 'static',
           :down => :false,
           :enable => :true
@@ -113,32 +113,31 @@ describe Puppet::Type.type(:address_object).provider(:address_object) do
       end
 
       it 'should parse the object properly' do
-        expect(described_class.instances[0].instance_variable_get("@property_hash")).to eq( {
-          :name => "lo0/v4",
-          :ensure => :present,
-          :address => nil,
-          :remote_address => nil,
-          :address_type => 'dhcp',
-          :down => :false,
-          :enable => :true
-        } )
+        expect(described_class.instances[0].instance_variable_get("@property_hash")).to eq({
+          :name=>"lo0/v4",
+          :ensure=>:present,
+          :address_type=>"dhcp",
+          :seconds=>:absent,
+          :hostname=>:absent
+        }
+        )
           end
     end
 
     context 'with a disabled state' do
       before :each do
         described_class.stubs(:ipadm).with(
-          "show-addr", "-p", "-o", "addrobj,type,state,addr").returns "lo0/v4:dhcp:disabled:?"
+          "show-addr", "-p", "-o", "addrobj,type,state,addr").returns "lo0/v4:static:disabled:"
       end
 
       it 'should parse the object properly' do
         expect(described_class.instances[0].instance_variable_get("@property_hash")).to eq( {
           :name => "lo0/v4",
           :ensure => :present,
-          :address => nil,
-          :remote_address => nil,
-          :address_type => 'dhcp',
-          :down => :false,
+          :address => :absent,
+          :remote_address => :absent,
+          :address_type => 'static',
+          :down => :true,
           :enable => :false
         } )
           end
@@ -147,7 +146,7 @@ describe Puppet::Type.type(:address_object).provider(:address_object) do
     context 'with a down state' do
       before :each do
         described_class.stubs(:ipadm).with(
-          "show-addr", "-p", "-o", "addrobj,type,state,addr").returns "lo0/v4:dhcp:down:?"
+          "show-addr", "-p", "-o", "addrobj,type,state,addr").returns "lo0/v4:static:down:"
       end
 
       it 'should parse the object properly' do
@@ -155,9 +154,9 @@ describe Puppet::Type.type(:address_object).provider(:address_object) do
           described_class.instances[0].instance_variable_get("@property_hash")).to eq( {
           :name => "lo0/v4",
           :ensure => :present,
-          :address => nil,
-          :remote_address => nil,
-          :address_type => 'dhcp',
+          :address => :absent,
+          :remote_address => :absent,
+          :address_type => 'static',
           :down => :true,
           :enable => :true
         } )

@@ -25,41 +25,66 @@ Puppet::Type.type(:address_object).provide(:address_object) do
     def self.instances
         ipadm("show-addr", "-p", "-o", "addrobj,type,state,addr").split(
               "\n").collect do |line|
-            addrobj, type, state, addr = line.split(":", 4)
+            addrobj, address_type, state, addr = line.split(":", 4)
 
             # replace any hypen with an underscore
-            type = type.gsub(/\-/, "_")
+            address_type = address_type.gsub(/\-/, "_")
+
+            hsh = {
+                :name => addrobj,
+                :ensure => :present,
+                :address_type => address_type,
+            }
+
+            down = nil
+            if state == "ok"
+                down = :false
+                enable = :true
+            elsif state == "disabled"
+                down = :true
+                enable = :false
+            elsif state == "down"
+                down = :true
+                enable = :true
+            end
+            hsh[:enable] = enable
+            hsh[:down] = down unless down.nil?
 
             # look to see if this is a point-to-point address object
             if addr.include?("->")
                 local, remote = addr.split("->")
                 local = local.delete("\\")
                 remote = remote.delete("\\")
-            elsif type.downcase == "dhcp" and addr == "?"
+                hsh[:address] = local
+                hsh[:remote_address] = remote
+            elsif address_type.downcase == "dhcp"
+              # Temporary objects cannot be enabled
+              hsh.delete(:enable)
+              # Remove down, temporary objects cannot be downed...
+              # otherwise resource > example.pp generates invalid code
+              hsh.delete(:down)
+              if addr == "?"
                 local = nil
                 remote = nil
+              end
             else
                 local = addr.delete("\\")
-                remote = nil
+                hsh[:address] = local.empty? ? :absent : local
             end
 
-            down = :false
-            if state == "ok"
-                enable = :true
-            elsif state == "disabled"
-                enable = :false
-            elsif state == "down"
-                down = :true
-                enable = :true
-            end
 
-            new(:name => addrobj,
-                :ensure => :present,
-                :address_type => type,
-                :down => down,
-                :enable => enable,
-                :address => local,
-                :remote_address => remote)
+      type_props = {
+        :static => [:address,:remote_address,:down],
+        :dhcp => [:seconds,:hostname],
+        :addrconf => [:interface_id,:remote_interface_id],
+      }
+
+
+            type_props[address_type.to_sym].each {|t|
+              hsh[t] ||= :absent
+            }
+
+            new(hsh)
         end
     end
 
