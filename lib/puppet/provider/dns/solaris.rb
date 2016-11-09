@@ -22,6 +22,8 @@ Puppet::Type.type(:dns).provide(:dns) do
 
     Dns_fmri = "svc:/network/dns/client"
 
+    mk_resource_methods
+
     def self.instances
         props = {}
         svcprop("-p", "config", Dns_fmri).split("\n").each do |line|
@@ -33,19 +35,13 @@ Puppet::Type.type(:dns).provide(:dns) do
 
         props[:name] = "current"
         props[:ensure] = :present
+
+        # remove escaped spaces, they are invalid in the resource output
+        props[:options] = props[:options].gsub(/\\ /,' ') if props[:options]
         return Array new(props)
     end
 
     Puppet::Type.type(:dns).validproperties.each do |field|
-        define_method(field) do
-            begin
-                svcprop("-p", "config/" + field.to_s, Dns_fmri).strip()
-            rescue
-                # if the property isn't set, don't raise an error
-                nil
-            end
-        end
-
         define_method(field.to_s + "=") do |should|
             begin
                 if should.is_a? Array
