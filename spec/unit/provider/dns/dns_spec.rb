@@ -51,6 +51,8 @@ describe Puppet::Type.type(:dns).provider(:dns) do
         expect(instances.size).to eq(1)
       end
 
+      xit "has the correct options"
+
   describe "when validating defined properties" do
     Puppet::Type.type(:dns).validproperties.each do |field|
       pg = "config"
