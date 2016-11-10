@@ -23,6 +23,7 @@
   24696809 Puppet link aggregation modules cascading errors
   25022632 puppet ipmp_interface type should not validate interface existence
   23593308 rspec tests need to be written for solaris_providers ipmp_interface
+  25071681 puppet dns resource generates invalid manifest
 
 1.2.2
 This release unifies the source for the oracle-solaris_providers IPS package.
