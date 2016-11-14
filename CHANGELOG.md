@@ -23,6 +23,9 @@
   24696809 Puppet link aggregation modules cascading errors
   25022632 puppet ipmp_interface type should not validate interface existence
   23593308 rspec tests need to be written for solaris_providers ipmp_interface
+  25071681 puppet dns resource generates invalid manifest
+  25071690 puppet resource nis; Error: Could not run: No ability to determine if nis exists
+  25071686 puppet resource ldap; Error: Could not run: No ability to determine if ldap...
 
 1.2.2
 This release unifies the source for the oracle-solaris_providers IPS package.

@@ -25,8 +25,9 @@ Puppet::Type.newtype(:nis) do
 
     newparam(:name) do
        desc "The symbolic name for the NIS domain and client settings to use.
-              This name is used for human reference only."
-        isnamevar
+              Name can only be the literal value 'current'"
+       newvalues("current")
+       isnamevar
     end
 
     newproperty(:domainname) do

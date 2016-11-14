@@ -18,7 +18,7 @@ describe Puppet::Type.type(:ldap).provider(:ldap) do
       }
       hsh
     }
-        end
+  end
 
 
   let(:resource) do
@@ -26,21 +26,20 @@ describe Puppet::Type.type(:ldap).provider(:ldap) do
       :name => "current",
       :ensure => :present
     )
-      end
+  end
 
   let(:provider) do
     described_class.new(:ldap)
   end
 
-
   let(:properties) {
     # This is duplicated from @properties for scoping
     @properties = [:profile, :server_list, :preferred_server_list, :search_base, :search_scope,
-      :authentication_method, :credential_level, :search_time_limit,
-      :bind_time_limit, :follow_referrals, :profile_ttl, :attribute_map,
-      :objectclass_map, :service_credential_level, :service_authentication_method,
-      :service_search_descriptor, :bind_dn, :bind_passwd, :enable_shadow_update,
-      :admin_bind_dn, :admin_bind_passwd, :host_certpath]
+                   :authentication_method, :credential_level, :search_time_limit,
+                   :bind_time_limit, :follow_referrals, :profile_ttl, :attribute_map,
+                   :objectclass_map, :service_credential_level, :service_authentication_method,
+                   :service_search_descriptor, :bind_dn, :bind_passwd, :enable_shadow_update,
+                   :admin_bind_dn, :admin_bind_passwd, :host_certpath]
   }
 
   # remove ensure from the expected properties
@@ -51,13 +50,13 @@ describe Puppet::Type.type(:ldap).provider(:ldap) do
     FileTest.stubs(:executable?).with('/usr/bin/svcprop').returns true
   end
 
-    # ensure we have all listed properties, addition of new properties will result
-    # in an error here and require the various property arrays to be updated
-    it "has only expected methods" do
-      expect(properties).to eq(expectedproperties)
-    end
+  # ensure we have all listed properties, addition of new properties will result
+  # in an error here and require the various property arrays to be updated
+  it "has only expected methods" do
+    expect(properties).to eq(expectedproperties)
+  end
 
-    context "responds to" do
+  context "responds to" do
     # No setter methods
     [:ensure,:flush].each { |method|
       it method do is_expected.to respond_to(method) end
@@ -65,20 +64,25 @@ describe Puppet::Type.type(:ldap).provider(:ldap) do
 
     # This is duplicated due to scoping
     @properties = [:profile, :server_list, :preferred_server_list, :search_base, :search_scope,
-      :authentication_method, :credential_level, :search_time_limit,
-      :bind_time_limit, :follow_referrals, :profile_ttl, :attribute_map,
-      :objectclass_map, :service_credential_level, :service_authentication_method,
-      :service_search_descriptor, :bind_dn, :bind_passwd, :enable_shadow_update,
-      :admin_bind_dn, :admin_bind_passwd, :host_certpath]
+                   :authentication_method, :credential_level, :search_time_limit,
+                   :bind_time_limit, :follow_referrals, :profile_ttl, :attribute_map,
+                   :objectclass_map, :service_credential_level, :service_authentication_method,
+                   :service_search_descriptor, :bind_dn, :bind_passwd, :enable_shadow_update,
+                   :admin_bind_dn, :admin_bind_passwd, :host_certpath]
 
     @properties.each { |method|
       it method do is_expected.to respond_to(method) end
       it "#{method}=".intern do is_expected.to respond_to("#{method}=".to_sym) end
     }
 
-    end # properties
+  end # properties
 
   describe ".instances" do
+    before(:all) do
+      # LDAP provider checks the euid of the running process
+      Process.stubs(:euid).returns(0)
+    end
+
     it "returns one instance" do
       expect(instances.size).to eq(1)
     end
@@ -107,12 +111,12 @@ describe Puppet::Type.type(:ldap).provider(:ldap) do
         :service_credential_level => :absent,
         :service_authentication_method => :absent,
         :service_search_descriptor => %q(passwd:dc=foo,dc=com?sub? shadow:dc=foo,dc=com?sub? rpc:ou=rpc,ou=foo.corp.com,o=nl,dc=foo,dc=com amgh:nismapname=amgh,ou=foo.corp.com,o=nl,dc=foo,dc=com protocols:ou=protocols,ou=foo.corp.com,o=nl,dc=foo,dc=com services:ou=services,ou=foo.corp.com,o=nl,dc=foo,dc=com aliases:ou=aliases,ou=foo.corp.com,o=nl,dc=foo,dc=com netgroup:ou=netgroup,dc=foo,dc=com auto_share:automountmapname=auto_share,ou=it.bar.sun.com,o=nl,dc=foo,dc=com auto_re:automountmapname=auto_re,ou=foo.corp.com,o=nl,dc=foo,dc=com auto_master:automountmapname=auto_master,ou=it.bar.sun.com,o=nl,dc=foo,dc=com auto_home:automountmapname=auto_home,ou=it.bar.sun.com,o=nl,dc=foo,dc=com auto_direct:automountmapname=auto_direct,ou=it.bar.sun.com,o=nl,dc=foo,dc=com auto_galileo:automountmapname=auto_galileo,ou=it.bar.sun.com,o=nl,dc=foo,dc=com auto_java:automountmapname=auto_java,ou=it.bar.sun.com,o=nl,dc=foo,dc=com auto_ws:automountmapname=auto_ws,ou=it.bar.sun.com,o=nl,dc=foo,dc=com auto_wwss:automountmapname=auto_wwss,ou=it.bar.sun.com,o=nl,dc=foo,dc=com auto_scde:automountmapname=auto_scde,ou=it.bar.sun.com,o=nl,dc=foo,dc=com auto_micro:automountmapname=auto_micro,ou=automount,ou=pd_sca,ou=foo.corp.com,o=nl,dc=foo,dc=com auto_shared:automountmapname=auto_shared,ou=it.bar.sun.com,o=nl,dc=foo,dc=com auto_src:automountmapname=auto_src,ou=it.bar.sun.com,o=nl,dc=foo,dc=com auto_workspace:automountmapname=auto_workspace,ou=foo.corp.com,o=nl,dc=foo,dc=com auto_micro_people:automountmapname=auto_micro_people,ou=automount,ou=pd_sca,ou=foo.corp.com,o=nl,dc=foo,dc=com auto_ON:automountmapname=auto_ON,ou=it.bar.sun.com,o=nl,dc=foo,dc=com auto_import:automountmapname=auto_import,ou=it.bar.sun.com,o=nl,dc=foo,dc=com printers:ou=printers,ou=foo.corp.com,o=nl,dc=foo,dc=com group:ou=groups,dc=foo,dc=com),
-        :bind_dn => %q(cn=admin,ou=users,dc=foo,dc=com),
-        :bind_passwd => %q({NS1}c2ab9ff37b69c4b5a665a2b15d003bba0779),
-        :enable_shadow_update => :absent,
-        :admin_bind_dn => :absent,
-        :admin_bind_passwd => :absent,
-        :host_certpath => :absent
+      :bind_dn => %q(cn=admin,ou=users,dc=foo,dc=com),
+      :bind_passwd => %q({NS1}c2ab9ff37b69c4b5a665a2b15d003bba0779),
+      :enable_shadow_update => :absent,
+      :admin_bind_dn => :absent,
+      :admin_bind_passwd => :absent,
+      :host_certpath => :absent
       }.each_pair do |field,value|
         pg = Puppet::Type.type(:ldap).propertybyname(field).pg rescue "unknown"
         it "#{pg}/#{field}" do
@@ -145,4 +149,4 @@ describe Puppet::Type.type(:ldap).provider(:ldap) do
       expect(provider.profile=newval).to eq(newval)
     end
   end
-  end
+end

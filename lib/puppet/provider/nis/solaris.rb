@@ -26,6 +26,10 @@ Puppet::Type.type(:nis).provide(:nis) do
 
     mk_resource_methods
 
+    def exists?
+      @property_hash[:ensure] == :present
+    end
+
     def self.instances
         props = {}
         validprops = Puppet::Type.type(:nis).validproperties
@@ -90,6 +94,10 @@ Puppet::Type.type(:nis).provide(:nis) do
                     end
                     return value
                 end
+    end
+
+    def create
+      fail "Cannot create a new instance. Use the fixed name 'current'"
     end
 
     # svc:/network/nis/client properties

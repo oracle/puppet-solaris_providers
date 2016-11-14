@@ -24,8 +24,9 @@ Puppet::Type.newtype(:ldap) do
     ensurable
 
     newparam(:name) do
-        desc "The symbolic name for the LDAP client settings to use.  This name
-              is used for human reference only."
+        desc "The symbolic name for the LDAP client settings to use. Name
+              can only be the literal value 'current'"
+        newvalues("current")
         isnamevar
     end
 
