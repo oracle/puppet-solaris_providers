@@ -23,28 +23,35 @@ Puppet::Type.type(:link_aggregation).provide(:link_aggregation) do
   mk_resource_methods
 
   def self.instances
+    persistent = []
+    dladm("show-aggr", "-P", "-p", "-o", "link").each_line.collect do |line|
+      persistent << line.chomp.strip()
+    end
+
     dladm("show-aggr", "-p", "-o",
-          "link,mode,policy,addrpolicy,lacpactivity,lacptimer").each_line
-    .collect do |line|
-      link, mode, policy, addrpolicy, lacpactivity, lacptimer = \
-        line.chomp.split(":").map! { |e| ( e == "--" ) ? nil : e }
+          "link,mode,policy,addrpolicy,lacpactivity,lacptimer").
+          each_line.collect do |line|
+           link, mode, policy, addrpolicy, lacpactivity, lacptimer = \
+             line.chomp.split(":").map! { |e| ( e == "--" ) ? nil : e }
 
-      links = []
-      dladm("show-aggr", "-x", "-p", "-o", "port", link).split(
-        "\n").each do |portline|
-        next if portline.strip() == ""
-        links << portline.chomp.strip()
-        end
+           links = []
+           dladm("show-aggr", "-x", "-p", "-o", "port", link).
+             each_line do |portline|
+             next if portline.strip() == ""
+             links << portline.chomp.strip()
+           end
 
-      new(:name => link,
-          :ensure => :present,
-          :lower_links => links,
-          :mode => mode,
-          :policy => policy,
-          :address => addrpolicy,
-          :lacpmode => lacpactivity,
-          :lacptimer => lacptimer)
-          end
+           new(:name => link,
+               :ensure => :present,
+               :lower_links => links,
+               :mode => mode,
+               :policy => policy,
+               :address => addrpolicy,
+               :lacpmode => lacpactivity,
+               :lacptimer => lacptimer,
+               :temporary => persistent.include?(link) ? :false : :true
+              )
+         end
   end
 
   def self.prefetch(resources)
@@ -61,7 +68,7 @@ Puppet::Type.type(:link_aggregation).provide(:link_aggregation) do
 
   # override mk_resource_method  property setters
   def lower_links=(value)
-    is_temporary?
+    recreate_temporary && return
     current = lower_links.kind_of?(Array) ? lower_links : []
     remove_list = []
     for entry in current - value
@@ -86,7 +93,6 @@ Puppet::Type.type(:link_aggregation).provide(:link_aggregation) do
   end
 
   def mode=(value)
-    is_temporary?
     # -m was removed in s12_99; mode must be changed via destroy/create
     destroy
     create
@@ -94,25 +100,25 @@ Puppet::Type.type(:link_aggregation).provide(:link_aggregation) do
   end
 
   def policy=(value)
-    is_temporary?
+    recreate_temporary && return
     dladm("modify-aggr", "-P", value, resource[:name])
     return @property_hash[:policy]= value
   end
 
   def lacpmode=(value)
-    is_temporary?
+    recreate_temporary && return
     dladm("modify-aggr", "-L", value, resource[:name])
     return @property_hash[:lacpmode]= value
   end
 
   def lacptimer=(value)
-    is_temporary?
+    recreate_temporary && return
     dladm("modify-aggr", "-T", value, resource[:name])
     return @property_hash[:lacptimer]= value
   end
 
   def address=(value)
-    is_temporary?
+    recreate_temporary && return
     dladm("modify-aggr", "-u", value, resource[:name])
     return @property_hash[:address]= value
   end
@@ -171,16 +177,17 @@ Puppet::Type.type(:link_aggregation).provide(:link_aggregation) do
     nil
   end
 
-  def is_temporary?
-    dladm("show-aggr", "-P", name)
-    #raise Puppet::Error, "Unable to change attributes of temporary " \
-    #    "aggregation #{name} " if p[:exit] == 1
-    nil
-  end
-
-  def exec_cmd(*cmd)
-    output = Puppet::Util::Execution.execute(cmd, :failonfail => false)
-    {:out => output, :exit => $CHILD_STATUS.exitstatus}
+  def recreate_temporary
+    # Temporary aggregations cannot be modified, instead of failing and
+    # forcing them to be removed if changes are desired remove and re-create
+    # the aggregation
+    if resource[:temporary] == :true
+      destroy
+      create
+      return true
+    else
+      return false
+    end
   end
 end
 

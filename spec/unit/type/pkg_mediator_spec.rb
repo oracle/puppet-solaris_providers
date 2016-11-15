@@ -5,7 +5,7 @@ describe Puppet::Type.type(:pkg_mediator) do
 
   before do
     @class = described_class
-    @profile_name = "rspec profile"
+    @profile_name = "pkgmediator"
   end
 
   it "should have :name as its keyattribute" do
@@ -33,19 +33,23 @@ describe Puppet::Type.type(:pkg_mediator) do
           expect { validate(newval) }.not_to raise_error
         end
       end
-
-      it "should reject invalid values" do
-        expect { validate "foo" }.to raise_error(Puppet::Error, error_pattern)
-      end
-    end  # ensure
+    end
 
     describe "for version" do
       def validate(ver)
          @class.new(:name => @profile_name, :version => ver)
       end
 
-      it "should accept a value" do
-        expect { validate "foo" }.not_to raise_error
+      [ "none", "None", "1", "1.2", "1.2.3" ].each do |v|
+        it "should accept #{v}" do
+          expect { validate v }.not_to raise_error
+        end
+      end
+
+      [ "A", "1a", "1.2b" ].each do |v|
+        it "should not accept #{v}" do
+          expect { validate v }.to raise_error(Puppet::ResourceError)
+        end
       end
     end  # version
 
@@ -54,11 +58,22 @@ describe Puppet::Type.type(:pkg_mediator) do
          @class.new(:name => @profile_name, :implementation => imp)
       end
 
-      it "should accept a value" do
-        expect { validate "foo" }.not_to raise_error
+      [ "none", "None", "foo", "foo@1",
+        "foo@1.2.3", "foo-bar", "foo-bar@1" ].each do |v|
+        it "should accept #{v}" do
+          expect { validate v }.not_to raise_error
+        end
+      end
+        [ "foo bar", "foo 1", "foo@1.2b" ].each do |v|
+      it "should not accept #{v}" do
+          expect { validate v }.to raise_error(Puppet::ResourceError)
+        end
       end
     end  # implementation
-
-
   end # validating values
+  describe "when validating resource" do
+    it "should not accept None for both implementation and version" do
+         expect { @class.new(:name => @profile_name, :version => 'None', :implementation => "None") }.to raise_error(Puppet::ResourceError)
+    end
+  end
 end

@@ -31,6 +31,7 @@ Puppet::Type.newtype(:address_object) do
     newparam(:temporary) do
         desc "Optional parameter that specifies that the address object is
               temporary.  Temporary address objects last until the next reboot."
+        #defaultto :false
         newvalues(:true, :false)
     end
 
@@ -227,8 +228,7 @@ Puppet::Type.newtype(:address_object) do
         end
       end
 
-    fail("cannot specify :enable when :temporary != :true") if [:true,:false].include?(self[:enable]) &&
-      self[:temporary] != :true
-
+    fail("cannot specify :enable when :temporary == :true") if [:true,:false].include?(self[:enable]) &&
+      self[:temporary] == :true
     }
 end

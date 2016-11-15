@@ -357,31 +357,29 @@ describe Puppet::Type.type(:address_object) do
     end  # address_type
 
     describe "for enable" do
-      error_pattern = /enable.*Invalid/m
-
-      def validate(enab)
-         @class.new(:name => @profile_name, :enable => enab, :temporary => :true)
+      error_pattern = /cannot specify/m
+      def validate(enab,tmp)
+        @class.new(:name => @profile_name, :enable => enab, :temporary => tmp)
       end
 
-      [ "true", "false" ].each do |follow_val|
-        it "should accept a value of #{follow_val}" do
-          expect { validate(follow_val) }.not_to raise_error
+      [ "true","false" ].each do |enable|
+        context "temporary=true" do
+          it "should reject enable=#{enable}" do
+            expect { validate(enable,true) }.to raise_error(Puppet::ResourceError,
+                                                            error_pattern)
+          end
         end
-      end
+        context "temporary=false" do
+          it "should accept enable=#{enable}" do
+            expect { validate(enable,false) }.not_to raise_error
+          end
+        end
 
-      it "should reject an invalid value" do
-        expect { validate("foobar") }.to raise_error(Puppet::ResourceError,
-                                                       error_pattern)
-      end
+        it "should reject an invalid value" do
+          expect { validate("foobar",false) }.to raise_error(Puppet::ResourceError,
+                                                       /Invalid value/)
+        end
 
-      it "should raise an error if :temporary == :false" do
-        expect { @class.new(:name => @profile_name, :enable => :true, :temporary => :false) }.to raise_error(Puppet::ResourceError,
-                                                       /cannot specify/)
-      end
-
-      it "should raise an error if :temporary is not set" do
-        expect { @class.new(:name => @profile_name, :enable => :true) }.to raise_error(Puppet::ResourceError,
-                                                       /cannot specify/)
       end
 
     end  # enable

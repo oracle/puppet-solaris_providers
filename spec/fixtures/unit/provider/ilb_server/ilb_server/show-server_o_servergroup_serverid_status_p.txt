@@ -1,0 +1,13 @@
+sg10:_sg10.0:E
+sg10:_sg10.1:E
+sg1:_sg1.0:D
+sg1:_sg1.1:E
+sg1:_sg1.2:E
+sg3_v6:_sg3_v6.0:E
+sg3_v6:_sg3_v6.1:E
+sg1:_sg1.0:D
+sg1:_sg1.1:E
+sg1:_sg1.2:E
+sg1:_sg1.0:D
+sg1:_sg1.1:E
+sg1:_sg1.2:E

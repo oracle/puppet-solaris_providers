@@ -8,7 +8,7 @@ group(:development, :test) do
   gem 'pry', :require => false
   gem 'pry-rescue', :require => false
   gem 'pry-stack_explorer', :require => false
-  gem 'psych', :require => true
+  gem 'psych', :require => false
   gem 'puppet', '3.8.6', :require => true
   gem 'pkg-config', :require => false
 end
