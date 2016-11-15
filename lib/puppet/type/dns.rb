@@ -124,11 +124,6 @@ Puppet::Type.newtype(:dns) do
             is.sort == self.should.sort
         end
 
-        # svcprop returns multivalue entries delimited with a space
-        def delimiter
-            " "
-        end
-
         validate do |value|
             data = value.split(":")
             if data.length == 1
