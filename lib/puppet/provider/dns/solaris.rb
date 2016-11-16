@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2013, 2014, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2013, 2016, Oracle and/or its affiliates. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -29,16 +29,32 @@ Puppet::Type.type(:dns).provide(:dns) do
         svcprop("-p", "config", Dns_fmri).split("\n").each do |line|
             fullprop, value = line.split(" ", 3).values_at(0,2)
             prop = fullprop.split("/")[1].intern
-            props[prop] = value \
-                if Puppet::Type.type(:dns).validproperties.include? prop
+            if Puppet::Type.type(:dns).validproperties.include? prop
+              if [:options,:nameserver,:search,:sortlist].include? prop
+                # remove escaped spaces, they are invalid in the resource
+                # output and break automatic list munging
+                value = value.gsub(/\\ /,' ')
+              end
+            props[prop] = value
+            end
         end
 
         props[:name] = "current"
         props[:ensure] = :present
 
-        # remove escaped spaces, they are invalid in the resource output
-        props[:options] = props[:options].gsub(/\\ /,' ') if props[:options]
         return Array new(props)
+    end
+
+    def self.prefetch(resources)
+        things = instances
+        resources.keys.each do |key|
+            if provider = things.find{ |prop|
+              prop.name == key &&
+                prop.kind_of?(Puppet::Type::Dns::ProviderDns)
+            }
+            resources[key].provider = provider
+            end
+        end
     end
 
     Puppet::Type.type(:dns).validproperties.each do |field|

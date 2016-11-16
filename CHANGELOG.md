@@ -19,18 +19,15 @@
 
   Bugs Fixed:
   23593308 rspec tests need to be written for solaris_providers ipmp_interface
-  23593308 rspec tests need to be written for solaris_providers ipmp_interface
-  24696809 Puppet link aggregation modules cascading errors
   24696809 Puppet link aggregation modules cascading errors
   24836004 '-' is valid in pkg mediator implementation
   24836209 nis provider needs to support multiple securenets entries
   25022632 puppet ipmp_interface type should not validate interface existence
-  25022632 puppet ipmp_interface type should not validate interface existence
-  25071681 puppet dns resource generates invalid manifest
   25071681 puppet dns resource generates invalid manifest
   25071686 puppet resource ldap; Error: Could not run: No ability to determine if ldap...
   25071690 puppet resource nis; Error: Could not run: No ability to determine if nis exists
   25106150 Nis provider is not idempotent
+  25106155 DNS provider is not idempotent
 
 1.2.2
 This release unifies the source for the oracle-solaris_providers IPS package.
@@ -40,14 +37,14 @@ spec testing has been completed.~~
 This release changes embedded licenses from CDDL to Apache 2.0
 
   Bugs Fixed:
-  23641391 Do not enable permanent addresses for ipadm
-  23586971 Puppet link aggregation code needs to be updated based on the dladm command chan
-  23593312 rspec tests need to be written for solaris_providers link_aggregation
   21626572 svccfg provider does not support multi-valued properties
-  23484766 describe output for interface_properties should reference ipadm(8)
   22259529 pkg_mediator fails on previously set implementation parameter 
   23332786 Solaris NIS provider needs to validate securenets parameter
   23338926 Puppetx / PuppetX namespace change
+  23484766 describe output for interface_properties should reference ipadm(8)
+  23586971 Puppet link aggregation code needs to be updated based on the dladm command chan
+  23593312 rspec tests need to be written for solaris_providers link_aggregation
+  23641391 Do not enable permanent addresses for ipadm
 
 1.2.1
 This release unifies the source for the oracle-solaris_providers IPS package.
@@ -55,10 +52,10 @@ Puppet Forge Packages will not be built from this branch until spec testing has 
 
   Bugs Fixed:
   21626572 svccfg provider does not support multi-valued properties
-  23484766 describe output for interface_properties should reference ipadm(8)
   22259529 pkg_mediator fails on previously set implementation parameter
   23332786 Solaris NIS provider needs to validate securenets parameter
   23338926 Puppetx / PuppetX namespace change
+  23484766 describe output for interface_properties should reference ipadm(8)
 
 1.0.2
   Version as once released on the Forge
