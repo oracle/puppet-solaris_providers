@@ -1,4 +1,4 @@
-# solaris_providers Mdule for Puppet
+# solaris_providers Module for Puppet
 
 [![Build Status](https://travis-ci.org/oracle/puppet-solaris_providers.svg?branch=master)](https://travis-ci.org/oracle/puppet-solaris_providers)
 
