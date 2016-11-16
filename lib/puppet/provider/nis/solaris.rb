@@ -54,15 +54,16 @@ Puppet::Type.type(:nis).provide(:nis) do
     end
 
     def self.prefetch(resources)
-      # pull the instances on the system
-      inst = instances
-
-      # set the provider for the resource to set the property_hash
-      resources.keys.each do |name|
-        if provider = inst.find{ |i| i.name == name}
-          resources[name].provider = provider
+        things = instances
+        resources.keys.each do |key|
+            if provider = things.find{ |prop|
+              # key is unexpectedly coming from resource as a symbol
+              prop.name == key.to_s &&
+                prop.kind_of?(Puppet::Type::Nis::ProviderNis)
+            }
+            resources[key].provider = provider
+            end
         end
-      end
     end
 
     # Return a string to pass to setrop ... = <string>
