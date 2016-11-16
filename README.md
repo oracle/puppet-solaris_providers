@@ -1,4 +1,6 @@
-# solaris_providers
+# solaris_providers Mdule for Puppet
+
+[![Build Status](https://travis-ci.org/oracle/souffle.svg?branch=master)](https://travis-ci.org/oracle/souffle)
 
 #### Table of Contents
 
