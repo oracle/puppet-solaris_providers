@@ -28,29 +28,44 @@ Puppet::Type.type(:link_aggregation).provide(:link_aggregation) do
       persistent << line.chomp.strip()
     end
 
+    macs = {}
+    dladm(%w(show-linkprop -p mac-address -o link,value)).each_line.collect do |line|
+      link,mac = line.chomp.split
+      macs[link] = mac
+    end
+
     dladm("show-aggr", "-p", "-o",
           "link,mode,policy,addrpolicy,lacpactivity,lacptimer").
           each_line.collect do |line|
+           # Strip partial mac address from addrpolicy fixed lines
+           line = line.gsub(/\\:/,'')
            link, mode, policy, addrpolicy, lacpactivity, lacptimer = \
-             line.chomp.split(":").map! { |e| ( e == "--" ) ? nil : e }
+             line.chomp.split(":").map! { |e| ( e == "--" ) ? :absent : e }
 
-           links = []
-           dladm("show-aggr", "-x", "-p", "-o", "port", link).
-             each_line do |portline|
-             next if portline.strip() == ""
-             links << portline.chomp.strip()
-           end
-
-           new(:name => link,
+           aggr={
+               :name => link,
                :ensure => :present,
-               :lower_links => links,
                :mode => mode,
                :policy => policy,
-               :address => addrpolicy,
                :lacpmode => lacpactivity,
                :lacptimer => lacptimer,
                :temporary => persistent.include?(link) ? :false : :true
-              )
+              }
+
+           if addrpolicy && addrpolicy.match(/^fixed/)
+             aggr[:address] = macs[link]
+           else
+             aggr[:address] = :auto
+           end
+
+           links = dladm("show-aggr", "-x", "-p", "-o", "port", link).
+             each_line.collect do |portline|
+             next if portline.strip() == ""
+             portline.chomp.strip()
+           end
+           aggr[:lower_links] = links.compact
+
+           new(aggr)
          end
   end
 
@@ -129,34 +144,34 @@ Puppet::Type.type(:link_aggregation).provide(:link_aggregation) do
       options << "-t"
     end
 
-    if lowerlinks = resource[:lower_links]
-      if lowerlinks.is_a? Array
-        for link in lowerlinks
+    if resource[:lower_links] && resource[:lower_links] != :absent
+      if resource[:lower_links].is_a? Array
+        for link in resource[:lower_links]
           options << "-l" << link
         end
       else
-        options << "-l" << lowerlinks
+        options << "-l" << resource[:lower_links]
       end
     end
 
-    if mode = resource[:mode]
-      options << "-m" << mode
+    if resource[:mode] && resource[:mode] != :absent
+      options << "-m" << resource[:mode]
     end
 
-    if policy = resource[:policy]
-      options << "-P" << policy
+    if resource[:policy] && resource[:policy] != :absent
+      options << "-P" << resource[:policy]
     end
 
-    if lacpmode = resource[:lacpmode]
-      options << "-L" << lacpmode
+    if resource[:lacpmode] && resource[:lacpmode] != :absent
+      options << "-L" << resource[:lacpmode]
     end
 
-    if lacptimer = resource[:lacptimer]
-      options << "-T" << lacptimer
+    if resource[:lacptimer] && resource[:lacptimer] != :absent
+      options << "-T" << resource[:lacptimer]
     end
 
-    if address = resource[:address]
-      options << "-u" << address
+    if resource[:address] && resource[:address] != :auto
+      options << "-u" << resource[:address]
     end
     options
   end

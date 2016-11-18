@@ -1,0 +1,7 @@
+dladm show-linkprop -p mac-address -o link,value
+LINK     VALUE
+aggr0    0:14:4f:29:cc:8d
+net0     0:14:4f:29:cc:8c
+net1     0:14:4f:29:cc:8d
+net2     0:14:4f:29:cc:92
+net3     0:14:4f:29:cc:93

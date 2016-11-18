@@ -17,7 +17,7 @@
     static interfaces do not accept seconds as an argument
     Note: dhcp is a temporary interface
 
-  Bugs Fixed:
+  Bugs Fixes and Enhancements:
   23593308 rspec tests need to be written for solaris_providers ipmp_interface
   24696809 Puppet link aggregation modules cascading errors
   24836004 '-' is valid in pkg mediator implementation
@@ -28,6 +28,11 @@
   25071690 puppet resource nis; Error: Could not run: No ability to determine if nis exists
   25106150 Nis provider is not idempotent
   25106155 DNS provider is not idempotent
+  25163776 puppet link_aggregation misunderstands 'address' -u output
+  25163791 puppet link_aggregation should use resource values instead of property_hash
+  25163815 puppet address_object errors and validations could be better
+  25163840 puppet puppet::property::list types conflict with internally generated arrays
+  25163864 puppet link_aggregation type specs need to be written
 
 1.2.2
 This release unifies the source for the oracle-solaris_providers IPS package.
