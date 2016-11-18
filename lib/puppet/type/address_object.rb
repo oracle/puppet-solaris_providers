@@ -28,7 +28,6 @@ Puppet::Type.newtype(:address_object) do
     newparam(:temporary) do
         desc "Optional parameter that specifies that the address object is
               temporary.  Temporary address objects last until the next reboot."
-        #defaultto :false
         newvalues(:true, :false)
     end
 
@@ -55,7 +54,6 @@ Puppet::Type.newtype(:address_object) do
         validate do |value|
           unless valid_ip?(value) || valid_hostname?(value)
             fail "#{value} is invalid"
-            raise Puppet::Error, ":address entry:  #{value} is invalid"
           end
         end
     end
@@ -69,7 +67,6 @@ Puppet::Type.newtype(:address_object) do
         validate do |value|
           unless valid_ip?(value) || valid_hostname?(value)
             fail "#{value} is invalid"
-            raise Puppet::Error, ":remote_address entry:  #{value} is invalid"
           end
         end
     end
@@ -86,7 +83,7 @@ Puppet::Type.newtype(:address_object) do
               'dhcp'.  Valid values are a numerical value in seconds or
               'forever'"
 
-        newvalues(/\d+/,"forever")
+        newvalues(/^\d+$/,"forever")
     end
 
     newproperty(:hostname) do
@@ -98,7 +95,6 @@ Puppet::Type.newtype(:address_object) do
         validate do |value|
           unless valid_hostname?(value)
             fail "#{value} is invalid"
-            raise Puppet::Error, ":hostname entry:  #{value} is invalid"
           end
         end
     end
@@ -113,7 +109,7 @@ Puppet::Type.newtype(:address_object) do
           2001:0db8:85a3:0000:0000:8a2e:0370:7334"
         include PuppetX::Oracle::SolarisProviders::Util::Validation
         validate do |value|
-          unless validator.valid_ipv6?(value)
+          unless valid_ipv6?(value)
             fail "#{value} is invalid IPv6 address"
           end
         end
@@ -129,7 +125,7 @@ Puppet::Type.newtype(:address_object) do
           2001:0db8:85a3:0000:0000:8a2e:0370:7334"
         include PuppetX::Oracle::SolarisProviders::Util::Validation
         validate do |value|
-          unless validator.valid_ipv6?(value)
+          unless valid_ipv6?(value)
             fail "#{value} is invalid IPv6 address"
           end
         end
