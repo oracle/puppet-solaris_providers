@@ -4,18 +4,20 @@ require 'spec_helper'
 
 describe Puppet::Type.type(:dns).provider(:dns) do
 
-  let(:resource) do
-    Puppet::Type.type(:dns).new(
+  let(:params) do
+    {
       :name => "current",
       :ensure => :present
-    )
-      end
-
-  let(:provider) do
-    described_class.new(:dns)
+    }
   end
+  let(:resource) { described_class.new(params) }
+  let(:provider) { Puppet::Provider.new(resource) }
+  let(:catalog) { Puppet::Resource::Catalog.new }
+  let(:error_pattern) { /Invalid/ }
 
   before(:each) do
+    FileTest.stubs(:file?).with('/usr/sbin/svccfg').returns true
+    FileTest.stubs(:executable?).with('/usr/sbin/svccfg').returns true
     FileTest.stubs(:file?).with('/usr/bin/svcprop').returns true
     FileTest.stubs(:executable?).with('/usr/bin/svcprop').returns true
   end
@@ -29,14 +31,13 @@ describe Puppet::Type.type(:dns).provider(:dns) do
   # There is no setter method for flush
   it { is_expected.to respond_to(:flush) }
 
-
   describe "#instances" do
     described_class.expects(:svcprop).with(
       "-p", "config", Dns_fmri).returns File.read(
-      my_fixture('svcprop_p_config_Dns_fmri.txt'))
+        my_fixture('svcprop_p_config_Dns_fmri.txt'))
 
-    instances = described_class.instances.map { |p|
-    {
+      instances = described_class.instances.map { |p|
+        {
           :ensure => p.get(:ensure),
           :name => p.get(:name),
           :nameserver => p.get(:nameserver),
@@ -44,8 +45,8 @@ describe Puppet::Type.type(:dns).provider(:dns) do
           :search => p.get(:search),
           :sortlist => p.get(:sortlist),
           :options => p.get(:options)
-          }
-    }
+        }
+      }
 
       it "should only have one result" do
         expect(instances.size).to eq(1)
@@ -59,20 +60,64 @@ describe Puppet::Type.type(:dns).provider(:dns) do
         :options => %q(retrans:3 retry:1 timeout:3 ndots:2)
       }.each_pair { |opt,value|
 
-      it "has the correct #{opt}" do
-        expect(instances[0][opt]).to eq(value)
-      end
+        it "has the correct #{opt}" do
+          expect(instances[0][opt]).to eq(value)
+        end
       }
 
-  describe "when validating defined properties" do
-    Puppet::Type.type(:dns).validproperties.each do |field|
-      pg = "config"
-
-      it "should be able to see the #{pg}/#{field} SMF property" do
-        expect(instances[0][field]).not_to eq(nil)
-      end
-    end  # validproperties
-  end  # validating default values
+      describe "when validating defined properties" do
+        Puppet::Type.type(:dns).validproperties.each do |field|
+          pg = "config"
+          it "should be able to see the #{pg}/#{field} SMF property" do
+            expect(instances[0][field]).not_to eq(nil)
+          end
+        end  # validproperties
+      end  # validating default values
   end
-
+  describe "correctly formats" do
+    {
+      :nameserver= => {
+        :absent => %q(\'\'),
+        "1.2.3.4" => "1.2.3.4",
+        "fe80::3e07:54ff:fe53:c704" => "fe80::3e07:54ff:fe53:c704",
+        "[fe80::3e07:54ff:fe53:c704]" => "\\[fe80::3e07:54ff:fe53:c704\\]",
+        "1.2.3.4 2.3.4.5" => %q^\(1.2.3.4 2.3.4.5\)^,
+        %w(1.2.3.4 2.3.4.5) => %q^\(1.2.3.4 2.3.4.5\)^
+      },
+      :domain= => {
+        :absent => %q(\'\'),
+        "foo.com" => "foo.com",
+        "foo.bar.com" => "foo.bar.com"
+      },
+      :search= => {
+        :absent => %q(\'\'),
+        "foo.com" => "foo.com",
+        "foo.bar.com" => "foo.bar.com",
+        "foo.com bar.com" => %q^\(foo.com bar.com\)^,
+        %w(foo.com bar.com) => %q^\(foo.com bar.com\)^,
+      },
+      :sortlist= => {
+        :absent => %q(\'\'),
+        "1.2.3.4" => "1.2.3.4",
+        "1.2.3.4 2.3.4.5" => %q^\(1.2.3.4 2.3.4.5\)^,
+        %w"1.2.3.4 2.3.4.5" => %q^\(1.2.3.4 2.3.4.5\)^,
+      },
+      :options= => {
+        :absent => %q(\'\'),
+        "debug" => "debug",
+        "debug timeout:3" => %q^\(debug timeout:3\)^,
+      }
+    }.each_pair { |type,hsh|
+      context type.inspect do
+        hsh.each_pair { |k,v|
+          it "#{k} -> #{v}" do
+            described_class.expects(:svccfg).with(
+              "-s", Dns_fmri, "setprop",
+              "config/#{type.slice(0..-2)}=", v)
+            expect(resource.send(type,k)).to eq(v)
+          end
+        }
+      end
+    }
+  end
 end

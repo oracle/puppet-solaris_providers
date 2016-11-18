@@ -10,8 +10,10 @@ describe Puppet::Type.type(:svccfg).provider(:svccfg) do
       :fmri => "svc:/application/puppet:agent",
       :property => "refresh/timeout_seconds",
       :type => "count",
-      :value => 0
+      :value => 0,
+      :ensure => :present
     }
+
   end
 
   let(:resource) { Puppet::Type.type(:svccfg).new(params) }
@@ -242,7 +244,34 @@ describe Puppet::Type.type(:svccfg).provider(:svccfg) do
             "setprop",
             params[:property],
             "=", "#{params[:type]}:",
-            params[:value]] * " "
+            params[:value].shellescape] * " "
+        )
+        described_class.expects(:svccfg).with("-s", resource[:fmri], "refresh")
+        described_class.expects(:svcprop).with("-f", resource[:prop_fmri])
+        expect(provider.create).to eq(nil)
+      end
+      }
+
+      # This is probably a bad example. I'm not sure that we will ever
+      # get an actual array here or why it needs to be wrapped in another
+      # array but if there is an array it seems to be handled correctly
+      {
+        :opaque=> ['asasd wewerwef','asdasd'],
+        :astring=> ['asasd wewerwef','asdasd'],
+        :ustring=> ['asasd wewerwef','asdasd'],
+      }.each { |thing,arry|
+      it "#{thing} array treated as list" do
+        params[:name]  = "create-#{thing}"
+        params[:type]  = thing
+        params[:value] = [arry]
+        params[:fmri]  = "svc:/bogus/service"
+        params[:property] = "config/something"
+        Puppet::Util::Execution.expects(:execute).with(
+          ["/usr/sbin/svccfg", "-s", params[:fmri],
+            "setprop",
+            params[:property],
+            "=", "#{params[:type]}:",
+            "\\(#{params[:value][0].map(&:shellescape).join(" ")}\\)"] * " "
         )
         described_class.expects(:svccfg).with("-s", resource[:fmri], "refresh")
         described_class.expects(:svcprop).with("-f", resource[:prop_fmri])
@@ -251,7 +280,6 @@ describe Puppet::Type.type(:svccfg).provider(:svccfg) do
       }
       {
         :fmri=> ['svc:/foo svc:/bar','svc:/foo'],
- :opaque=> ['asasd wewerwef','asdasd'],
  :host=> ['foo.com bar.com','foo.com'],
  :hostname=> ['a.foo.com b.bar.com','a.foo.com'],
  :net_address=> ['1.2.3.4 3.4.5.6','1.2.3.4'],
@@ -302,12 +330,28 @@ describe Puppet::Type.type(:svccfg).provider(:svccfg) do
             "setprop",
             resource[:property],
             "=",
-            resource[:value]
+            resource[:value].shellescape
         ] * " "
         )
         described_class.expects(:svccfg).with("-s", resource[:fmri], "refresh")
         expect(provider.create).to eq(nil)
       end
+
+      {
+        %q(simple string) => %q(simple\\ string),
+        %q(it's less simple) => %q(it\\'s\\ less\\ simple),
+        %q(echo foo > /etc/shadow) => %q(echo\\ foo\\ \\>\\ /etc/shadow)
+      }.each_pair { |k,v|
+        it "escapes shell characters in strings" do
+          params[:type] = :astring
+          params[:value] = k
+          expect(provider.munge_value(k)).to eq(v)
+        end
+      }
+
+      # String escapes in multi-value types generally can't be tested here as
+      # they must first be valid and are weeded out by the input validation
+      # on the puppet type
 
       it "should execute svccfg addpg" do
         resource[:property] = "tm_proppat_nt_config_user"
@@ -325,6 +369,10 @@ describe Puppet::Type.type(:svccfg).provider(:svccfg) do
       end
     end
     context "#destroy" do
+      it "does not require value for :absent" do
+        params={:ensure=>:absent, :fmri => "svc:/application/puppet:agent"}
+        expect{resource}.not_to raise_error
+      end
       it "should execute svccfg delprop" do
         described_class.expects(:svccfg).with("-s",resource[:fmri],"delprop",resource[:property])
         described_class.expects(:svccfg).with("-s",resource[:fmri],"refresh")

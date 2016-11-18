@@ -19,6 +19,8 @@ Puppet::Type.type(:svccfg).provide(:svccfg) do
     defaultfor :operatingsystem => :solaris
     commands :svccfg => "/usr/sbin/svccfg", :svcprop => "/usr/bin/svcprop"
 
+    include PuppetX::Oracle::SolarisProviders::Util::Svcs
+
     mk_resource_methods
 
     def exists?
@@ -67,34 +69,10 @@ Puppet::Type.type(:svccfg).provide(:svccfg) do
         svcprops = instances
         # set the provider for the resource to set the property_hash
         resources.each_pair do |key,res|
-            if provider = svcprops.find{ |prop| prop.prop_fmri == res.parameters[:prop_fmri].should}
+            if provider = svcprops.find{ |prop| prop.prop_fmri == res.parameters[:prop_fmri]}
                 resources[key].provider = provider
             end
         end
-    end
-
-    def munge_value
-      munged = ""
-      # reformat values which may be lists. If there is no resource type look for
-      # a property_hash value
-      case ( @resource[:type] ? @resource[:type] : type.to_sym )
-      when :astring, :ustring, :boolean, :count, :integer, :time
-        # Do Nothing for these types
-        munged = @resource[:value]
-
-      when :fmri, :opaque, :host, :hostname, :net_address, :net_address_v4,
-        :net_address_v6, :uri
-        if @resource[:value].split(/\s+/).length > 1
-          munged << "\\(#{@resource[:value]}\\)"
-        else
-          munged = @resource[:value]
-        end
-      else
-        # without a type pass value unmunged
-        munged = @resource[:value]
-      end
-
-      return munged
     end
 
     def update_property_hash
@@ -119,7 +97,7 @@ Puppet::Type.type(:svccfg).provide(:svccfg) do
             end
 
 
-            args << munge_value
+            args << munge_value(@resource[:value],@resource[:type] ? @resource[:type] : type)
         else
             args << "addpg" << @resource[:property] << @resource[:type]
         end

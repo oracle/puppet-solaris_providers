@@ -15,11 +15,11 @@
 #
 
 
-require File.expand_path(File.join(File.dirname(__FILE__), '..','..','puppet_x/oracle/solaris_providers/util/validation.rb'))
+require File.expand_path(File.join(File.dirname(__FILE__), '..','..','puppet_x/oracle/solaris_providers/util/svcs.rb'))
 
 Puppet::Type.newtype(:svccfg) do
   @doc = "Manage SMF service properties with svccfg(8)."
-  validator = PuppetX::Oracle::SolarisProviders::Util::Validation.new
+  include PuppetX::Oracle::SolarisProviders::Util::Svcs
 
   ensurable do
     newvalue(:present) do
@@ -105,113 +105,61 @@ Puppet::Type.newtype(:svccfg) do
       fail ":fmri is required" unless self[:fmri]
       fail ":property is required" unless self[:property]
 
-      # Don't check for presence of value for property group types
-      unless [:dependency, :framework, :configfile, :method, :template,
-        :template_pg_pattern, :template_prop_pattern].include?(self[:type])
-        # self.provider.value is set in prefetch
-        fail ":value is required" if self[:value].nil? && self.provider.value.nil?
+      # Skip value validation for absent and delcust
+      if self[:ensure] != :present
+        return true
       end
 
+      # Value is required for non-property groups and
+      # invalid for property groups
+      unless is_pg_type?(self[:type])
+
+        if self[:value].nil? && (self.provider && self.provider.value.nil?)
+          fail ":value is required for setting properties"
+        end
+      else
+        is_pg_wellformed?(self[:property],true)
+        is_pg_valid?(self[:value],true)
+      end
     end
 
     self[:prop_fmri] ||= "#{self[:fmri]}/:properties/#{self[:property]}"
 
-
     #
     # Validate Value arguments based on type
     #
-    # :astring, :ustring, :boolean, :count, :integer, :time are evaluated
-    # as is. Other types are split on whitespace with each component
-    # checked for validity.
     case self[:type]
-    when :astring, :ustring, :opaque
-
+    when :astring
+      is_astring?(self[:value],true)
+    when :ustring
+      is_ustring?(self[:value],true)
+    when :opaque
+      is_opaque?(self[:value],true)
     when :boolean
-      unless [:true,:false].include?(self[:value].downcase.to_sym)
-        fail "#{self[:type]} must be true or false"
-      end
-
+      is_boolean?(self[:value],true)
     when :count
-      unless self[:value].kind_of?(Integer) || self[:value].match(/\A\d+\Z/)
-        fail "#{self[:type]}:#{self[:value]} must be an integer"
-      end
-      unless self[:value].to_i >= 0
-        fail "#{self[:type]}:#{self[:value]} must be unsigned"
-      end
-
+      is_count?(self[:value],true)
     when :fmri
-      self[:value].split(/\s+/).each { |v|
-        unless v.match(/\A\p{Alpha}+:\/+\p{Graph}+\Z/)
-          fail "#{self[:type]}:'#{v}' does not appear to be valid"
-        end
-      }
-
+      is_fmri?(self[:value],true)
     when :host
-      self[:value].split(/\s+/).each { |v|
-        unless ( validator.valid_hostname?(v) || validator.valid_ip?(v) )
-          fail "#{self[:type]}:#{v} is not a valid hostname or ip address"
-        end
-      }
-
+      is_host?(self[:value],true)
     when :hostname
-      self[:value].split(/\s+/).each { |v|
-        unless validator.valid_hostname?(v)
-          fail "#{self[:type]}:#{v} is not valid"
-        end
-      }
-
+      is_hostname?(self[:value],true)
     when :integer
-      if self[:value].kind_of?(Numeric)
-        unless self[:value].kind_of?(Integer)
-          fail "#{self[:type]} must be an integer"
-        end
-      else
-        unless self[:value].match(/\A-?\d+\Z/)
-          fail "#{self[:type]} must be an integer"
-        end
-      end
-
+      is_integer?(self[:value],true)
     when :net_address
-      self[:value].split(/\s+/).each { |v|
-        unless validator.valid_ip?(v)
-          fail "#{self[:type]}:#{v} is not valid"
-        end
-      }
-
+      is_net_address?(self[:value],true)
     when :net_address_v4
-      self[:value].split(/\s+/).each { |v|
-        unless validator.valid_ipv4?(v)
-          fail "#{self[:type]}:#{v} is not valid"
-        end
-      }
-
+      is_net_address_v4?(self[:value],true)
     when :net_address_v6
-      self[:value].split(/\s+/).each { |v|
-        unless validator.valid_ipv6?(v)
-          fail "#{self[:type]}:#{v} is not valid"
-        end
-      }
-
+      is_net_address_v6?(self[:value],true)
     when :time
-      unless  self[:value].kind_of?(Float) || self[:value].to_f >= 0
-        fail "#{self[:type]}:#{self[:value]} is not valid"
-      end
-
+      is_time?(self[:value],true)
     when :uri
-      self[:value].split(/\s+/).each { |v|
-        unless v.match(/\A\p{Alpha}+:\p{Graph}+\Z/)
-          fail "#{self[:type]}:#{v} is not valid"
-        end
-      }
-
+      is_uri?(self[:value],true)
     when :dependency, :framework, :configfile, :method, :template,
       :template_pg_pattern, :template_prop_pattern
-      fail "#{self[:type]} implies a property group. Property group names cannot contain /" if (
-        self[:property].match('/')
-      )
 
-      fail "Property groups do not take values" unless self[:value].nil?
     end
-
   }
 end

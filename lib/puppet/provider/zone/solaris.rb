@@ -44,7 +44,7 @@ Puppet::Type.type(:zone).provide(:solaris) do
     end
   end
 
-  
+
   # Read in the zone configuration parameters and properties and
   # perform the zone configuration. Options are cloning the zone,
   # which needs a zonecfg_export file, configuring an archive, which
@@ -99,7 +99,7 @@ Puppet::Type.type(:zone).provide(:solaris) do
 
     # execute the command to configure the zone
     if command
-      r = exec_cmd(:cmd => command)
+      exec_cmd(:cmd => command)
     end
   end
 
@@ -135,14 +135,14 @@ Puppet::Type.type(:zone).provide(:solaris) do
 	     @resource[:install_args] << " -c " + @resource[:config_profile]
        end
     end
-       
+
     if @resource[:clone] # TODO: add support for "-s snapshot"
       if @resource[:config_profile]
         zoneadm :clone, @resource[:install_args].split(" "), @resource[:clone]
       else
         zoneadm :clone, @resource[:clone]
       end
-    elsif @resource[:install_args] 
+    elsif @resource[:install_args]
       zoneadm :install, @resource[:install_args].split(" ")
     else
       zoneadm :install
@@ -162,12 +162,12 @@ Puppet::Type.type(:zone).provide(:solaris) do
       end
     end
     @property_hash.dup
-    
+
   end
 
   # We need a way to test whether a zone is in process.  Our 'ensure'
   # property models the static states, but we need to handle the temporary ones.
-  def processing?  
+  def processing?
     hash = status
     return false unless hash
     ["incomplete", "ready", "shutting_down"].include? hash[:ensure]
@@ -274,7 +274,7 @@ Puppet::Type.type(:zone).provide(:solaris) do
      # Shutdown the zone
      zoneadm :halt
   end
-  
+
 
   def unconfigure
     # Unconfigure and delete the zone

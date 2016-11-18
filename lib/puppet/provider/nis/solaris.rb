@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2013, 2015, Oracle and/or its affiliates. All rights reserved.
+#   Copyright (c) 2013, 2015, Oracle and/or its affiliates. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,124 +14,98 @@
 # limitations under the License.
 #
 
-Puppet::Type.type(:nis).provide(:nis) do
-    desc "Provider for management of NIS client for Oracle Solaris"
-    confine :operatingsystem => [:solaris]
-    defaultfor :osfamily => :solaris, :kernelrelease => ['5.11', '5.12']
-    commands :svccfg => '/usr/sbin/svccfg', :svcprop => '/usr/bin/svcprop'
+# This is only a pre-configured instance of svccfg
+Puppet::Type.type(:nis).provide(:nis,
+                                :parent =>
+Puppet::Type.type(:svccfg).provider(:svccfg)) do
 
-    class << self; attr_accessor :client_fmri, :domain_fmri end
-    Client_fmri = "svc:/network/nis/client"
-    Domain_fmri = "svc:/network/nis/domain"
+  desc "Provider for management of NIS client for Oracle Solaris"
+  confine :operatingsystem => [:solaris]
+  defaultfor :osfamily => :solaris, :kernelrelease => ['5.11', '5.12']
+  commands :svccfg => '/usr/sbin/svccfg', :svcprop => '/usr/bin/svcprop'
 
-    mk_resource_methods
+  class << self; attr_accessor :client_fmri, :domain_fmri end
+  Client_fmri = "svc:/network/nis/client"
+  Domain_fmri = "svc:/network/nis/domain"
 
-    def exists?
-      @property_hash[:ensure] == :present
-    end
 
-    def self.instances
-        props = {}
-        validprops = Puppet::Type.type(:nis).validproperties
+  mk_resource_methods
 
-        [Client_fmri, Domain_fmri].each do |svc|
-            svcprop("-p", "config", svc).split("\n").collect do |line|
-                data = line.split()
-                fullprop = data[0]
-                if data.length > 2
-                    value = data[2..-1].join(" ")
-                else
-                    value = nil
-                end
+  def self.instances
+    props = {}
+    validprops = Puppet::Type.type(:nis).validproperties
 
-                prop = fullprop.split("/")[1].intern
-                props[prop] = value if validprops.include? prop.to_sym
-            end
+    [Client_fmri, Domain_fmri].each do |svc|
+      svcprop("-p", "config", svc).split("\n").collect do |line|
+        data = line.split()
+        fullprop = data[0]
+        if data.length > 2
+          value = data[2..-1].join(" ")
+        else
+          value = nil
         end
-        props[:name] = "current"
-        props[:ensure] = :present
-        return Array new(props)
+
+        prop = fullprop.split("/")[1].intern
+        props[prop] = value if validprops.include? prop.to_sym
+      end
     end
+    props[:name] = "current"
+    props[:ensure] = :present
+    return Array new(props)
+  end
 
-    def self.prefetch(resources)
-        things = instances
-        resources.keys.each do |key|
-            if provider = things.find{ |prop|
-              # key is unexpectedly coming from resource as a symbol
-              prop.name == key.to_s &&
-                prop.kind_of?(Puppet::Type::Nis::ProviderNis)
-            }
-            resources[key].provider = provider
-            end
-        end
+  def self.prefetch(resources)
+    things = instances
+    resources.keys.each { |key|
+      things.find { |prop|
+        # key is unexpectedly coming from resource as a symbol
+        prop.name == key.to_s
+      }.tap { |provider|
+        resources[key].provider = provider
+      }
+    }
+  end
+
+  def exists?
+    @property_hash[:ensure] == :present
+  end
+
+  def create
+    fail "Cannot create a new instance. Use the fixed name 'current'"
+  end
+
+  # svc:/network/nis/client properties
+  [:use_broadcast, :use_ypsetme].each do |field|
+    # Don't define accessors, mk_resource_methods and instances pre-populate
+    define_method(field.to_s + "=") do |should|
+      begin
+        value = munge_value(should)
+        svccfg("-s", Client_fmri, "setprop", "config/#{field}=", value)
+        return value
+      rescue => detail
+        fail "value: #{should.inspect}\n#{detail}\n"
+      end
     end
+  end
 
-    # Return a string to pass to setrop ... = <string>
-    def format_value(should)
-                if should.is_a? Array
-                    arr = should.collect {|val|
-                      str = '"'
-                      if val.kind_of? Array
-                        str << val * ' '
-                      else
-                        str << val.to_s
-                      end
-                      str << '"'
-                    }
-                    arr.unshift "("
-                    arr.push ")"
+  # svc:/network/nis/domain properties
+  [:securenets, :domainname, :ypservers].each do |field|
+    prop_type = Puppet::Type::Nis.propertybyname(field).prop_type
+    # Don't define accessors, mk_resource_methods and instances pre-populate
 
-                    return arr * " "
-                else
-                    # Puppet seems to get confused about when to pass an empty
-                    # string or "\"\"".  Catch either condition to handle
-                    # passing values to SMF correctly
-                    if should.to_s.empty? or should.to_s == '""'
-                        value = should.to_s
-                    elsif should.match(/['"]/)
-                        value = "\"" + should.to_s + "\""
-                    else
-                        value = should.to_s
-                    end
-                    return value
-                end
+    define_method(field.to_s + "=") do |should|
+      begin
+        value = munge_value(should,prop_type)
+        svccfg("-s", Domain_fmri, "setprop", "config/#{field}=", value)
+        return value
+      rescue => detail
+        fail "value: #{should.inspect}\n#{detail}\n"
+      end
     end
+  end
 
-    def create
-      fail "Cannot create a new instance. Use the fixed name 'current'"
-    end
-
-    # svc:/network/nis/client properties
-    [:use_broadcast, :use_ypsetme].each do |field|
-        # Don't define accessors, mk_resource_methods and instances pre-populate
-        define_method(field.to_s + "=") do |should|
-            begin
-                svccfg("-s", Client_fmri, "setprop", "config/" + field.to_s,
-                       "=", format_value(should) )
-            rescue => detail
-                fail "value: #{should.inspect}\n#{detail}\n"
-            end
-            @client_refresh = true
-        end
-    end
-
-    # svc:/network/nis/domain properties
-    [:securenets, :domainname, :ypservers].each do |field|
-        # Don't define accessors, mk_resource_methods and instances pre-populate
-
-        define_method(field.to_s + "=") do |should|
-            begin
-                    svccfg("-s", Domain_fmri, "setprop",
-                           "config/" + field.to_s, "=", format_value(should))
-            rescue => detail
-                fail "value: #{should.inspect}\n#{detail}\n"
-            end
-            @domain_refresh = true
-        end
-    end
-
-    def flush
-            svccfg("-s", Domain_fmri, "refresh")
-            svccfg("-s", Client_fmri, "refresh")
-    end
+  def flush
+    svccfg("-s", Domain_fmri, "refresh")
+    svccfg("-s", Client_fmri, "refresh")
+  end
 end

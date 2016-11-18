@@ -23,7 +23,7 @@ Puppet::Type.newtype(:ilb_rule) do
   @doc = "Manage Solaris Integrated Load Balancer (ILB) rule configuration.
   Existing rules cannot be modified they will be removed and re-created"
 
-  validator = PuppetX::Oracle::SolarisProviders::Util::Validation.new
+  include PuppetX::Oracle::SolarisProviders::Util::Validation
 
   ensurable
 
@@ -43,8 +43,9 @@ Puppet::Type.newtype(:ilb_rule) do
   newproperty(:vip) do
     desc "(Virtual) destination IP address"
 
+    include PuppetX::Oracle::SolarisProviders::Util::Validation
     validate do |value|
-      fail "Invalid IP #{value}" unless validator.valid_ip?(value)
+      fail "Invalid IP #{value}" unless valid_ip?(value)
     end
   end
 
@@ -115,11 +116,12 @@ Puppet::Type.newtype(:ilb_rule) do
     to use as the proxy source address range. The range is limited to
     ten IP addresses."
 
+    include PuppetX::Oracle::SolarisProviders::Util::Validation
     validate do |value|
       ips = value.split('-')
       fail "Invalid IP range #{value}" if ips.length > 2
       ips.each { |ip|
-        fail "Invalid IP #{ip}" unless validator.valid_ip?(ip)
+        fail "Invalid IP #{ip}" unless valid_ip?(ip)
       }
       if ips.length == 2
         if (range = (IPAddr.new(ips[0])..IPAddr.new(ips[1])).to_a.length) > 10

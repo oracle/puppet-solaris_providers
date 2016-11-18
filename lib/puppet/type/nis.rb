@@ -14,12 +14,11 @@
 # limitations under the License.
 #
 
-require File.expand_path(File.join(File.dirname(__FILE__), '..','..','puppet_x/oracle/solaris_providers/util/validation.rb'))
+require File.expand_path(File.join(File.dirname(__FILE__), '..','..','puppet_x/oracle/solaris_providers/util/svcs.rb'))
 require 'puppet/property/list'
 
 Puppet::Type.newtype(:nis) do
     @doc = "Manage the configuration of the NIS client for Oracle Solaris"
-    validator = PuppetX::Oracle::SolarisProviders::Util::Validation.new
 
     ensurable
 
@@ -32,11 +31,28 @@ Puppet::Type.newtype(:nis) do
 
     newproperty(:domainname) do
         desc "The NIS domainname"
+
+        class << self
+          attr_accessor :prop_type
+        end
+        self.prop_type = :hostname
+
+        include PuppetX::Oracle::SolarisProviders::Util::Svcs
+        validate do |value|
+          is_hostname?(value,true)
+        end
     end
 
     newproperty(:ypservers, :parent => Puppet::Property::List) do
         desc "The hosts or IP addresses to use as NIS servers.  Specify
               multiple entries as an array"
+
+        class << self
+          attr_accessor :prop_type
+        end
+        self.prop_type = :host
+
+        include PuppetX::Oracle::SolarisProviders::Util::Svcs
 
         # ensure should remains an array
         def should
@@ -53,11 +69,10 @@ Puppet::Type.newtype(:nis) do
             " "
         end
 
+
+        include PuppetX::Oracle::SolarisProviders::Util::Svcs
         validate do |value|
-          unless validator.valid_ip?(value) || validator.valid_hostname?(value)
-                raise Puppet::Error, "ypserver entry:  #{value} is
-                    invalid"
-          end
+          is_host?(value,true)
         end
     end
 
@@ -66,6 +81,11 @@ Puppet::Type.newtype(:nis) do
         be an array.  The first element in the entry array is either 'host' or a
         netmask.  The second element must be an IP network address.  Specify
         multiple entries as additional arrays"
+
+        class << self
+          attr_accessor :prop_type
+        end
+        self.prop_type = :array
 
         def insync?(is)
             is = [] if is == :absent or is.nil?
@@ -80,15 +100,20 @@ Puppet::Type.newtype(:nis) do
           currentvalue.to_s
         end
 
+        include PuppetX::Oracle::SolarisProviders::Util::Svcs
         validate do |value|
           unless value.kind_of?(Array)
             fail("Argument `#{value}`:#{value.class} is not an array")
           end
             addr=value[1]
             addr << "/" << value[0] unless value[0] == 'host'
-            unless validator.valid_ip?(addr)
+            unless is_net_address?(addr)
               fail("Invalid address `#{addr}` for entry `#{value}`")
             end
+        end
+
+        munge do |value|
+          value = value.join(" ")
         end
     end
 

@@ -14,21 +14,7 @@
 # limitations under the License.
 #
 
-# Puppet 4 renames Puppetx to PuppetX
-begin
-  require 'puppet_x'
-rescue LoadError
-  # Support Puppet 3.x with the 4.x namespace
-  module PuppetX; end
-end
-
-require 'ipaddr'
-module PuppetX::Oracle
-  module SolarisProviders
-    module Util
-    end
-  end
-end
+require File.expand_path(File.join(File.dirname(__FILE__), '..', 'util.rb'))
 
 # ILB has a flexible defintion of ports
 # these methods will return puppet failures

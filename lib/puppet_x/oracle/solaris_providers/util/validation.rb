@@ -14,23 +14,9 @@
 # limitations under the License.
 #
 
-# Puppet 4 renames Puppetx to PuppetX
-begin
-  require 'puppet_x'
-rescue LoadError
-  # Support Puppet 3.x with the 4.x namespace
-  module PuppetX; end
-end
+require File.expand_path(File.join(File.dirname(__FILE__), '..','util.rb'))
 
-require 'ipaddr'
-module PuppetX::Oracle
-  module SolarisProviders
-    module Util
-    end
-  end
-end
-
-class PuppetX::Oracle::SolarisProviders::Util::Validation
+module PuppetX::Oracle::SolarisProviders::Util::Validation
   def valid_hostname?(hostname)
     # Reject things that bear a strong resembalance to an IPv4 address
     return false if hostname.match(/\A(?:\d{1,3}\.?){4}\Z/)

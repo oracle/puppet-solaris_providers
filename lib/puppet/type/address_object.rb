@@ -18,9 +18,6 @@ require File.expand_path(File.join(File.dirname(__FILE__), '..','..','puppet_x/o
 
 Puppet::Type.newtype(:address_object) do
     @doc = "Manage the configuration of Oracle Solaris address objects"
-    validator = PuppetX::Oracle::SolarisProviders::Util::Validation.new
-
-
     ensurable
 
     newparam(:name) do
@@ -53,8 +50,11 @@ Puppet::Type.newtype(:address_object) do
               end-point.  An optional prefix length may be specified.  Only
               valid with an address_type of 'static'"
 
+
+        include PuppetX::Oracle::SolarisProviders::Util::Validation
         validate do |value|
-          unless validator.valid_ip?(value) || validator.valid_hostname?(value)
+          unless valid_ip?(value) || valid_hostname?(value)
+            fail "#{value} is invalid"
             raise Puppet::Error, ":address entry:  #{value} is invalid"
           end
         end
@@ -65,8 +65,10 @@ Puppet::Type.newtype(:address_object) do
               remote end-point.  An optional prefix length may be specified.
               Only valid with an address_type of 'static'"
 
+        include PuppetX::Oracle::SolarisProviders::Util::Validation
         validate do |value|
-          unless validator.valid_ip?(value) || validator.valid_hostname?(value)
+          unless valid_ip?(value) || valid_hostname?(value)
+            fail "#{value} is invalid"
             raise Puppet::Error, ":remote_address entry:  #{value} is invalid"
           end
         end
@@ -92,8 +94,10 @@ Puppet::Type.newtype(:address_object) do
               server to map the client's leased IPv4 address.  Only valid
               with an address_type of 'dhcp'"
 
+        include PuppetX::Oracle::SolarisProviders::Util::Validation
         validate do |value|
-          unless validator.valid_hostname?(value)
+          unless valid_hostname?(value)
+            fail "#{value} is invalid"
             raise Puppet::Error, ":hostname entry:  #{value} is invalid"
           end
         end
@@ -102,17 +106,33 @@ Puppet::Type.newtype(:address_object) do
     newproperty(:interface_id) do
         desc "Specifies the local interface ID to be used for generating
               auto-configured addresses.  Only valid with an address_type of
-              'addrconf'"
-        # interface id is a 64-bit hex identifier like xxxx:xxxx:xxxx:xxxx
-        newvalues(/\h\h\h\h:\h\h\h\h:\h\h\h\h:\h\h\h\h/)
+              'addrconf'
+        Interface ID is a valid IPv6 64-bit hex identifier such as
+          ::1a:2b:3c:4d
+          fe80::1a:2b:3c:4d
+          2001:0db8:85a3:0000:0000:8a2e:0370:7334"
+        include PuppetX::Oracle::SolarisProviders::Util::Validation
+        validate do |value|
+          unless validator.valid_ipv6?(value)
+            fail "#{value} is invalid IPv6 address"
+          end
+        end
     end
 
     newproperty(:remote_interface_id) do
         desc "Specifies an optional remote interface ID to be used for
               generating auto-configured addresses.  Only valid with an
-              address_type of 'addrconf'"
-        # interface id is a 64-bit hex identifier like xxxx:xxxx:xxxx:xxxx
-        newvalues(/\h\h\h\h:\h\h\h\h:\h\h\h\h:\h\h\h\h/)
+              address_type of 'addrconf'
+        Interface ID is a valid IPv6 64-bit hex identifier such as
+          ::1a:2b:3c:4d
+          fe80::1a:2b:3c:4d
+          2001:0db8:85a3:0000:0000:8a2e:0370:7334"
+        include PuppetX::Oracle::SolarisProviders::Util::Validation
+        validate do |value|
+          unless validator.valid_ipv6?(value)
+            fail "#{value} is invalid IPv6 address"
+          end
+        end
     end
 
     newproperty(:stateful) do

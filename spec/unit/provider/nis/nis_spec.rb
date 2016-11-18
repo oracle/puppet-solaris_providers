@@ -81,29 +81,28 @@ describe Puppet::Type.type(:nis).provider(:nis) do
       it "formats string arguments" do
         resource[:domainname] = %q(oracle.com)
         newval = %q(foo.com)
-        described_class.expects(:svccfg).with("-s", Domain_fmri, "setprop", "config/domainname", "=", newval )
+        described_class.expects(:svccfg).with("-s", Domain_fmri, "setprop", "config/domainname=", newval )
         expect(provider.domainname=newval).to eq(newval)
       end
 
       it "formats array arguments" do
         newval = %w(1.2.3.4 2.3.4.5)
-        testval = %Q^( \"1.2.3.4\" \"2.3.4.5\" )^
-        described_class.expects(:svccfg).with("-s", Domain_fmri, "setprop", "config/ypservers", "=", testval )
+        testval = %q^\(1.2.3.4 2.3.4.5\)^
+        described_class.expects(:svccfg).with("-s", Domain_fmri, "setprop", "config/ypservers=", testval )
         expect(provider.ypservers=newval).to eq(newval)
       end
 
       it "formats array of arrays arguments" do
-        newval =  [['host','127.0.0.1'],['255.255.255.0','1.1.1.1']]
-        testval = %Q^( \"host 127.0.0.1\" \"255.255.255.0 1.1.1.1\" )^
-        described_class.expects(:svccfg).with("-s", Domain_fmri, "setprop", "config/securenets", "=", testval )
+        newval =  ['host 127.0.0.1','255.255.255.0 1.1.1.1']
+        testval = %q^\(host\\ 127.0.0.1 255.255.255.0\\ 1.1.1.1\)^
+        described_class.expects(:svccfg).with("-s", Domain_fmri, "setprop", "config/securenets=", testval )
         expect(provider.securenets=newval).to eq(newval)
       end
 
       it "formats empty arguments" do
-        resource[:use_broadcast] = "true"
-        newval = %q("")
-        described_class.expects(:svccfg).with("-s", Client_fmri, "setprop", "config/use_broadcast", "=", newval )
-        expect(provider.use_broadcast=newval).to eq(newval)
+        newval = %q(\'\')
+        described_class.expects(:svccfg).with("-s", Client_fmri, "setprop", "config/use_broadcast=", newval )
+        expect(provider.send(:use_broadcast=,:absent)).to eq(newval)
       end
     end
   end
