@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2013, 2014, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2013, 2016, Oracle and/or its affiliates. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -22,30 +22,42 @@ Puppet::Type.type(:dns).provide(:dns) do
 
     Dns_fmri = "svc:/network/dns/client"
 
+    mk_resource_methods
+
     def self.instances
         props = {}
         svcprop("-p", "config", Dns_fmri).split("\n").each do |line|
             fullprop, value = line.split(" ", 3).values_at(0,2)
             prop = fullprop.split("/")[1].intern
-            props[prop] = value \
-                if Puppet::Type.type(:dns).validproperties.include? prop
+            if Puppet::Type.type(:dns).validproperties.include? prop
+              if [:options,:nameserver,:search,:sortlist].include? prop
+                # remove escaped spaces, they are invalid in the resource
+                # output and break automatic list munging
+                value = value.gsub(/\\ /,' ')
+              end
+            props[prop] = value
+            end
         end
 
         props[:name] = "current"
         props[:ensure] = :present
+
         return Array new(props)
     end
 
-    Puppet::Type.type(:dns).validproperties.each do |field|
-        define_method(field) do
-            begin
-                svcprop("-p", "config/" + field.to_s, Dns_fmri).strip()
-            rescue
-                # if the property isn't set, don't raise an error
-                nil
+    def self.prefetch(resources)
+        things = instances
+        resources.keys.each do |key|
+            if provider = things.find{ |prop|
+              prop.name == key &&
+                prop.kind_of?(Puppet::Type::Dns::ProviderDns)
+            }
+            resources[key].provider = provider
             end
         end
+    end
 
+    Puppet::Type.type(:dns).validproperties.each do |field|
         define_method(field.to_s + "=") do |should|
             begin
                 if should.is_a? Array
