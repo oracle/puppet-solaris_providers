@@ -64,7 +64,6 @@ describe Puppet::Type.type(:dns).provider(:dns) do
       end
       }
 
-
   describe "when validating defined properties" do
     Puppet::Type.type(:dns).validproperties.each do |field|
       pg = "config"
