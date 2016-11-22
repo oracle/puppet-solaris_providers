@@ -24,6 +24,10 @@ Puppet::Type.type(:ldap).provide(:ldap) do
 
     mk_resource_methods
 
+    def exists?
+      @property_hash[:ensure] == :present
+    end
+
     def self.instances
         if Process.euid != 0
           # Failure is presumed to be better than returning the empty
@@ -64,6 +68,10 @@ Puppet::Type.type(:ldap).provide(:ldap) do
           resources[name].provider = provider
         end
       end
+    end
+
+    def create
+      fail "Cannot create a new instance. Use the fixed name 'current'"
     end
 
     # Define getters and setters

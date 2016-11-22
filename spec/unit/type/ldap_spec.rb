@@ -5,7 +5,7 @@ describe Puppet::Type.type(:ldap) do
 
   let(:params) do
     {
-      :name => "ldap_type",
+      :name => 'current',
       :ensure => :present,
     }
       end
@@ -13,7 +13,7 @@ describe Puppet::Type.type(:ldap) do
   let(:error_pattern) { /value:.*invalid/ }
 
   before do
-    @profile_name = "rspec profile"
+    @profile_name = "current"
   end
 
   it "has :name as its keyattribute" do
@@ -40,7 +40,6 @@ describe Puppet::Type.type(:ldap) do
       describe prop do
         klass = Puppet::Type.type(:ldap)
         before(:each) do
-          params[:name] = prop.to_s
           error_pattern
         end
 

@@ -18,11 +18,15 @@
     Note: dhcp is a temporary interface
 
   Bugs Fixed:
+  23593308 rspec tests need to be written for solaris_providers ipmp_interface
+  24696809 Puppet link aggregation modules cascading errors
   24836004 '-' is valid in pkg mediator implementation
   24836209 nis provider needs to support multiple securenets entries
-  24696809 Puppet link aggregation modules cascading errors
   25022632 puppet ipmp_interface type should not validate interface existence
-  23593308 rspec tests need to be written for solaris_providers ipmp_interface
+  25071681 puppet dns resource generates invalid manifest
+  25071686 puppet resource ldap; Error: Could not run: No ability to determine if ldap...
+  25071690 puppet resource nis; Error: Could not run: No ability to determine if nis exists
+  25106150 Nis provider is not idempotent
 
 1.2.2
 This release unifies the source for the oracle-solaris_providers IPS package.
