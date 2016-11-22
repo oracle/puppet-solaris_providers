@@ -1,7 +1,6 @@
 #!/usr/bin/env rspec
 
 require 'spec_helper'
-require_relative  '../../../lib/puppet/type/zone'
 
 describe Puppet::Type.type(:zone) do
 
