@@ -103,16 +103,16 @@ Puppet::Type.newtype(:address_object) do
         desc "Specifies the local interface ID to be used for generating
               auto-configured addresses.  Only valid with an address_type of
               'addrconf'"
-        # addr obj is something like <interface>/v4<optional string>
-        newvalues(/\A\p{Alnum}+\/v[46](?:\p{Alpha}{0,})?\Z/)
+        # interface id is a 64-bit hex identifier like xxxx:xxxx:xxxx:xxxx
+        newvalues(/\h\h\h\h:\h\h\h\h:\h\h\h\h:\h\h\h\h/)
     end
 
     newproperty(:remote_interface_id) do
         desc "Specifies an optional remote interface ID to be used for
               generating auto-configured addresses.  Only valid with an
               address_type of 'addrconf'"
-        # addr obj is something like <interface>/v4<optional string>
-        newvalues(/\A\p{Alnum}+\/v[46](?:\p{Alpha}{0,})?\Z/)
+        # interface id is a 64-bit hex identifier like xxxx:xxxx:xxxx:xxxx
+        newvalues(/\h\h\h\h:\h\h\h\h:\h\h\h\h:\h\h\h\h/)
     end
 
     newproperty(:stateful) do

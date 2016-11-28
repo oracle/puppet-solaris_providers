@@ -40,8 +40,8 @@ describe Puppet::Type.type(:address_object).provider(:address_object) do
       [:down,:true,%w(-d)],
       [:seconds,"10",%w(-w 10)],
       [:hostname,"foo",%w(-h foo)],
-      [:interface_id,"lo0/v4",%w(-i local=lo0/v4)],
-      [:remote_interface_id,"lo0/v4",%w(-i remote=lo0/v4)],
+      [:interface_id,"1234:5678:90ab:cdef",%w(-i local=1234:5678:90ab:cdef)],
+      [:remote_interface_id,"1234:5678:90ab:cdef",%w(-i remote=1234:5678:90ab:cdef)],
       [:stateful,"yes",%w(-p stateful=yes)],
       [:stateless,"no",%w(-p stateless=no)]
     ].each { |arr|

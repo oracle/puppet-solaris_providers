@@ -82,7 +82,7 @@ describe Puppet::Type.type(:address_object) do
         (
           [[:address,'1.2.3.4'],[:remote_address,'foo'],[:down,'true']].product(
             [[:seconds,5],[:hostname,'bar']] +
-            [[:interface_id,'net0/v4'],[:remote_interface_id,'net1/v4']])
+            [[:interface_id,'1234:5678:90ab:cdef'],[:remote_interface_id,'1234:5678:90ab:cdef']])
         ).each do |a|
           it "should not accept both :#{a[0][0]} and :#{a[1][0]}" do
             expect { @class.new(:name => "#{a[0][0]}-#{a[1][0]}",
@@ -95,7 +95,7 @@ describe Puppet::Type.type(:address_object) do
         (
           [[:address,'1.2.3.4'],[:remote_address,'foo'],[:down,'true']].permutation(2).to_a +
           [[:seconds,5],[:hostname,'bar']].permutation(2).to_a +
-          [[:interface_id,'net0/v4'],[:remote_interface_id,'net1/v4']].permutation(2).to_a
+          [[:interface_id,'1234:5678:90ab:cdef'],[:remote_interface_id,'1234:5678:90ab:cdef']].permutation(2).to_a
         ).each do |a|
           it "should accept both :#{a[0][0]} and :#{a[1][0]}" do
             expect { @class.new(:name => "#{a[0][0]}-#{a[1][0]}",
@@ -164,13 +164,13 @@ describe Puppet::Type.type(:address_object) do
         end
         it "should not accept interface_id" do
           expect { @class.new(:name => "static-interface_id", :address_type => :static,
-                              :interface_id => "net0/v4test")
+                              :interface_id => "1234:5678:90ab:cdef")
           }.to raise_error(Puppet::ResourceError,
                            %r(cannot specify.*interface_id.*static))
         end
         it "should not accept remote_interface_id" do
           expect { @class.new(:name => "static-remote_interface_id", :address_type => :static,
-                              :remote_interface_id => "net0/v6")
+                              :remote_interface_id => "1234:5678:90ab:cdef")
           }.to raise_error(Puppet::ResourceError,
                            %r(cannot specify.*remote_interface_id.*static))
         end
@@ -208,13 +208,13 @@ describe Puppet::Type.type(:address_object) do
         end
         it "should not accept interface_id" do
           expect { @class.new(:name => "dhcp-interface_id", :address_type => :dhcp,
-                              :interface_id => "net0/v4")
+                              :interface_id => "1234:5678:90ab:cdef")
           }.to raise_error(Puppet::ResourceError,
                            %r(cannot specify.*interface_id.*dhcp))
         end
         it "should not accept remote_interface_id" do
           expect { @class.new(:name => "dhcp-remote_interface_id", :address_type => :dhcp,
-                              :remote_interface_id => "net0/v4")
+                              :remote_interface_id => "1234:5678:90ab:cdef")
           }.to raise_error(Puppet::ResourceError,
                            %r(cannot specify.*remote_interface_id.*dhcp))
         end
@@ -250,14 +250,14 @@ describe Puppet::Type.type(:address_object) do
           }.to raise_error(Puppet::ResourceError,
                            %r(cannot specify.*hostname.*addrconf))
         end
-        ["net0/v4","net0/v4test","net0/v6"].each do |value|
+        ["1234:5678:90ab:cdef"].each do |value|
           it "should accept interface_id #{value}" do
             expect { @class.new(:name => "addrconf-interface_id", :address_type => :addrconf,
                                 :interface_id => value)
             }.to_not raise_error
           end
         end
-        ["net0/v4","net0/v4test","net0/v6"].each do |value|
+        ["1234:5678:90ab:cdef"].each do |value|
           it "should accept remote_interface_id #{value}" do
             expect { @class.new(:name => "addrconf-remote_interface_id", :address_type => :addrconf,
                                 :remote_interface_id => value)
@@ -298,13 +298,13 @@ describe Puppet::Type.type(:address_object) do
         end
         it "should not accept interface_id" do
           expect { @class.new(:name => "from_gz-interface_id", :address_type => :from_gz,
-                              :interface_id => "net0/v4")
+                              :interface_id => "1234:5678:90ab:cdef")
           }.to raise_error(Puppet::ResourceError,
                            %r(cannot specify.*interface_id.*from_gz))
         end
         it "should not accept remote_interface_id" do
           expect { @class.new(:name => "from_gz-remote_interface_id", :address_type => :from_gz,
-                              :remote_interface_id => "net0/v4")
+                              :remote_interface_id => "1234:5678:90ab:cdef")
           }.to raise_error(Puppet::ResourceError,
                            %r(cannot specify.*remote_interface_id.*from_gz))
         end
@@ -342,13 +342,13 @@ describe Puppet::Type.type(:address_object) do
         end
         it "should not accept interface_id" do
           expect { @class.new(:name => "inherited-interface_id", :address_type => :inherited,
-                              :interface_id => "net0/v4")
+                              :interface_id => "1234:5678:90ab:cdef")
           }.to raise_error(Puppet::ResourceError,
                            %r(cannot specify.*interface_id.*inherited))
         end
         it "should not accept remote_interface_id" do
           expect { @class.new(:name => "inherited-remote_interface_id", :address_type => :inherited,
-                              :remote_interface_id => "net0/v4")
+                              :remote_interface_id => "1234:5678:90ab:cdef")
           }.to raise_error(Puppet::ResourceError,
                            %r(cannot specify.*remote_interface_id.*inherited))
         end
@@ -421,6 +421,45 @@ describe Puppet::Type.type(:address_object) do
                                                        error_pattern)
       end
     end  # stateless
+
+    describe "for interface_id" do
+      error_pattern = /interface_id.*Invalid/m
+
+      def validate(iid)
+         @class.new(:name => "addrconf-interface_id", :address_type => :addrconf, :interface_id => iid)
+      end
+
+      [ "1234:5678:90ab:cdef" ].each do |int_id|
+        it "should accept a value of #{int_id}" do
+          expect { validate(int_id) }.not_to raise_error
+        end
+      end
+
+      it "should reject an invalid value" do
+        expect { validate("foobar") }.to raise_error(Puppet::ResourceError,
+                                                       error_pattern)
+      end
+    end  # interface_id
+
+    describe "for remote_interface_id" do
+      error_pattern = /remote_interface_id.*Invalid/m
+
+      def validate(iid)
+         @class.new(:name => "addrconf-remote-interface_id", :address_type => :addrconf, :remote_interface_id => iid)
+      end
+
+      [ "1234:5678:90ab:cdef" ].each do |int_id|
+        it "should accept a value of #{int_id}" do
+          expect { validate(int_id) }.not_to raise_error
+        end
+      end
+
+      it "should reject an invalid value" do
+        expect { validate("foobar") }.to raise_error(Puppet::ResourceError,
+                                                       error_pattern)
+      end
+    end  # remote_interface_id
+
 
   end # validating values
 end
