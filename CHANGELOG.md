@@ -23,6 +23,7 @@
   24836004 '-' is valid in pkg mediator implementation
   24836209 nis provider needs to support multiple securenets entries
   25022632 puppet ipmp_interface type should not validate interface existence
+  25022632 puppet ipmp_interface type should not validate interface existence
   25071681 puppet dns resource generates invalid manifest
   25071686 puppet resource ldap; Error: Could not run: No ability to determine if ldap...
   25071690 puppet resource nis; Error: Could not run: No ability to determine if nis exists
