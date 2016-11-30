@@ -94,6 +94,7 @@ Puppet::Type.type(:boot_environment).provide(:boot_environment) do
         end
 
         if zp = @resource[:zpool]
+          if @resource[:clone_be].nil? || @resource[:clone_be] == :absent
             found = false
             for line in zpool(:list, "-o", "name", "-H").each_line do
                 if zp == line.strip
@@ -105,6 +106,7 @@ Puppet::Type.type(:boot_environment).provide(:boot_environment) do
                 raise Puppet::Error, \
                     "Unable to create BE in zpool #{zp} -- #{zp} does not exist"
             end
+          end
         end
         flags
     end
