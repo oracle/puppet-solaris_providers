@@ -61,6 +61,7 @@ Puppet::Type.type(:svccfg).provider(:svccfg)) do
         # key is unexpectedly coming from resource as a symbol
         prop.name == key.to_s
       }.tap { |provider|
+        next if provider.nil?
         resources[key].provider = provider
       }
     }
@@ -79,17 +80,31 @@ Puppet::Type.type(:svccfg).provider(:svccfg)) do
     # Don't define accessors, mk_resource_methods and instances pre-populate
     define_method(field.to_s + "=") do |should|
       begin
-        value = munge_value(should)
+        value = munge_value(should,:boolean)
         svccfg("-s", Client_fmri, "setprop", "config/#{field}=", value)
-        return value
+        return should
       rescue => detail
         fail "value: #{should.inspect}\n#{detail}\n"
       end
     end
   end
 
+  def securenets=(should)
+    begin
+      field = :securenets
+      prop_type = Puppet::Type::Nis.propertybyname(field).prop_type
+      # Make the array of securenets entries
+      should = should.map { |ary| ary.join(" ") }
+      value = munge_value(should,prop_type)
+      svccfg("-s", Domain_fmri, "setprop", "config/#{field}=", value)
+      return should == :absent ? should : value
+    rescue => detail
+      fail "value: #{should.inspect}\n#{detail}\n"
+    end
+  end
+
   # svc:/network/nis/domain properties
-  [:securenets, :domainname, :ypservers].each do |field|
+  [:domainname, :ypservers].each do |field|
     prop_type = Puppet::Type::Nis.propertybyname(field).prop_type
     # Don't define accessors, mk_resource_methods and instances pre-populate
 
@@ -97,7 +112,7 @@ Puppet::Type.type(:svccfg).provider(:svccfg)) do
       begin
         value = munge_value(should,prop_type)
         svccfg("-s", Domain_fmri, "setprop", "config/#{field}=", value)
-        return value
+        return should == :absent ? should : value
       rescue => detail
         fail "value: #{should.inspect}\n#{detail}\n"
       end

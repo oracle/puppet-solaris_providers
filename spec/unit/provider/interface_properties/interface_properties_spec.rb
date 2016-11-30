@@ -6,7 +6,7 @@ describe Puppet::Type.type(:interface_properties).provider(:interface_properties
 
   let(:params) do
     {
-      :interface => 'net0',
+      :name => 'net0',
       :properties => {
         'ipv4' => { "mtu" => 1776 },
         'ipv6' => { "mtu" => 2048 },
@@ -23,7 +23,7 @@ describe Puppet::Type.type(:interface_properties).provider(:interface_properties
   # Fake a property hash
   let(:property_hash) do
     {
-      :interface => 'net0',
+      :name => 'net0',
       :properties => {
         'ipv4' => { "mtu" => 1550 },
         'ipv6' => { "mtu" => 2048 },
@@ -59,7 +59,7 @@ describe Puppet::Type.type(:interface_properties).provider(:interface_properties
         hsh={}
         [
           :ensure,
-          :interface, :temporary, :properties
+          :name, :temporary, :properties
         ].each { |fld|
           hsh[fld] = p.get(fld)
         }
@@ -72,11 +72,11 @@ describe Puppet::Type.type(:interface_properties).provider(:interface_properties
 
       context "second instance (defaults)" do
         hsh = {:ensure=>:present,
-               :interface=>"net0",
+               :name=>"net0",
                :temporary=>:absent,
                :properties=>{"ipv4"=>{"arp"=>"on", "exchange-routes"=>"on", "forwarding"=>"off", "metric"=>"0", "mtu"=>"1500", "usesrc"=>"none"}, "ipv6"=>{"exchange-routes"=>"on", "forwarding"=>"off", "metric"=>"0", "mtu"=>"1500", "nud"=>"on", "usesrc"=>"none"}, "ip"=>{"standby"=>"off"}},
         }
-        [:ensure,:interface].each { |k|
+        [:ensure,:name].each { |k|
           it "has expected #{k}" do
             expect(instances[1][k]).to eq(hsh[k])
           end
@@ -89,7 +89,7 @@ describe Puppet::Type.type(:interface_properties).provider(:interface_properties
       end
       context "third instance (non-default)" do
         hsh = {:ensure=>:present,
-               :interface=>"net4",
+               :name=>"net4",
                :temporary=>:absent,
                :properties=>{
                  "ipv4"=>{"arp"=>"on", "exchange-routes"=>"off",
@@ -104,7 +104,7 @@ describe Puppet::Type.type(:interface_properties).provider(:interface_properties
                "ip"=>{"standby"=>"off"}
                },
         }
-        [:ensure,:interface].each { |k|
+        [:ensure,:name].each { |k|
           it "has expected #{k}" do
             expect(instances[2][k]).to eq(hsh[k])
           end
@@ -133,7 +133,7 @@ describe Puppet::Type.type(:interface_properties).provider(:interface_properties
   end
   describe "interface/proto syntax" do
     it "munges old style properties" do
-      params[:interface] = "net0/ipv4"
+      params[:name] = "net0/ipv4"
       params[:properties] = params[:properties]["ipv4"]
       expect(resource[:properties]).to eq({"ipv4" => params[:properties]})
     end

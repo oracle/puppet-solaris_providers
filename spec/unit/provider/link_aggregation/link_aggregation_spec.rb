@@ -111,6 +111,11 @@ describe Puppet::Type.type(:link_aggregation).provider(:link_aggregation) do
       described_class.expects(:dladm).with("delete-aggr", "aggr10")
       expect(provider.destroy).to eq(nil)
     end
+    it "should use correct args for temporary destroy" do
+      params[:temporary] = :true
+      described_class.expects(:dladm).with("delete-aggr", "-t", "aggr10")
+      expect(provider.destroy).to eq(nil)
+    end
 
     describe 'lower_links=' do
       # meddling with pry it's right but it needs property_hash populated to
@@ -168,7 +173,7 @@ describe Puppet::Type.type(:link_aggregation).provider(:link_aggregation) do
                                          :short, ])
     end
     it "returns :true for recreate_temporary" do
-      described_class.expects(:dladm).with("delete-aggr", params[:name])
+      described_class.expects(:dladm).with("delete-aggr", '-t', params[:name])
       described_class.expects(:dladm).with("create-aggr", '-t', '-l',
                                            'net10', '-l', 'net20', '-m',
                                            :trunk, '-P', :L4, '-L', :off,

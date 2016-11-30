@@ -16,58 +16,55 @@
 
 require 'shellwords'
 require File.expand_path(File.join(File.dirname(__FILE__), '..','util.rb'))
+require File.expand_path(File.join(File.dirname(__FILE__), 'svcs.rb'))
 require File.expand_path(File.join(File.dirname(__FILE__), 'validation.rb'))
 
 
 
 # Valid svccfg / svcprop arguments
 module PuppetX::Oracle::SolarisProviders::Util::Svcs
-
-  module ToSvcs
-    def svcs_escape(value=self)
-      if value.kind_of? String
-        value.gsub(/([;&()|^<>\n \t\\\"\'`~*\[\]\$\!])/, '\\\\\1')
-      else
-        value
-      end
-    end
-    def to_svcs
-      if self == :absent
-        %q(\'\')
-      elsif self.kind_of?(Array)
-        self.map{ |val| svcs_escape(val) }.join(" ")
-      else
-        self.svcs_escape
-      end
-    end
-  end
-
   # We use valid_... from Validation
   include PuppetX::Oracle::SolarisProviders::Util::Validation
+
+  def svcs_escape(value=self)
+    if value.kind_of? String
+      value.gsub(/([;&()|^<>\n \t\\\"\'`~*\[\]\$\!])/, '\\\\\1')
+    else
+      value
+    end
+  end
+  def to_svcs(value=self)
+    if value == "absent" || value == :absent
+      %q(\'\')
+    elsif value.kind_of?(Array)
+      value.map{ |val| svcs_escape(val) }.join(" ")
+    else
+      svcs_escape(value)
+    end
+  end
 
   # May want to split this into Provider Functions and Validation
   def munge_value(prop_value,prop_type=nil)
     munged = nil
 
-    # Add our ToSvcs methods to prop_value
-    prop_value.extend PuppetX::Oracle::SolarisProviders::Util::Svcs::ToSvcs
     # This initially started as per-type handling but it doesn't
     # seem that it really needs to be that different
     case prop_type
     when :boolean, :count, :integer, :time, # mostly numbers
          :astring, :ustring, :opaque, # mostly strings
          :fmri, :host, :hostname, :net_address, :net_address_v4,
-           :net_address_v6, :uri # more complex strings
-        munged = prop_value.to_svcs
+         :net_address_v6, :uri, # more complex strings
+         :array # a processing hint
+      munged = to_svcs(prop_value)
     else
       # Fall through processing fully escapes the prop_value if we
       # get here without some known type
-      warn ("Unknown property type (#{prop_type})")
-      munged = prop_value.svcs_escape
+      warning "Unknown property type (#{prop_type})" unless prop_type.nil?
+      munged = svcs_escape(prop_value)
     end
 
     # Wrap the resulting string in ()s and return it
-    return "(#{munged})"
+    return "\\(#{munged}\\)"
   end
 
 
@@ -82,7 +79,7 @@ module PuppetX::Oracle::SolarisProviders::Util::Svcs
   end
   def is_pg_type?(prop_type,fail_on_false=false)
     unless [:dependency, :framework, :configfile, :method, :template,
-        :template_pg_pattern, :template_prop_pattern].include?(prop_type)
+            :template_pg_pattern, :template_prop_pattern].include?(prop_type)
       fail "invalid property group type" if fail_on_false
       return false
     end

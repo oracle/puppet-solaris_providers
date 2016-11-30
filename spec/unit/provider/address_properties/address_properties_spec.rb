@@ -24,7 +24,7 @@ describe Puppet::Type.type(:address_properties).provider(:address_properties) do
 
     it 'should parse the object properly' do
       expect(described_class.instances[0].instance_variable_get("@property_hash")).to eq( {
-        :name       => "lo0/v4",
+        :name    => "lo0/v4",
         :ensure     => :present,
         :properties => {
            "deprecated"=> "off",
@@ -37,7 +37,7 @@ describe Puppet::Type.type(:address_properties).provider(:address_properties) do
     end
   end
 
-  [ "exists?", "create", "exec_cmd" ].each do |method|
+  [ "exists?", "create" ].each do |method|
     it "should have a #{method} method" do
       expect(provider.class.method_defined?(method)).to eq(true)
     end

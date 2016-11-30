@@ -20,10 +20,7 @@ Puppet::Type.type(:address_properties).provide(:address_properties) do
     defaultfor :osfamily => :solaris, :kernelrelease => ['5.11', '5.12']
     commands :ipadm => '/usr/sbin/ipadm'
 
-    def initialize(value={})
-        super(value)
-        @addrprops = {}
-    end
+    mk_resource_methods
 
     def self.instances
         props = {}
@@ -59,46 +56,19 @@ Puppet::Type.type(:address_properties).provide(:address_properties) do
         end
     end
 
-    def properties
-        @property_hash[:properties]
-    end
-
     def properties=(value)
+        @resource[:temporary] == :true ? tmp = "-t" : tmp = nil
         value.each do |key, val|
-            ipadm("set-addrprop", "-p", "#{key}=#{val}", @resource[:name])
+          args = ["#{key}=#{val}", tmp].compact
+            ipadm("set-addrprop", "-p", *args, @resource[:name])
         end
     end
 
     def exists?
-        if @resource[:properties] == nil
-            return :false
-        end
-
-        @resource[:properties].each do |key, value|
-            p = exec_cmd(command(:ipadm), "show-addrprop","-c", "-p", key,
-                         "-o", "CURRENT", @resource[:address])
-            if p[:exit] == 1
-                Puppet.warning "Property '#{key}' not found for address " \
-                               "#{@resource[:address]}"
-                next
-            end
-
-            if p[:out].strip != value
-                @addrprops[key] = value
-            end
-        end
-
-        return @addrprops.empty?
+      @property_hash[:ensure] == :present
     end
 
     def create
-        @addrprops.each do |key, value|
-            ipadm("set-addrprop", "-p", "#{key}=#{value}", @resource[:address])
-        end
-    end
-
-    def exec_cmd(*cmd)
-        output = Puppet::Util::Execution.execute(cmd, :failonfail => false)
-        {:out => output, :exit => $CHILD_STATUS.exitstatus}
+      fail "address_object #{address} must exist"
     end
 end

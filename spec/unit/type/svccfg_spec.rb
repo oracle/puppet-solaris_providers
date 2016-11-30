@@ -21,7 +21,7 @@ describe type_class do
 
     context "ensure" do
       error_pattern = /Invalid value/m
-      [ "present", "absent", "delcust" ].each do |newval|
+      [ "present", :present,  "absent", :absent, "delcust" ].each do |newval|
         it "should accept a value of #{newval}" do
           expect { described_class.new(:name => "foo", :fmri => "svc:/foo", :property => "bar/baz", :value => "quux",  :ensure => newval) }.not_to raise_error
           end

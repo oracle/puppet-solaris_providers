@@ -20,7 +20,7 @@ Puppet::Type.newtype(:interface_properties) do
       the properties hash.
 
         Preferred:
-        Interface: net0
+        name: net0
         Properties:
         A complex hash of proto => { property => value },...
         {
@@ -29,7 +29,7 @@ Puppet::Type.newtype(:interface_properties) do
         }
 
         Old Syntax:
-        Interface: net0/ipv4
+        name: net0/ipv4
         Properties:
         A hash of property => value when Interface defines protocol
         { 'mtu' => '1776' }
@@ -38,13 +38,16 @@ Puppet::Type.newtype(:interface_properties) do
   ensurable do
     # remove the ability to specify :absent.  New values must be set.
     newvalue(:present) do
+      # Do nothing
+    end
+    newvalue(:absent) do
       # We can only ensure synchronization
-      fail "Interface #{interface} must exist to modify properties"
+      fail "Interface properties cannot be removed"
     end
   end
 
-  newparam(:interface) do
-    desc "The name of the interface with optional protocol"
+  newparam(:name) do
+    desc "The name of the interface"
     newvalues(/^[a-z_0-9]+[0-9]+(?:\/ipv[46]?)?$/)
     isnamevar
 
@@ -74,11 +77,26 @@ Puppet::Type.newtype(:interface_properties) do
               property can be managed.
               See ipadm(8)"
 
+    def insync?(is)
+      # There will almost always be more properties on the system than
+      # defined in the resource. Make sure the properties in the resource
+      # are insync
+      should.each_pair { |proto,hsh|
+        return false unless is.has_key?(proto)
+        hsh.each_pair { |key,value|
+          # Stop after the first out of sync property
+          return false unless property_matches?(is[proto][key],value)
+        }
+      }
+      true
+    end
+
     munge do |value|
       # If the supplied syntax isn't a hash of protocol options
       # reformat the value to that format
       if (value.keys & ["ip","ipv4","ipv6"]).empty?
-        proto = resource[:interface].split('/')[1]
+        intf, proto = resource[:name].split('/')
+        resource[:name] = intf
         value = { proto => value }
       end
       return value
@@ -87,16 +105,10 @@ Puppet::Type.newtype(:interface_properties) do
   autorequire(:ip_interface) do
     children = catalog.resources.select { |resource|
       resource.type == :ip_interface &&
-        self[:interface].split('/').include?(resource[:name])
+        self[:name].split('/').include?(resource[:name])
     }
     children.each.collect { |child|
       child[:name]
     }
-  end
-
-  # Reopen the Properties Class
-  class Puppet::Type::Interface_properties::Properties
-    attr_accessor :defaults
-    @defaults = {}
   end
 end

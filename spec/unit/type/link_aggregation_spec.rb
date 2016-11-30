@@ -92,6 +92,11 @@ describe Puppet::Type.type(:link_aggregation) do
       end
     }
   end
+  describe "validation" do
+    it "fails without lower_links defined" do
+      expect{described_class.new(:name => 'aggr10')}.to raise_error(Puppet::ResourceError)
+    end
+  end
   describe "autorequire" do
     context "ip_interface" do
       def add_resource(name,res_type)

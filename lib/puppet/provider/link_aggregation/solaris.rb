@@ -110,6 +110,14 @@ Puppet::Type.type(:link_aggregation).provide(:link_aggregation) do
   def mode=(value)
     # -m was removed in s12_99; mode must be changed via destroy/create
     destroy
+    # Populate resource from property hash...just in case only mode
+    # is being changed
+    @property_hash.each_pair { |prop,prop_val|
+      unless resource[prop]
+        next if prop_val == :absent
+        resource[prop] = prop_val
+      end
+    }
     create
     return @property_hash[:mode]= value
   end
@@ -187,7 +195,11 @@ Puppet::Type.type(:link_aggregation).provide(:link_aggregation) do
   end
 
   def destroy
-    dladm("delete-aggr", resource[:name])
+    args = [resource[:name]]
+    if resource[:temporary] == :true
+      args.unshift '-t'
+    end
+    dladm("delete-aggr", *args)
     @property_hash[:ensure]=:absent
     nil
   end

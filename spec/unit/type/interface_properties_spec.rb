@@ -7,7 +7,7 @@ describe Puppet::Type.type(:interface_properties) do
   # before it is generated
   let(:params) do
     {
-      :interface => 'net0',
+      :name => 'net0',
       :properties => {
         'ipv4' => { "mtu" => 1776 },
         'ipv6' => { "mtu" => 2048 },
@@ -24,8 +24,8 @@ describe Puppet::Type.type(:interface_properties) do
 
   let(:error_pattern) { /Invalid/ }
 
-  it "has :interface as its keyattribute" do
-    expect( described_class.key_attributes).to be == [:interface]
+  it "has :name as its keyattribute" do
+    expect( described_class.key_attributes).to be == [:name]
   end
 
   describe "has property" do
@@ -46,7 +46,7 @@ describe Puppet::Type.type(:interface_properties) do
         ("a"*15) + "0"
       ].each do |thing|
         it thing.inspect do
-          params[:interface] = thing
+          params[:name] = thing
           expect { resource }.not_to raise_error
         end
       end
@@ -59,7 +59,7 @@ describe Puppet::Type.type(:interface_properties) do
         Net0
       ).each do |thing|
         it thing.inspect do
-          params[:interface] = thing
+          params[:name] = thing
           expect { resource }.to raise_error(Puppet::Error, error_pattern)
         end
       end

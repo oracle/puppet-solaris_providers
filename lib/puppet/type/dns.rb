@@ -138,9 +138,10 @@ Puppet::Type.newtype(:dns) do
     simple_opts = ["debug", "rotate", "no-check-names", "inet6"]
     arg_opts =  ["ndots", "timeout", "retrans", "attempts", "retry"]
 
+    include PuppetX::Oracle::SolarisProviders::Util::Svcs
+
     def should_to_s(newvalue)
-      newvalue.extend PuppetX::Oracle::SolarisProviders::Util::Svcs::ToSvcs
-      newvalue.to_svcs
+      to_svcs(newvalue)
     end
 
     def should

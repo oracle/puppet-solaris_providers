@@ -77,35 +77,32 @@ describe Puppet::Type.type(:dns).provider(:dns) do
   describe "correctly formats" do
     {
       :nameserver= => {
-        :absent => %q(\'\'),
-        "1.2.3.4" => "1.2.3.4",
-        "fe80::3e07:54ff:fe53:c704" => "fe80::3e07:54ff:fe53:c704",
-        "[fe80::3e07:54ff:fe53:c704]" => "\\[fe80::3e07:54ff:fe53:c704\\]",
-        "1.2.3.4 2.3.4.5" => %q^\(1.2.3.4 2.3.4.5\)^,
+        :absent => %q^\(\'\'\)^,
+        "1.2.3.4" => %q^\(1.2.3.4\)^,
+        "fe80::3e07:54ff:fe53:c704" => %q^\(fe80::3e07:54ff:fe53:c704\)^,
+        "[fe80::3e07:54ff:fe53:c704]" => %q^\(\\[fe80::3e07:54ff:fe53:c704\\]\)^,
         %w(1.2.3.4 2.3.4.5) => %q^\(1.2.3.4 2.3.4.5\)^
       },
       :domain= => {
-        :absent => %q(\'\'),
-        "foo.com" => "foo.com",
-        "foo.bar.com" => "foo.bar.com"
+        :absent => %q^\(\'\'\)^,
+        "foo.com" => %q^\(foo.com\)^,
+        "foo.bar.com" => %q^\(foo.bar.com\)^
       },
       :search= => {
-        :absent => %q(\'\'),
-        "foo.com" => "foo.com",
-        "foo.bar.com" => "foo.bar.com",
-        "foo.com bar.com" => %q^\(foo.com bar.com\)^,
+        :absent => %q^\(\'\'\)^,
+        "foo.com" => %q^\(foo.com\)^,
+        "foo.bar.com" => %q^\(foo.bar.com\)^,
         %w(foo.com bar.com) => %q^\(foo.com bar.com\)^,
       },
       :sortlist= => {
-        :absent => %q(\'\'),
-        "1.2.3.4" => "1.2.3.4",
-        "1.2.3.4 2.3.4.5" => %q^\(1.2.3.4 2.3.4.5\)^,
+        :absent => %q^\(\'\'\)^,
+        "1.2.3.4" => %q^\(1.2.3.4\)^,
         %w"1.2.3.4 2.3.4.5" => %q^\(1.2.3.4 2.3.4.5\)^,
       },
       :options= => {
-        :absent => %q(\'\'),
-        "debug" => "debug",
-        "debug timeout:3" => %q^\(debug timeout:3\)^,
+        :absent => %q^\(\'\'\)^,
+        "debug" => %q^\(debug\)^,
+        %w(debug timeout:3) => %q^\(debug timeout:3\)^,
       }
     }.each_pair { |type,hsh|
       context type.inspect do

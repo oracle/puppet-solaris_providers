@@ -39,13 +39,20 @@ Puppet::Type.newtype(:address_properties) do
         desc "A hash table of propname=propvalue entries to apply to an
               address object. See ipadm(8)"
 
-        def property_matches?(current, desired)
-            desired.each do |key, value|
-                if current[key] != value
-                    return :false
-                end
-            end
-            return :true
+        def insync?(is)
+          is = [] if is == :absent or is.nil?
+          return false unless is.length == should.length
+          is.zip(@should).all? {|a, b| property_matches?(a, b) }
         end
+    end
+
+    autorequire(:address_object) do
+      children = catalog.resources.select { |resource|
+        resource.type == :address_object &&
+          self[:address].include?(resource[:name])
+      }
+      children.each.collect { |child|
+        child[:name]
+      }
     end
 end

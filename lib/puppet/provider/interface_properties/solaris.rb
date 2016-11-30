@@ -34,7 +34,8 @@ Puppet::Type.type(:interface_properties).provide(:interface_properties) do
             props[ifname][proto][property] = value
         end
         props.collect do |key, value|
-          new(:interface => key,
+          new(
+                :name => key,
                 :ensure => :present,
                 :properties => value,
                )
@@ -42,15 +43,15 @@ Puppet::Type.type(:interface_properties).provide(:interface_properties) do
     end
 
     def self.prefetch(resources)
-        # pull the instances on the system
-        props = instances
-
-        # set the provider for the resource to set the property_hash
-        resources.keys.each do |name|
-            if provider = props.find{ |prop| prop.name == name}
-                resources[name].provider = provider
-            end
-        end
+      things = instances
+      resources.keys.each { |key|
+        things.find { |prop|
+          prop.name == key
+        }.tap { |provider|
+          next if provider.nil?
+          resources[key].provider = provider
+        }
+      }
     end
 
     def create
@@ -87,8 +88,6 @@ Puppet::Type.type(:interface_properties).provide(:interface_properties) do
     end
 
     def exists?
-      # Check only for the existence of the interface
-      # insync is a question for later
-      ! @resource[:properties].nil?
+      @property_hash[:ensure] == :present
     end
 end

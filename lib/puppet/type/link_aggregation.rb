@@ -37,7 +37,12 @@ Puppet::Type.newtype(:link_aggregation) do
   # This is a Puppet::Property::List but that breaks on internal
   # representation as an Array
   newproperty(:lower_links) do
-    desc "Specifies an array of links over which the aggrestion is created."
+    desc "Specifies an array of links over which the aggrestion is created.
+
+     Modifying a partially defined pre-existing resource is not recommended.
+     As incompatible option combinations cannot be verified before
+     application.
+    "
 
     # ensure should remains an array
     def should
@@ -67,7 +72,8 @@ Puppet::Type.newtype(:link_aggregation) do
   newproperty(:mode) do
     desc "Specifies which mode to set. Mode can not be changed on an
         existing aggregation, instead the aggregation will be removed and
-        re-created"
+        re-created.
+    "
     newvalues(:trunk, :dlmp)
   end
 
@@ -102,5 +108,11 @@ Puppet::Type.newtype(:link_aggregation) do
       child[:name]
     }
   end
+
+  validate {
+    if self[:lower_links] == :absent || self[:lower_links].nil?
+      fail "lower_links must be defined"
+    end
+  }
 
 end

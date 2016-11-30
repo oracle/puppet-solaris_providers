@@ -66,6 +66,7 @@ Puppet::Type.type(:svccfg).provider(:svccfg)) do
         # key is unexpectedly coming from resource as a symbol
         prop.name == key.to_s
       }.tap { |provider|
+        next if provider.nil?
         resources[key].provider = provider
       }
     }

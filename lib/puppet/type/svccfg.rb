@@ -146,6 +146,9 @@ Puppet::Type.newtype(:svccfg) do
     when :dependency, :framework, :configfile, :method, :template,
          :template_pg_pattern, :template_prop_pattern
       # These are property groups
+    when nil, :absent
+      # Accept not having a type
+      warning "Type should be provided in resource definition"
     else
       fail "unkown #{self[:type]}"
     end
