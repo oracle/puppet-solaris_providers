@@ -76,10 +76,14 @@ Puppet::Type.type(:svccfg).provide(:svccfg) do
     end
 
     def update_property_hash
-      a = svcprop('-f', @resource[:prop_fmri]).lines.first.split(/\s+/,3)
-      @property_hash[:value] = a[2]
-      @property_hash[:type] ||= a[1].to_sym
-      @property_hash[:ensure] = :present
+      if @resource[:prop_fmri] && !@resource[:prop_fmri].empty?
+        a = svcprop('-f', @resource[:prop_fmri]).lines.first.split(/\s+/,3)
+        @property_hash[:value] = a[2]
+        @property_hash[:type] ||= a[1].to_sym
+        @property_hash[:ensure] = :present
+      else
+        @property_hash[:ensure] = :absent
+      end
     rescue
         @property_hash[:ensure] = :absent
     ensure
