@@ -18,8 +18,29 @@ require 'shellwords'
 require File.expand_path(File.join(File.dirname(__FILE__), '..','util.rb'))
 require File.expand_path(File.join(File.dirname(__FILE__), 'validation.rb'))
 
+
+
 # Valid svccfg / svcprop arguments
 module PuppetX::Oracle::SolarisProviders::Util::Svcs
+
+  module ToSvcs
+    def svcs_escape(value=self)
+      if value.kind_of? String
+        value.gsub(/([;&()|^<>\n \t\\\"\'`~*\[\]\$\!])/, '\\\\\1')
+      else
+        value
+      end
+    end
+    def to_svcs
+      if self == :absent
+        %q(\'\')
+      elsif self.kind_of?(Array)
+        self.map{ |val| svcs_escape(val) }.join(" ")
+      else
+        self.svcs_escape
+      end
+    end
+  end
 
   # We use valid_... from Validation
   include PuppetX::Oracle::SolarisProviders::Util::Validation
@@ -28,36 +49,25 @@ module PuppetX::Oracle::SolarisProviders::Util::Svcs
   def munge_value(prop_value,prop_type=nil)
     munged = nil
 
-    # Return the empty string if prop_value is :absent
-    if prop_value == :absent
-      return %q(\'\')
-    end
-
-    # reformat values which may be lists.
-    # :array is not a valid type but it provides a processing hint
+    # Add our ToSvcs methods to prop_value
+    prop_value.extend PuppetX::Oracle::SolarisProviders::Util::Svcs::ToSvcs
+    # This initially started as per-type handling but it doesn't
+    # seem that it really needs to be that different
     case prop_type
-    when :boolean, :count, :integer, :time
-      if prop_value.kind_of?(Array)
-        munged = "\\(#{prop_value.svcs_escape}\\)"
-      end
-    when :astring, :ustring, :opaque
-      if prop_value.kind_of?(Array)
-        munged = "\\(#{prop_value.map(&:shellescape).join(" ")}\\)"
-      end
-    when :fmri, :host, :hostname, :net_address, :net_address_v4,
-      :net_address_v6, :uri, :array
-      if prop_value.kind_of?(Array)
-        munged = "\\(#{prop_value.shelljoin}\\)"
-      elsif prop_value.split.length > 1
-        munged = "\\(#{prop_value.split.shelljoin}\\)"
-      end
+    when :boolean, :count, :integer, :time, # mostly numbers
+         :astring, :ustring, :opaque, # mostly strings
+         :fmri, :host, :hostname, :net_address, :net_address_v4,
+           :net_address_v6, :uri # more complex strings
+        munged = prop_value.to_svcs
+    else
+      # Fall through processing fully escapes the prop_value if we
+      # get here without some known type
+      warn ("Unknown property type (#{prop_type})")
+      munged = prop_value.svcs_escape
     end
 
-    # Fall through processing fully escapes the prop_value if munged
-    # isn't defined. Includes special characters and spaces
-    munged ||= prop_value.svcs_escape
-
-    return munged
+    # Wrap the resulting string in ()s and return it
+    return "(#{munged})"
   end
 
 
@@ -213,3 +223,4 @@ module PuppetX::Oracle::SolarisProviders::Util::Svcs
     true
   end
 end
+

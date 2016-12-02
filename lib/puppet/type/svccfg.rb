@@ -90,6 +90,10 @@ Puppet::Type.newtype(:svccfg) do
       lists if they contain whitespace. See scf_value_create(3SCF)"
   end
 
+  def should_to_s(newvalue)
+    newvalue.extend PuppetX::Oracle::SolarisProviders::Util::Svcs::ToSvcs
+    newvalue.to_svcs
+  end
 
   validate {
     # Validation must happen after we have both the type and value.
@@ -129,37 +133,14 @@ Puppet::Type.newtype(:svccfg) do
     # Validate Value arguments based on type
     #
     case self[:type]
-    when :astring
-      is_astring?(self[:value],true)
-    when :ustring
-      is_ustring?(self[:value],true)
-    when :opaque
-      is_opaque?(self[:value],true)
-    when :boolean
-      is_boolean?(self[:value],true)
-    when :count
-      is_count?(self[:value],true)
-    when :fmri
-      is_fmri?(self[:value],true)
-    when :host
-      is_host?(self[:value],true)
-    when :hostname
-      is_hostname?(self[:value],true)
-    when :integer
-      is_integer?(self[:value],true)
-    when :net_address
-      is_net_address?(self[:value],true)
-    when :net_address_v4
-      is_net_address_v4?(self[:value],true)
-    when :net_address_v6
-      is_net_address_v6?(self[:value],true)
-    when :time
-      is_time?(self[:value],true)
-    when :uri
-      is_uri?(self[:value],true)
+    when :astring, :ustring, :opaque, :boolean, :count, :fmri, :host, :hostname,
+         :integer, :net_address, :net_address_v4, :net_address_v6, :time, :uri
+      self.send(:"is_#{self[:type]}?", self[:value],true)
     when :dependency, :framework, :configfile, :method, :template,
-      :template_pg_pattern, :template_prop_pattern
-
+         :template_pg_pattern, :template_prop_pattern
+      # These are property groups
+    else
+      fail "unkown #{self[:type]}"
     end
   }
 end

@@ -28,11 +28,3 @@ module PuppetX::Oracle
     end
   end
 end
-
-
-# Monkey patch String to add svcs_escape
-class String
-  def svcs_escape
-    self.gsub(/([;&()|^<>\n \t\\\"\'`~*\[\]\$\!])/, '\\\\\1')
-  end
-end

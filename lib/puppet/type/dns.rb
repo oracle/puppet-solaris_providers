@@ -138,6 +138,11 @@ Puppet::Type.newtype(:dns) do
     simple_opts = ["debug", "rotate", "no-check-names", "inet6"]
     arg_opts =  ["ndots", "timeout", "retrans", "attempts", "retry"]
 
+    def should_to_s(newvalue)
+      newvalue.extend PuppetX::Oracle::SolarisProviders::Util::Svcs::ToSvcs
+      newvalue.to_svcs
+    end
+
     def should
       @should
     end
@@ -149,8 +154,7 @@ Puppet::Type.newtype(:dns) do
     class << self
       attr_accessor :prop_type
     end
-    # Array is a processing hint
-    self.prop_type = :array
+    self.prop_type = :astring
 
     newvalues('debug','rotate',
               'no-check-names','inet6',
