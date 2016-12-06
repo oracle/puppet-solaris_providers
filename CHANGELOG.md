@@ -56,6 +56,8 @@
 * 25179040 puppet link_aggregation should delete with -t for temporary
 * 25192742 puppet svccfg shouldn't try to update properties for a non-existent fmri
 * 25196056 puppet interface and address _properties namevars are problematic
+* 25191982 puppet type 'dns' is not able to set 'options' property in resolv.conf
+* 25211935 puppet link_aggregation needs to permanently delete before modifying temporary
 
 # 1.2.2
 This release unifies the source for the oracle-solaris_providers IPS package.

@@ -173,7 +173,7 @@ describe Puppet::Type.type(:link_aggregation).provider(:link_aggregation) do
                                          :short, ])
     end
     it "returns :true for recreate_temporary" do
-      described_class.expects(:dladm).with("delete-aggr", '-t', params[:name])
+      described_class.expects(:dladm).with("delete-aggr", params[:name])
       described_class.expects(:dladm).with("create-aggr", '-t', '-l',
                                            'net10', '-l', 'net20', '-m',
                                            :trunk, '-P', :L4, '-L', :off,
