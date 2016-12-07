@@ -17,9 +17,14 @@
     not accept seconds as an argument *Note*: dhcp is a temporary interface
   * resources are considered invalid if they do not define `:lower_links`
 * interface_properties
-  * no longer supports the parameter `interface` instead uses `name`
+  * no longer supports the parameter `interface` instead uses `name`. This
+    change should be transparent.
 * address_properties
-  * no longer supports the parameter `address` instead uses `name`
+  * no longer supports the parameter `address` instead uses `name`. This change
+    should be transparent.
+* protocol_properties
+  * no longer supports the parameter `protocol` instead uses `name`. This change
+    should be transparent.
 * LDAP, DNS, and NIS
   * Names for these resources must be the string `current` other names are
     unable to be identified via puppet resource and will not appear to be in
@@ -27,8 +32,8 @@
 
 ## Impacting Changes
 * interface_properties
-  * interface has been renamed "name"
-  * name should be defined as an ip interface `net0`
+  * `interface` has been renamed `name`.
+  * `name` should be defined as an ip interface `net0`
   * properties should be defined as a complex hash of
     `{ proto => { prop => value }}`
   * Old style interface (name) definitions `net0/ipv4` continue to work
@@ -58,6 +63,7 @@
 * 25196056 puppet interface and address _properties namevars are problematic
 * 25191982 puppet type 'dns' is not able to set 'options' property in resolv.conf
 * 25211935 puppet link_aggregation needs to permanently delete before modifying temporary
+* 25217063 puppet protocol_properties is not idempotent
 
 # 1.2.2
 This release unifies the source for the oracle-solaris_providers IPS package.

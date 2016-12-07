@@ -24,7 +24,7 @@ Puppet::Type.newtype(:protocol_properties) do
         end
     end
 
-    newparam(:protocol) do
+    newparam(:name) do
         desc "The name of the protocol"
         isnamevar
     end
@@ -39,13 +39,16 @@ Puppet::Type.newtype(:protocol_properties) do
         desc "A hash table of propname=propvalue entries to apply to an
               protocol. See ipadm(8)"
 
-        def property_matches?(current, desired)
-            desired.each do |key, value|
-                if current[key] != value
-                    return :false
-                end
-            end
-            return :true
+        def insync?(is)
+          # There will almost always be more properties on the system than
+          # defined in the resource. Make sure the properties in the resource
+          # are insync
+          should.each_pair { |prop,value|
+            return false unless is.has_key?(prop)
+            # Stop after the first out of sync property
+            return false unless property_matches?(is[prop],value)
+          }
+          true
         end
     end
 end
