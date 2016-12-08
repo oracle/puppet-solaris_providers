@@ -148,14 +148,20 @@ describe Puppet::Type.type(:interface_properties).provider(:interface_properties
       expect(provider.properties=params[:properties]).to eq params[:properties]
     end
     it "changes single protocol multiple properties" do
-      args=%w(set-ifprop -p mtu=1776,nud=on -m ipv4 net0)
-      described_class.expects(:ipadm).with(*args)
+      args=[
+        %w(set-ifprop -p mtu=1776 -m ipv4 net0),
+        %w(set-ifprop -p nud=on -m ipv4 net0)]
+      described_class.expects(:ipadm).with(*args[0])
+      described_class.expects(:ipadm).with(*args[1])
       params[:properties]["ipv4"]["nud"] = "on"
       expect(provider.properties=params[:properties]).to eq params[:properties]
     end
     it "changes multiple protocol multiple properties" do
-      args1=%w(set-ifprop -p mtu=1776,nud=on -m ipv4 net0)
-      described_class.expects(:ipadm).with(*args1)
+      args1=[
+        %w(set-ifprop -p mtu=1776 -m ipv4 net0),
+        %w(set-ifprop -p nud=on -m ipv4 net0)]
+      described_class.expects(:ipadm).with(*args1[0])
+      described_class.expects(:ipadm).with(*args1[1])
       args2=%w(set-ifprop -p nud=on -m ipv6 net0)
       described_class.expects(:ipadm).with(*args2)
       params[:properties]["ipv4"]["nud"] = "on"

@@ -27,11 +27,17 @@ Puppet::Type.newtype(:protocol_properties) do
     newparam(:name) do
         desc "The name of the protocol"
         isnamevar
+        newvalues(:dhcpv4,:dhcpv6,:icmp,:ip,:ipv4,:ipv6,
+                  :sctp,:tcp,:udp,
+                  # This is probably a non-exhaustive list so we allow any
+                  # alphanumeric string as well
+                  /^\p{Alnum}+$/)
     end
 
     newparam(:temporary) do
         desc "Optional parameter that specifies changes to the protocol are
-              temporary.  Changes last until the next reboot."
+              temporary.  Changes last until the next reboot.
+              This parameter is ignored"
         newvalues(:true, :false)
     end
 
@@ -50,5 +56,14 @@ Puppet::Type.newtype(:protocol_properties) do
           }
           true
         end
+
+        validate { |hsh|
+          fail "Invalid, must be a hash" unless hsh.kind_of? Hash
+          fail "Invalid, cannot be empty" if hsh.empty?
+          hsh.each_pair { |key,value|
+            fail "key #{key} must be a-Z - _" unless key.match(/[\p{Alnum}_-]+/)
+            fail "value #{value} must be a-Z - _" unless key.match(/[\p{Alnum}_-]+/)
+          }
+        }
     end
 end

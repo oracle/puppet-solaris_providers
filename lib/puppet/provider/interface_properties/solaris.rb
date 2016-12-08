@@ -78,11 +78,12 @@ Puppet::Type.type(:interface_properties).provide(:interface_properties) do
     end
 
     def properties=(value)
+      # Support old style intf/proto names
+      name = @resource[:name].split('/')[0]
       change_props.each_pair { |proto,props|
-        ipadm("set-ifprop",
-              "-p", props * ",",
-              "-m", proto,
-              @resource[:name].split('/')[0] )
+        props.each { |prop|
+          ipadm("set-ifprop", "-p", prop, "-m", proto, name)
+        }
       }
       @property_hash[:properties].merge(value)
     end

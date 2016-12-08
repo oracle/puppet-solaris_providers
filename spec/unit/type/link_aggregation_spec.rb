@@ -93,8 +93,8 @@ describe Puppet::Type.type(:link_aggregation) do
     }
   end
   describe "validation" do
-    it "fails without lower_links defined" do
-      expect{described_class.new(:name => 'aggr10')}.to raise_error(Puppet::ResourceError)
+    it "fails with mode and without lower_links defined" do
+      expect{described_class.new(:name => 'aggr10', :mode => 'dlmp')}.to raise_error(Puppet::ResourceError)
     end
   end
   describe "autorequire" do

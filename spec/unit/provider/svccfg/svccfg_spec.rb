@@ -262,9 +262,9 @@ describe Puppet::Type.type(:svccfg).provider(:svccfg) do
       # get an actual array here or why it needs to be wrapped in another
       # array but if there is an array it seems to be handled correctly
       {
-        :opaque=> ['asasd wewerwef','asdasd'],
-        :astring=> ['asasd wewerwef','asdasd'],
-        :ustring=> ['asasd wewerwef','asdasd'],
+        :opaque=> ['asasd wewerwef','bcsdf'],
+        :astring=> ['asasd wewerwef','bcsdf'],
+        :ustring=> ['asasd wewerwef','bcsdf'],
       }.each { |thing,arry|
       it "#{thing} array treated as list" do
         params[:name]  = "create-#{thing}"
@@ -334,14 +334,15 @@ describe Puppet::Type.type(:svccfg).provider(:svccfg) do
       end
       }
       it "passes unmunged value without type" do
-        resource.delete(:type)
-        resource[:value]    = "this is an astring"
+        params.delete(:type)
+        params[:value] = "this is an astring"
+        munged = munge.munge_value(params[:value])
         Puppet::Util::Execution.expects(:execute).with(
           ["/usr/sbin/svccfg", "-s", resource[:fmri],
             "setprop",
             resource[:property],
             "=",
-            munge.munge_value("this is an astring",:astring)
+            munged
         ] * " "
         )
         described_class.expects(:svccfg).with("-s", resource[:fmri], "refresh")

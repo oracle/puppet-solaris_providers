@@ -2,14 +2,20 @@
   *Puppet 4 related changes and Bug Fixes*
 ## Incompatible Changes:
 * NIS provider securenets argument changes from an Array to an Array of Arrays
-  * Previous versions indicated secure nets must be a Hash in error messages
-    ```ruby
+  * Previous versions indicated secure nets must be a Hash in error messages.
+  * Incorrect Format did not allow multiple `'host'` definitions
+  ```Ruby
+    :securenets => {'host' => '1.1.1.1'}
+  ```
+  * Old Correct Format
+  ```Ruby
     :securenets => ['host','1.1.1.1']
-    ```
-    ```ruby
+  ```
+  * New Format
+  ```Ruby
     :securenets => [['host','1.1.1.1']]
     :securenets => [['host','1.1.1.1'],['255.255.255.0','2.2.2.2']]
-    ```
+  ```
 * link_aggregation
   * now strictly checks option combinations which previously failed during
     catalog application.
@@ -96,8 +102,9 @@
 * 25178928 puppet link_aggregation should try to copy existing values on change of mode
 * 25179040 puppet link_aggregation should delete with -t for temporary
 * 25192742 puppet svccfg shouldn't try to update properties for a non-existent fmri
-* 25196056 puppet interface and address _properties namevars are problematic
+* 23593316 rspec tests need to be written for solaris_providers protocol_properties
 * 25191982 puppet type 'dns' is not able to set 'options' property in resolv.conf
+* 25196056 puppet interface and address _properties namevars are problematic
 * 25211935 puppet link_aggregation needs to permanently delete before modifying temporary
 * 25217063 puppet protocol_properties is not idempotent
 * 25218036 puppet resource svccfg emits a warning for every property
@@ -105,6 +112,7 @@
 * 25218208 puppet svccfg should enforce well-formedness in fmri parameters
 * 25224661 puppet resource address_properties shouldn't output read-only properties
 * 25224777 puppet address_properties should not reset unchanged properties
+* 25225039 puppet svccfg should not declare a property absent if it does not match desired
 
 # 1.2.2
 This release unifies the source for the oracle-solaris_providers IPS package.

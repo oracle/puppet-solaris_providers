@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2013, 2014, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2013, 2016, Oracle and/or its affiliates. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -22,16 +22,13 @@ Puppet::Type.type(:protocol_properties).provide(:protocol_properties) do
 
     mk_resource_methods
 
-    def initialize(value={})
-        super(value)
-        @protoprops = {}
-    end
-
     def self.instances
         props = Hash.new { |k,v| k[v] = Hash.new }
-        ipadm("show-prop", "-c", "-o", "PROTO,PROPERTY,CURRENT").each_line do
+        ipadm("show-prop", "-c", "-o",
+              "PROTO,PROPERTY,CURRENT,DEFAULT,PERSISTENT,POSSIBLE,PERM"
+             ).each_line do
           |line|
-          protocol, property, value = line.strip.split(":")
+          protocol, property, value, _tmp = line.strip.split(':',4)
           props[protocol][property] = value ? value : :absent
         end
 
@@ -56,17 +53,32 @@ Puppet::Type.type(:protocol_properties).provide(:protocol_properties) do
       }
     end
 
-    def properties=(value)
-        value.each do |key, val|
-            ipadm("set-prop", "-p", "#{key}=#{val}", @resource[:name])
+    # Return an array of prop=value strings to change
+    def change_props
+      out_of_sync=[]
+      # Compare the desired values against the current values
+      resource[:properties].each_pair { |prop,should_be|
+        is = properties[prop]
+        # Current Value == Desired Value
+        unless is == should_be
+          # Stash out of sync property
+          out_of_sync.push("%s=%s" % [prop, should_be])
         end
+      }
+      out_of_sync
+    end
+
+    def properties=(value)
+      change_props.each do |prop|
+        ipadm("set-prop", "-p", prop, @resource[:name])
+      end
     end
 
     def exists?
-      @resource[:ensure] == :present
+      @property_hash[:ensure] == :present
     end
 
     def create
-      fail "protcol must exist"
+      fail "protcol must exist before properties can be set"
     end
 end

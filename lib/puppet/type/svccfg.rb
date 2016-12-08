@@ -100,7 +100,7 @@ Puppet::Type.newtype(:svccfg) do
 
   end
 
-  newproperty(:value, :array_matching => :all) do
+  newproperty(:value) do
     desc "Value of the property. Value types :fmri, :opaque, :host, :hostname,
       :net_address, :net_address_v4, :net_address_v6, and :uri are treated as
       lists if they contain whitespace. Array arguments are treated as lists.
@@ -115,6 +115,19 @@ Puppet::Type.newtype(:svccfg) do
 
     def should_to_s(newvalue)
       to_svcs(newvalue)
+    end
+
+    def insync?(is)
+      if is.kind_of? NilClass || is == :absent
+        is = ""
+      end
+      return false if is.class != should.class
+      return false if is.length != should.length
+      if is.respond_to?(:zip)
+        is.zip(@should).all? {|a, b| property_matches?(a, b) }
+      else
+        is == should
+      end
     end
   end
 
@@ -161,19 +174,22 @@ Puppet::Type.newtype(:svccfg) do
     self[:prop_fmri] ||= "#{self[:fmri]}/:properties/#{self[:property]}"
 
 
-    #
-    # Validate Value arguments based on type
+    # Treat value as an array in any configuration
+    [self[:value]].flatten.each { |val|
+      #
+      # Validate Value arguments based on type
     case self[:type]
     when :astring, :ustring, :opaque, :boolean, :count, :fmri, :host, :hostname,
          :integer, :net_address, :net_address_v4, :net_address_v6, :time, :uri
-      self.send(:"is_#{self[:type]}?", self[:value],true)
+      self.send(:"is_#{self[:type]}?", val,true)
     when :dependency, :framework, :configfile, :method, :template,
          :template_pg_pattern, :template_prop_pattern
       # These are property groups
     when nil, :absent
       warning "Type should be provided in resource definition"
     else
-      fail "unkown #{self[:type]}"
+      fail "unknown type #{self[:type]}"
     end
+    }
   }
 end
