@@ -50,7 +50,15 @@ Puppet::Type.newtype(:svccfg) do
   newproperty(:prop_fmri, :namevar => true) do
     desc "The fully composed property FMRI <fmri>/properties:/<property>
           if left blank it will be built from the :fmri and :property
-          parameters, or from :name if the format matches"
+          parameters, or from :name if the format matches.
+          FMRI must be fully qualified as svc:/path"
+
+    newvalues(%r(^svc:/))
+
+    include PuppetX::Oracle::SolarisProviders::Util::Svcs
+    validate do |value| 
+      is_fmri?(value,true)
+    end
   end
 
   newparam(:name) do
@@ -61,7 +69,15 @@ Puppet::Type.newtype(:svccfg) do
   end
 
   newparam(:fmri) do
-    desc "SMF service FMRI to manipulate"
+    desc "SMF service FMRI to manipulate.
+    FMRI must be fully qualified as svc:/path"
+
+    newvalues(%r(^svc:/))
+
+    include PuppetX::Oracle::SolarisProviders::Util::Svcs
+    validate do |value| 
+      is_fmri?(value,true)
+    end
   end
 
   newparam(:property) do
@@ -84,28 +100,36 @@ Puppet::Type.newtype(:svccfg) do
 
   end
 
-  newproperty(:value) do
+  newproperty(:value, :array_matching => :all) do
     desc "Value of the property. Value types :fmri, :opaque, :host, :hostname,
       :net_address, :net_address_v4, :net_address_v6, and :uri are treated as
-      lists if they contain whitespace. See scf_value_create(3SCF)"
+      lists if they contain whitespace. Array arguments are treated as lists.
+      See scf_value_create(3SCF)"
 
-      # escape bourne shell characters in the should value
-      def insync?(is)
-          is.to_s == should.to_s.gsub(/([;&()|^<>\n \t\\\"\'`~*\[\]\$\!])/,
-                                      '\\\\\1')
+    include PuppetX::Oracle::SolarisProviders::Util::Svcs
 
-      end
-  end
+    # escape bourne shell characters in the should value
+    def insync?(is)
+      is.to_s == to_svcs(should)
+    end
 
-  def should_to_s(newvalue)
-    newvalue.extend PuppetX::Oracle::SolarisProviders::Util::Svcs::ToSvcs
-    newvalue.to_svcs
+    def should_to_s(newvalue)
+      to_svcs(newvalue)
+    end
   end
 
   validate {
     # Validation must happen after we have both the type and value.
 
+    # Skip validation if we are in instances/prefetch
+    if (self[:type].nil? && self[:value].nil?) &&
+       self.provider &&
+       (!self.provider.type.nil? && !self.provider.value.nil?)
+      next
+    end
+
     # Don't run top level validation unless there is an ensure property
+    # Munge prop_fmri into fmri and property if they are not set
     unless self[:ensure].nil?
       if self[:prop_fmri] && ( self[:fmri].nil? || self[:property].nil? )
         a = self[:prop_fmri].split(%r(/:properties/),2)
@@ -136,9 +160,9 @@ Puppet::Type.newtype(:svccfg) do
 
     self[:prop_fmri] ||= "#{self[:fmri]}/:properties/#{self[:property]}"
 
+
     #
     # Validate Value arguments based on type
-    #
     case self[:type]
     when :astring, :ustring, :opaque, :boolean, :count, :fmri, :host, :hostname,
          :integer, :net_address, :net_address_v4, :net_address_v6, :time, :uri
@@ -147,7 +171,6 @@ Puppet::Type.newtype(:svccfg) do
          :template_pg_pattern, :template_prop_pattern
       # These are property groups
     when nil, :absent
-      # Accept not having a type
       warning "Type should be provided in resource definition"
     else
       fail "unkown #{self[:type]}"

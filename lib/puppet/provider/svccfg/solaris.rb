@@ -24,14 +24,7 @@ Puppet::Type.type(:svccfg).provide(:svccfg) do
     mk_resource_methods
 
     def exists?
-        if @property_hash[:ensure] == :present && ! @resource[:value].nil?
-          # property exists and resource has a defined value
-          # escape bourne shell characters in the value
-          @property_hash[:value] == @resource[:value].gsub(/([;&()|^<>\n \t\\\"\'`~*\[\]\$\!])/, '\\\\\1')
-        else
-          # just check for presence
-          @property_hash[:ensure] == :present
-        end
+        @property_hash[:ensure] == :present
     end
 
     def self.instances
@@ -66,14 +59,20 @@ Puppet::Type.type(:svccfg).provide(:svccfg) do
     end
 
     def self.prefetch(resources)
-        # pull the instances on the system
-        svcprops = instances
-        # set the provider for the resource to set the property_hash
-        resources.each_pair do |key,res|
-            if provider = svcprops.find{ |prop| prop.prop_fmri == res.parameters[:prop_fmri]}
-                resources[key].provider = provider
-            end
-        end
+      things = instances
+      resources.each_pair { |key,res|
+        things.find { |prop|
+          # Match on prop_fmri
+          [
+            res[:prop_fmri],
+            # Try to construct a prop_fmri string
+           "%s/:properties/%s" % [res[:fmri], res[:property]]
+          ].include? prop.prop_fmri
+        }.tap { |provider|
+          next if provider.nil?
+          resources[key].provider = provider
+        }
+      }
     end
 
     def update_property_hash

@@ -110,7 +110,7 @@ Puppet::Type.newtype(:link_aggregation) do
   end
 
   validate {
-    if (self[:mode] != :absent || self[:mode].nil?) &&
+    if (self[:mode] != :absent && !self[:mode].nil?) &&
        (self[:lower_links] == :absent || self[:lower_links].nil?)
         fail "lower_links must be defined when mode is specified"
       end
