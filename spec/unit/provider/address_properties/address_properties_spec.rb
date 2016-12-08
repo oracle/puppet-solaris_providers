@@ -15,11 +15,12 @@ describe Puppet::Type.type(:address_properties).provider(:address_properties) do
 
   context 'with a multi-property interface' do
     before :each do
-      described_class.stubs(:ipadm).with("show-addrprop", "-c", "-o", "ADDROBJ,PROPERTY,CURRENT").returns "lo0/v4:broadcast:\nlo0/v4:deprecated:off\nlo0/v4:prefixlen:8\nlo0/v4:private:off\nlo0/v4:reqhost:\nlo0/v4:transmit:on\nlo0/v4:zone:global"
+      described_class.stubs(:ipadm).with("show-addrprop", "-c", "-o",
+      "ADDROBJ,PROPERTY,CURRENT,PERM").returns File.read(my_fixture('show-addrprop-ADDROBJ-PROPERTY-CURRENT-PERM.txt'))
     end
 
     it 'should find one object' do
-      expect(described_class.instances.size).to eq(1)
+      expect(described_class.instances.size).to eq(4)
     end
 
     it 'should parse the object properly' do

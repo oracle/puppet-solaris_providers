@@ -25,10 +25,13 @@ Puppet::Type.type(:address_properties).provide(:address_properties) do
     def self.instances
         props = {}
 
-        ipadm("show-addrprop", "-c", "-o", "ADDROBJ,PROPERTY,CURRENT").split(
-              "\n").collect do |line|
-            addrobj, property, value = line.strip().split(":")
-            next if value == nil
+        ipadm("show-addrprop", "-c", "-o",
+              "ADDROBJ,PROPERTY,CURRENT,PERM").each_line do |line| 
+            addrobj, property, value, perm = line.strip().split(":")
+            # Skip read-only properties
+            next if perm == 'r-'
+            # Skip empty values
+            next if (value == nil || value.empty?)
             if not props.has_key? addrobj
                 props[addrobj] = {}
             end
@@ -56,12 +59,25 @@ Puppet::Type.type(:address_properties).provide(:address_properties) do
         end
     end
 
+    # Return an array of prop=value strings to change
+    def change_props
+      out_of_sync=[]
+      # Compare the desired values against the current values
+      resource[:properties].each_pair { |prop,should_be|
+        is = properties[prop]
+        # Current Value == Desired Value
+        unless is == should_be
+          # Stash out of sync property
+          out_of_sync.push("%s=%s" % [prop, should_be])
+        end
+      }
+      out_of_sync
+    end
+
     def properties=(value)
         @resource[:temporary] == :true ? tmp = "-t" : tmp = nil
-        value.each do |key, val|
-          args = ["#{key}=#{val}", tmp].compact
-            ipadm("set-addrprop", "-p", *args, @resource[:name])
-        end
+        args = [change_props * ',', tmp].compact
+        ipadm("set-addrprop", "-p", *args, @resource[:name])
     end
 
     def exists?

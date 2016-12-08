@@ -29,6 +29,10 @@
   * Names for these resources must be the string `current` other names are
     unable to be identified via puppet resource and will not appear to be in
     sync.
+* svccfg
+  * FMRI arguments `fmri` and `prop_fmri` must now be well formed.
+    * `svc:/system/system-log:rsyslog` vs `system-log:rsyslog` or 
+      `system/system-log:rsyslog`
 
 ## Impacting Changes
 * interface_properties
@@ -37,6 +41,38 @@
   * properties should be defined as a complex hash of
     `{ proto => { prop => value }}`
   * Old style interface (name) definitions `net0/ipv4` continue to work
+* svccfg
+    * resource names should be provided as the fully qualified fmri of the
+      property
+  * svccfg is only idempotent when any of the following are true
+    * The property name is fully qualified. `title_patterns` are used to extract
+      details from fully qualified names.
+  ```Ruby
+    svccfg { 'svc:/system/system-log:rsyslog/:properties/config/log_from_remote':
+      ensure    => 'present',
+      type      => 'boolean',
+      value     => 'false',
+    }
+  ```
+    * `prop_fmri` matches the fully qualified property name
+  ```Ruby
+    svccfg { 'foo':
+      prop_fmri => 'svc:/system/system-log:rsyslog/:properties/config/log_from_remote',
+      ensure    => 'present',
+      type      => 'boolean',
+      value     => 'false',
+    }
+  ```
+    * `fmri` and `property` are specified exactly as found in smf
+  ```Ruby
+    svccfg { 'foo':
+      fmri      => 'svc:/system/system-log:rsyslog',
+      property  => 'config/log_from_remote',
+      ensure    => 'present',
+      type      => 'boolean',
+      value     => 'false',
+    }
+  ```
 
 ###  Bugs Fixes and Enhancements:
 * 23593308 rspec tests need to be written for solaris_providers ipmp_interface
@@ -64,6 +100,11 @@
 * 25191982 puppet type 'dns' is not able to set 'options' property in resolv.conf
 * 25211935 puppet link_aggregation needs to permanently delete before modifying temporary
 * 25217063 puppet protocol_properties is not idempotent
+* 25218036 puppet resource svccfg emits a warning for every property
+* 25218053 puppet svccfg prefetch should match individually specified parameters
+* 25218208 puppet svccfg should enforce well-formedness in fmri parameters
+* 25224661 puppet resource address_properties shouldn't output read-only properties
+* 25224777 puppet address_properties should not reset unchanged properties
 
 # 1.2.2
 This release unifies the source for the oracle-solaris_providers IPS package.
