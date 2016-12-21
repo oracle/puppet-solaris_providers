@@ -71,20 +71,21 @@ Puppet::Type.type(:boot_environment).provide(:boot_environment) do
 
         if clone_be = @resource[:clone_be]
             if clone_be.include? "@"
-                if beadm(:list, "-H", "-s").split("\n").detect \
-                    { |line| line.split(";")[1] == clone_be }
+                if beadm(:list, "-H", "-s").each_line.detect \
+                   { |line| src = line.split(";")[1]
+                     # Direct match for be://fmri or name@snap format
+                     src == clone_be || src.split('/')[-1] == clone_be
+                   }
                         flags << "-e" << clone_be
                 else
-                    Puppet.warning "BE #{clone_be} not found.  Skipping -e
-                                    argument."
+                    fail "BE #{clone_be} not found."
                 end
             else
                 if beadm(:list, "-H").split("\n").detect \
                     { |line| line.split(";")[0] == clone_be }
                         flags << "-e" << clone_be
                 else
-                    Puppet.warning "BE #{clone_be} not found.  Skipping -e
-                                    argument."
+                  fail "BE #{clone_be} not found."
                 end
             end
         end
@@ -93,7 +94,8 @@ Puppet::Type.type(:boot_environment).provide(:boot_environment) do
             options.each { |key, value| flags << "-o" << "#{key}=#{value}" }
         end
 
-        if zp = @resource[:zpool]
+        # Skip zpool if clone_be is provided
+        if zp = @resource[:zpool] && !@resource[:clone_be]
             found = false
             for line in zpool(:list, "-o", "name", "-H").each_line do
                 if zp == line.strip
@@ -102,8 +104,7 @@ Puppet::Type.type(:boot_environment).provide(:boot_environment) do
                 end
             end
             if not found
-                raise Puppet::Error, \
-                    "Unable to create BE in zpool #{zp} -- #{zp} does not exist"
+                fail "Unable to create BE in zpool #{zp} -- #{zp} does not exist"
             end
         end
         flags

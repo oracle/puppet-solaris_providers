@@ -130,7 +130,7 @@ describe Puppet::Type.type(:ldap).provider(:ldap) do
   describe "property=" do
     it "formats string arguments" do
       resource[:search_base] = %q(dc=foo,dc=com)
-      testval = %q^\(dc=bar,dc=com\)^
+      testval = %q(dc=bar,dc=com)
       newval = %q(dc=bar,dc=com)
       described_class.expects(:svccfg).with("-s", Ldap_fmri, "setprop", "config/search_base=", testval )
       expect(provider.search_base=newval).to eq(newval)
@@ -139,14 +139,13 @@ describe Puppet::Type.type(:ldap).provider(:ldap) do
     it "formats array arguments" do
       resource[:server_list] = "foo.com"
       newval = %w(baz.com quux.com)
-      testval = %q^\(baz.com quux.com\)^
+      testval = %w^( baz.com quux.com )^
       described_class.expects(:svccfg).with("-s", Ldap_fmri, "setprop", "config/server_list=", testval )
       expect(provider.server_list=newval).to eq(newval)
     end
 
     it "formats :absent argument" do
-      newval = %q(\'\')
-      testval = %q^\(\'\'\)^
+      testval = %q^\'\'^
       described_class.expects(:svccfg).with("-s", Ldap_fmri, "setprop", "config/profile=", testval )
       expect(provider.send(:profile=,:absent)).to eq(testval)
     end

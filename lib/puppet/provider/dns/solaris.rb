@@ -52,7 +52,7 @@ Puppet::Type.type(:svccfg).provider(:svccfg)) do
     things = instances
     resources.keys.each { |key|
       things.find { |prop|
-        # key is unexpectedly coming from resource as a symbol
+        # key.to_s in case name uses newvalues and is converted to symbol
         prop.name == key.to_s
       }.tap { |provider|
         next if provider.nil?

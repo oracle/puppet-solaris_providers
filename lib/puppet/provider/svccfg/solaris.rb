@@ -24,7 +24,13 @@ Puppet::Type.type(:svccfg).provide(:svccfg) do
     mk_resource_methods
 
     def exists?
+      # Property groups are not displayed by svcprop
+      # and thus do not have resources by default
+      if is_pg_type?(@resource[:type])
+        pg_exists?
+      else
         @property_hash[:ensure] == :present
+      end
     end
 
     def self.instances
@@ -42,6 +48,8 @@ Puppet::Type.type(:svccfg).provide(:svccfg) do
       end
 
       instances = []
+      pgs = []
+      pg_created = {}
       # Walk each discovered service
       svcs.each_pair do |prop_fmri,a|
         # Walk each property and create the resource
@@ -54,8 +62,19 @@ Puppet::Type.type(:svccfg).provide(:svccfg) do
               :value      => a[3],
               :ensure     => :present,
              )
+
+          tmp_pg = prop_fmri.slice(0,prop_fmri.rindex('/'))
+          unless pg_created.has_key? tmp_pg
+            pgs.push new(
+                       :name => tmp_pg,
+                       :prop_fmri => tmp_pg,
+                       :type => :unknown_pg,
+                       :ensure => :present
+                     )
+            pg_created[tmp_pg]=true
+          end
       end
-      return instances
+      return instances + pgs
     end
 
     def self.prefetch(resources)
@@ -90,38 +109,63 @@ Puppet::Type.type(:svccfg).provide(:svccfg) do
       return nil
     end
 
+    # Strip the property to get the pg and check that it is a defined resource
+    # or that it exists
+    def pg(prop_fmri=@resource[:prop_fmri])
+      prop_fmri.slice(0,prop_fmri.rindex('/'))
+    end
+    def pg_exists?
+      return @pg_exists if @pg_exists
+      svcprop(pg)
+      @pg_exists = true
+    rescue Puppet::ExecutionFailure
+      @pg_exists = false
+    end
+
+    def value=(value)
+      args = ["-s", @resource[:fmri], 'setprop', @resource[:property], '=']
+      args << munge_value(
+        @resource[:value],@resource[:type] ? @resource[:type] : type
+      )
+      svccfg(*args)
+      svccfg("-s", @resource[:fmri], "refresh")
+      update_property_hash
+      return value
+    end
+
     def create
         # commands will always begin with these args
         args = ["-s", @resource[:fmri]]
 
-        if @resource[:property].include? "/"
-            args << "setprop" << @resource[:property] << "="
-            if type = @resource[:type] and type != nil
-                args << "#{@resource[:type]}:"
-            end
-
-
-            args << munge_value(@resource[:value],@resource[:type] ? @resource[:type] : type)
+        # It is legal to create nested property groups. We no longer try to
+        # guess intent with the presence of a /
+        if is_pg_type?(@resource[:type])
+          args << "addpg" << @resource[:property] << @resource[:type]
         else
-            args << "addpg" << @resource[:property] << @resource[:type]
+          fail "Property Group (#{pg}) must exist" unless pg_exists?
+          args << "setprop" << @resource[:property] << "="
+
+          # Add resource type if it is defined
+          if type = @resource[:type] and type != nil
+            args << "#{@resource[:type]}:"
+          end
+
+          # Add munged value
+          args << munge_value(@resource[:value],
+                              @resource[:type] ? @resource[:type] : type)
         end
 
-        # Normal defined command execution doesn't work here in the case of
-        # list type variables e.g.  svccfg: Invalid "net_address" value ...
-        Puppet::Util::Execution.execute([command(:svccfg),*args].join(" "))
-
+        svccfg(*args)
         svccfg("-s", @resource[:fmri], "refresh")
         update_property_hash
     end
 
     def destroy
-        if @resource[:property].include? "/"
-            svccfg("-s", @resource[:fmri], "delprop", @resource[:property])
-        else
-            svccfg("-s", @resource[:fmri], "delpg", @resource[:property])
-        end
+        # delprop deletes either a property or the property group
+        svccfg("-s", @resource[:fmri], "delprop", @resource[:property])
         svccfg("-s", @resource[:fmri], "refresh")
-        update_property_hash
+        @property_hash[:ensure] = :absent
+        return nil
     end
 
     def delcust

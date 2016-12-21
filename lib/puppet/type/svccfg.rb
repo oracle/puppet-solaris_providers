@@ -56,7 +56,7 @@ Puppet::Type.newtype(:svccfg) do
     newvalues(%r(^svc:/))
 
     include PuppetX::Oracle::SolarisProviders::Util::Svcs
-    validate do |value| 
+    validate do |value|
       is_fmri?(value,true)
     end
   end
@@ -75,7 +75,7 @@ Puppet::Type.newtype(:svccfg) do
     newvalues(%r(^svc:/))
 
     include PuppetX::Oracle::SolarisProviders::Util::Svcs
-    validate do |value| 
+    validate do |value|
       is_fmri?(value,true)
     end
   end
@@ -90,7 +90,10 @@ Puppet::Type.newtype(:svccfg) do
   # displayed in puppet resource svccfg output
   newproperty(:type) do
     desc "Type of the property. Type must be defined for server side :value
-    validation See scf_value_create(3SCF)"
+    validation See scf_value_create(3SCF).
+
+    String type arguments passed as an array will be treated as a single string.
+    For multi-value string lists use type => array (RARE)"
 
     newvalues(:count, :integer, :opaque, :host, :hostname, :net_address,
               :net_address_v4, :net_address_v6, :time, :astring, :ustring,
@@ -100,33 +103,33 @@ Puppet::Type.newtype(:svccfg) do
 
   end
 
-  newproperty(:value) do
+  newproperty(:value, :array_matching => :all) do
     desc "Value of the property. Value types :fmri, :opaque, :host, :hostname,
       :net_address, :net_address_v4, :net_address_v6, and :uri are treated as
-      lists if they contain whitespace. Array arguments are treated as lists.
-      See scf_value_create(3SCF)"
+      lists if they contain whitespace. Most array arguments are also treated
+      as lists. See scf_value_create(3SCF)"
 
     include PuppetX::Oracle::SolarisProviders::Util::Svcs
 
-    # escape bourne shell characters in the should value
-    def insync?(is)
-      is.to_s == to_svcs(should)
-    end
-
     def should_to_s(newvalue)
       to_svcs(newvalue)
+    end
+
+    def should
+      if @should.size == 1
+        @should = @should[0]
+      end
+      return @should
     end
 
     def insync?(is)
       if is.kind_of? NilClass || is == :absent
         is = ""
       end
-      return false if is.class != should.class
-      return false if is.length != should.length
       if is.respond_to?(:zip)
         is.zip(@should).all? {|a, b| property_matches?(a, b) }
       else
-        is == should
+        is == should_to_s(munge_value(should,resource[:type]))
       end
     end
   end
@@ -166,7 +169,6 @@ Puppet::Type.newtype(:svccfg) do
           fail ":value is required for setting properties"
         end
       else
-        is_pg_wellformed?(self[:property],true)
         is_pg_valid?(self[:value],true)
       end
     end
@@ -192,4 +194,9 @@ Puppet::Type.newtype(:svccfg) do
     end
     }
   }
+
+  # Auto require property groups if they exist
+  autorequire(:svccfg) do
+    [self[:prop_fmri].slice(0,self[:prop_fmri].rindex('/'))]
+  end
 end

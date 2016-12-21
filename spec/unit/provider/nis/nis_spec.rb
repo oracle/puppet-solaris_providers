@@ -81,7 +81,7 @@ describe Puppet::Type.type(:nis).provider(:nis) do
       it "formats string arguments" do
         resource[:domainname] = %q(oracle.com)
         newval = %q(foo.com)
-        testval = %q^\(foo.com\)^
+        testval = %q^foo.com^
         described_class.expects(:svccfg).with("-s", Domain_fmri, "setprop",
                                               "config/domainname=", testval )
         expect(provider.domainname=newval).to eq(newval)
@@ -89,7 +89,7 @@ describe Puppet::Type.type(:nis).provider(:nis) do
 
       it "formats array arguments" do
         newval = %w(1.2.3.4 2.3.4.5)
-        testval = %q^\(1.2.3.4 2.3.4.5\)^
+        testval = %w^( 1.2.3.4 2.3.4.5 )^
         described_class.expects(:svccfg).with("-s", Domain_fmri, "setprop",
                                               "config/ypservers=", testval )
         expect(provider.ypservers=newval).to eq(newval)
@@ -97,14 +97,14 @@ describe Puppet::Type.type(:nis).provider(:nis) do
 
       it "formats array of arrays arguments" do
         inval = [['host','127.0.0.1'],['255.255.255.0','1.1.1.1']]
-        testval = %q^\(host\\ 127.0.0.1 255.255.255.0\\ 1.1.1.1\)^
+        testval = [ '(', ['host','127.0.0.1'],['255.255.255.0','1.1.1.1'], ')']
         described_class.expects(:svccfg).with("-s", Domain_fmri, "setprop",
                                               "config/securenets=", testval )
         expect(provider.securenets=inval).to eq(inval)
       end
 
       it "formats empty arguments" do
-        testval = %q^\(\'\'\)^
+        testval = %q^\'\'^
         described_class.expects(:svccfg).with("-s", Client_fmri, "setprop",
                                               "config/use_broadcast=", testval )
         expect(provider.send(:use_broadcast=,:absent)).to eq(:absent)

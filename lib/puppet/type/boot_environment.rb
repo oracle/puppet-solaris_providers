@@ -33,7 +33,7 @@ Puppet::Type.newtype(:boot_environment) do
     end
 
     newparam(:clone_be) do
-        desc "Create a new BE from an existing inactive BE"
+        desc "Create a new BE from an existing inactive BE."
     end
 
     newparam(:options) do
@@ -42,11 +42,18 @@ Puppet::Type.newtype(:boot_environment) do
     end
 
     newparam(:zpool) do
-        desc "Create the new BE in the specified zpool"
+        desc "Create the new BE in the specified zpool. Zpool is ignored for
+        a cloned BE"
     end
 
     newproperty(:activate) do
         desc "Activate the specified BE"
         newvalues(:true, :false)
     end
+
+    validate {
+      if self[:clone_be] && self[:zpool]
+        warning "zpool is ignored when cloning a BE"
+      end
+    }
 end

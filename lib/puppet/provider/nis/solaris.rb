@@ -36,7 +36,7 @@ Puppet::Type.type(:svccfg).provider(:svccfg)) do
     validprops = Puppet::Type.type(:nis).validproperties
 
     [Client_fmri, Domain_fmri].each do |svc|
-      svcprop("-p", "config", svc).split("\n").collect do |line|
+      svcprop("-p", "config", svc).each_line do |line|
         data = line.split()
         fullprop = data[0]
         if data.length > 2
@@ -46,6 +46,14 @@ Puppet::Type.type(:svccfg).provider(:svccfg)) do
         end
 
         prop = fullprop.split("/")[1].intern
+        # Rebuild securenets input format
+        if prop == :securenets
+          ary = value.gsub(%r(\\),'').split
+          value = []
+          ary.each_with_index { |val,idx|
+            idx.even? ? value.push([val]) : value[-1].push(val)
+          }
+        end
         props[prop] = value if validprops.include? prop.to_sym
       end
     end
@@ -58,7 +66,7 @@ Puppet::Type.type(:svccfg).provider(:svccfg)) do
     things = instances
     resources.keys.each { |key|
       things.find { |prop|
-        # key is unexpectedly coming from resource as a symbol
+        # key.to_s in case name uses newvalues and is converted to symbol
         prop.name == key.to_s
       }.tap { |provider|
         next if provider.nil?
@@ -93,8 +101,6 @@ Puppet::Type.type(:svccfg).provider(:svccfg)) do
     begin
       field = :securenets
       prop_type = Puppet::Type::Nis.propertybyname(field).prop_type
-      # Make the array of securenets entries
-      should = should.map { |ary| ary.join(" ") }
       value = munge_value(should,prop_type)
       svccfg("-s", Domain_fmri, "setprop", "config/#{field}=", value)
       return should == :absent ? should : value

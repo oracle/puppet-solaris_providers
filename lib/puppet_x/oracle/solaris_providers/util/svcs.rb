@@ -14,12 +14,8 @@
 # limitations under the License.
 #
 
-require 'shellwords'
-require File.expand_path(File.join(File.dirname(__FILE__), '..','util.rb'))
-require File.expand_path(File.join(File.dirname(__FILE__), 'svcs.rb'))
-require File.expand_path(File.join(File.dirname(__FILE__), 'validation.rb'))
-
-
+require_relative '../util.rb'
+require_relative 'validation.rb'
 
 # Valid svccfg / svcprop arguments
 module PuppetX::Oracle::SolarisProviders::Util::Svcs
@@ -37,7 +33,7 @@ module PuppetX::Oracle::SolarisProviders::Util::Svcs
     if value == "absent" || value == :absent
       %q(\'\')
     elsif value.kind_of?(Array)
-      value.map{ |val| svcs_escape(val) }.join(" ")
+      value.map{ |val| svcs_escape(val) }
     else
       svcs_escape(value)
     end
@@ -46,27 +42,36 @@ module PuppetX::Oracle::SolarisProviders::Util::Svcs
   # May want to split this into Provider Functions and Validation
   def munge_value(prop_value,prop_type=nil)
     munged = nil
+    wrap = nil
 
     # This initially started as per-type handling but it doesn't
     # seem that it really needs to be that different
     case prop_type
     when :boolean, :count, :integer, :time, # mostly numbers
-         :astring, :ustring, :opaque, # mostly strings
          :fmri, :host, :hostname, :net_address, :net_address_v4,
          :net_address_v6, :uri, # more complex strings
-         :array # a processing hint
+         :array # a processing hint for arrays of string type arguments
+      wrap = prop_value.kind_of?(Array) ? true : false
       munged = to_svcs(prop_value)
+    when :astring, :ustring, :opaque
+      # Arrays of string type arguments to be treated as list values
+      # must be provided with the hint type :array
+      # Debug command output will be somewhat misleading due to \s being eaten
+      munged = [prop_value].flatten.map{ |val| to_svcs(val) }.join("\ ")
     else
       # Fall through processing fully escapes the prop_value if we
-      # get here without some known type
+      # get here without some known type. This will almost certainly be wrong
+      # for complex types
       warning "Unknown property type (#{prop_type})" unless prop_type.nil?
-      munged = svcs_escape(prop_value)
+      munged = to_svcs(prop_value.to_s)
     end
 
-    # Wrap the resulting string in ()s and return it
-    return "\\(#{munged}\\)"
+    if wrap && munged.kind_of?(Array)
+      munged.unshift "("
+      munged.push ")"
+    end
+    return munged
   end
-
 
 
   # The provided prop_value is a valid property group type
@@ -85,17 +90,12 @@ module PuppetX::Oracle::SolarisProviders::Util::Svcs
     end
     true
   end
-  def is_pg_wellformed?(property,fail_on_false=false)
-    if property.match('/')
-      fail "Property group names cannot contain /" if fail_on_false
-      return false
-    end
-    true
-  end
 
   # we assume any non-nil prop_value is valid empty values should be provided
   # as :absent
   def is_astring?(prop_value,fail_on_false=false)
+    # Check each component if this is an array
+    prop_value.each { |val| send(__medthod__,val)} if prop_value.kind_of? Array
     if prop_value.nil?
       fail "prop_value must be provided use :absent to unset" if fail_on_false
       return false
@@ -105,8 +105,9 @@ module PuppetX::Oracle::SolarisProviders::Util::Svcs
   alias is_ustring? is_astring?
   alias is_opaque? is_astring?
 
-
   def is_boolean?(prop_value,fail_on_false=false)
+    # Check each component if this is an array
+    prop_value.each { |val| send(__medthod__,val)} if prop_value.kind_of? Array
     unless [:true,:false].include?(prop_value.downcase.to_sym)
       fail "#{prop_value} must be true or false" if fail_on_false
       return false
@@ -115,6 +116,8 @@ module PuppetX::Oracle::SolarisProviders::Util::Svcs
     true
   end
   def is_count?(prop_value,fail_on_false=false)
+    # Check each component if this is an array
+    prop_value.each { |val| send(__medthod__,val)} if prop_value.kind_of? Array
     unless prop_value.kind_of?(Integer) || prop_value.match(/\A\d+\Z/)
       fail "#{prop_value} must be an integer" if fail_on_false
       return false
@@ -127,6 +130,8 @@ module PuppetX::Oracle::SolarisProviders::Util::Svcs
     true
   end
   def is_fmri?(prop_value,fail_on_false=false)
+    # Check each component if this is an array
+    prop_value.each { |val| send(__medthod__,val)} if prop_value.kind_of? Array
     prop_value.split(/\s+/).each { |v|
       unless v.match(/\A\p{Alpha}+:\/+\p{Graph}+\Z/)
         fail "'#{v}' does not appear to be valid" if fail_on_false
@@ -137,6 +142,8 @@ module PuppetX::Oracle::SolarisProviders::Util::Svcs
     true
   end
   def is_host?(prop_value,fail_on_false=false)
+    # Check each component if this is an array
+    prop_value.each { |val| send(__medthod__,val)} if prop_value.kind_of? Array
     prop_value.split(/\s+/).each { |v|
       unless ( valid_hostname?(v) || valid_ip?(v) )
         fail "#{v} invalid valid hostname or ip address" if fail_on_false
@@ -147,6 +154,8 @@ module PuppetX::Oracle::SolarisProviders::Util::Svcs
     true
   end
   def is_hostname?(prop_value,fail_on_false=false)
+    # Check each component if this is an array
+    prop_value.each { |val| send(__medthod__,val)} if prop_value.kind_of? Array
     prop_value.split(/\s+/).each { |v|
       unless valid_hostname?(v)
         fail "#{v} invalid hostname" if fail_on_false
@@ -157,6 +166,8 @@ module PuppetX::Oracle::SolarisProviders::Util::Svcs
     true
   end
   def is_integer?(prop_value,fail_on_false=false)
+    # Check each component if this is an array
+    prop_value.each { |val| send(__medthod__,val)} if prop_value.kind_of? Array
     if prop_value.kind_of?(Numeric)
       unless prop_value.kind_of?(Integer)
         fail "#{v} must be an integer" if fail_on_false
@@ -172,6 +183,8 @@ module PuppetX::Oracle::SolarisProviders::Util::Svcs
     true
   end
   def is_net_address?(prop_value,fail_on_false=false)
+    # Check each component if this is an array
+    prop_value.each { |val| send(__medthod__,val)} if prop_value.kind_of? Array
     prop_value.split(/\s+/).each { |v|
       unless valid_ip?(v)
         fail "#{v} invalid net_address" if fail_on_false
@@ -182,6 +195,8 @@ module PuppetX::Oracle::SolarisProviders::Util::Svcs
     true
   end
   def is_net_address_v4?(prop_value,fail_on_false=false)
+    # Check each component if this is an array
+    prop_value.each { |val| send(__medthod__,val)} if prop_value.kind_of? Array
     prop_value.split(/\s+/).each { |v|
       unless valid_ipv4?(v)
         fail "#{v} invalid net_address_v4" if fail_on_false
@@ -192,6 +207,8 @@ module PuppetX::Oracle::SolarisProviders::Util::Svcs
     true
   end
   def is_net_address_v6?(prop_value,fail_on_false=false)
+    # Check each component if this is an array
+    prop_value.each { |val| send(__medthod__,val)} if prop_value.kind_of? Array
     prop_value.split(/\s+/).each { |v|
       unless valid_ipv6?(v)
         fail "#{v} invalid net_address_v6" if fail_on_false
@@ -202,6 +219,8 @@ module PuppetX::Oracle::SolarisProviders::Util::Svcs
     true
   end
   def is_time?(prop_value,fail_on_false=false)
+    # Check each component if this is an array
+    prop_value.each { |val| send(__medthod__,val)} if prop_value.kind_of? Array
     unless  prop_value.kind_of?(Float) || prop_value.to_f >= 0
       fail "#{prop_value} invalid time" if fail_on_false
       return false
@@ -210,6 +229,8 @@ module PuppetX::Oracle::SolarisProviders::Util::Svcs
     true
   end
   def is_uri?(prop_value,fail_on_false=false)
+    # Check each component if this is an array
+    prop_value.each { |val| send(__medthod__,val)} if prop_value.kind_of? Array
     prop_value.split(/\s+/).each { |v|
       unless v.match(/\A\p{Alpha}+:\p{Graph}+\Z/)
         fail "#{v} invalid uri" if fail_on_false

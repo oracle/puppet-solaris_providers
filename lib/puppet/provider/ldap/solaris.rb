@@ -14,6 +14,7 @@
 # limitations under the License.
 #
 
+require_relative '../../../puppet_x/oracle/solaris_providers/util/svcs.rb'
 # This is only a pre-configured instance of svccfg
 Puppet::Type.type(:ldap).provide(:ldap,
                                  :parent =>
@@ -63,7 +64,7 @@ Puppet::Type.type(:svccfg).provider(:svccfg)) do
     things = instances
     resources.keys.each { |key|
       things.find { |prop|
-        # key is unexpectedly coming from resource as a symbol
+        # key.to_s in case name uses newvalues and is converted to symbol
         prop.name == key.to_s
       }.tap { |provider|
         next if provider.nil?

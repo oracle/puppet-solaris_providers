@@ -22,7 +22,7 @@ describe Puppet::Type.type(:dns) do
 
   before do
     @class = described_class
-    @profile_name = "rspec profile"
+    @profile_name = "current"
   end
 
   it "should have :name as its keyattribute" do

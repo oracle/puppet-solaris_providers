@@ -24,6 +24,7 @@ Puppet::Type.newtype(:dns) do
   newparam(:name) do
     desc "The symbolic name for the DNS client settings to use.  This name
               is used for human reference only."
+    newvalues("current")
     isnamevar
   end
 
@@ -155,7 +156,7 @@ Puppet::Type.newtype(:dns) do
     class << self
       attr_accessor :prop_type
     end
-    self.prop_type = :astring
+    self.prop_type = :array
 
     newvalues('debug','rotate',
               'no-check-names','inet6',

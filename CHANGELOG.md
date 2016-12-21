@@ -48,8 +48,12 @@
     `{ proto => { prop => value }}`
   * Old style interface (name) definitions `net0/ipv4` continue to work
 * svccfg
-    * resource names should be provided as the fully qualified fmri of the
-      property
+  * resource names should be provided as the fully qualified fmri of the
+    property svc:/<fmri>[:<instance>]/:properties/<property>
+  * the non-standard type array must be used with string type properties
+    astring, ustring, and opaque when they are being used as a list argument.
+    *NOTE* When used as a native string type the array will be joined into a
+    single string and the resource will not be idempotent.
   * svccfg is only idempotent when any of the following are true
     * The property name is fully qualified. `title_patterns` are used to extract
       details from fully qualified names.
@@ -79,6 +83,11 @@
       value     => 'false',
     }
   ```
+* boot_environments
+  * Puppet will now fail if a non-existent boot environment is provided as the
+    argument for clone_be
+  * zpool is ignored if clone_be is provided
+   
 
 ###  Bugs Fixes and Enhancements:
 * 23593308 rspec tests need to be written for solaris_providers ipmp_interface
@@ -113,6 +122,9 @@
 * 25224661 puppet resource address_properties shouldn't output read-only properties
 * 25224777 puppet address_properties should not reset unchanged properties
 * 25225039 puppet svccfg should not declare a property absent if it does not match desired
+* 25306835 puppet boot_environment needs to understand the new snapshot format
+* 25306877 puppet svccfg should check for pg and allow nested property groups
+* 25306904 puppet dns,nis,ldap,protocol_properties prefetch fails after input auto munge
 
 # 1.2.2
 This release unifies the source for the oracle-solaris_providers IPS package.

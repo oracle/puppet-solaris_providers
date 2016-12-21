@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 
-require File.expand_path(File.join(File.dirname(__FILE__), '..','..','puppet_x/oracle/solaris_providers/util/validation.rb'))
+require_relative '../../puppet_x/oracle/solaris_providers/util/svcs.rb'
 require 'puppet/property/list'
 
 Puppet::Type.newtype(:ldap) do
@@ -26,7 +26,7 @@ Puppet::Type.newtype(:ldap) do
   newparam(:name) do
     desc "The symbolic name for the LDAP client settings to use. Name
               can only be the literal value 'current'"
-    newvalues("current")
+    newvalues(:current)
     isnamevar
   end
 
@@ -53,7 +53,7 @@ Puppet::Type.newtype(:ldap) do
     self.prop_type = :host
 
     # ensure should remains an array
-    def should
+   def should
       @should
     end
 
@@ -204,7 +204,12 @@ Puppet::Type.newtype(:ldap) do
       attr_accessor :prop_type
     end
     self.pg = "config"
-    self.prop_type = :count
+    self.prop_type = :integer
+
+    include PuppetX::Oracle::SolarisProviders::Util::Svcs
+    validate do |val|
+      is_integer?(val,true)
+    end
   end
 
   newproperty(:bind_time_limit) do
@@ -215,7 +220,11 @@ Puppet::Type.newtype(:ldap) do
       attr_accessor :prop_type
     end
     self.pg = "config"
-    self.prop_type = :count
+    self.prop_type = :integer
+    include PuppetX::Oracle::SolarisProviders::Util::Svcs
+    validate do |val|
+      is_integer?(val,true)
+    end
   end
 
   newproperty(:follow_referrals) do
@@ -236,7 +245,12 @@ Puppet::Type.newtype(:ldap) do
       attr_accessor :prop_type
     end
     self.pg = "config"
-    self.prop_type = :count
+    # astring is correct for the definition, checking as a count anyway 
+    self.prop_type = :astring
+    include PuppetX::Oracle::SolarisProviders::Util::Svcs
+    validate do |val|
+      is_count?(val,true)
+    end
   end
 
   newproperty(:attribute_map, :parent => Puppet::Property::List) do

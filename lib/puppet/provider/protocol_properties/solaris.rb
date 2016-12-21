@@ -45,7 +45,8 @@ Puppet::Type.type(:protocol_properties).provide(:protocol_properties) do
       things = instances
       resources.keys.each { |key|
         things.find { |prop|
-          prop.name == key
+          # key.to_s in case name uses newvalues and is converted to symbol
+          prop.name == key.to_s
         }.tap { |provider|
           next if provider.nil?
           resources[key].provider = provider

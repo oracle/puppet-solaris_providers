@@ -69,14 +69,15 @@ Puppet::Type.newtype(:nis) do
             " "
         end
 
-
         include PuppetX::Oracle::SolarisProviders::Util::Svcs
         validate do |value|
           is_host?(value,true)
         end
     end
 
-    newproperty(:securenets) do
+    newproperty(:securenets, :array_matching => :all) do
+      # This cannot be a Puppet::Property::List as we build it by hand in
+      # the provider when fetching instances
         desc "Array of array entries for /var/yp/securenets. Each entry must
         be an array.  The first element in the entry array is either 'host' or a
         netmask.  The second element must be an IP network address.  Specify
@@ -86,6 +87,10 @@ Puppet::Type.newtype(:nis) do
           attr_accessor :prop_type
         end
         self.prop_type = :array
+
+        def should
+          @should
+        end
 
         def insync?(is)
             is = [] if is == :absent or is.nil?
@@ -110,10 +115,6 @@ Puppet::Type.newtype(:nis) do
             unless is_net_address?(addr)
               fail("Invalid address `#{addr}` for entry `#{value}`")
             end
-        end
-
-        munge do |value|
-          value = value.join(" ")
         end
     end
 

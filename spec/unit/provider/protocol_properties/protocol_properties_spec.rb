@@ -108,14 +108,14 @@ describe Puppet::Type.type(:protocol_properties).provider(:protocol_properties) 
   end
   describe ".properties=" do
     it "changes single protocol single property" do
-      args=%w(set-prop -p max-buf=262999 icmp)
+      args=%w(set-prop -p max-buf=262999) << :icmp
       described_class.expects(:ipadm).with(*args)
       expect(provider.properties=params[:properties]).to eq params[:properties]
     end
     it "changes single protocol multiple properties" do
       params[:properties]["igmp-accept-clear"] = "off"
-      args=[%w(set-prop -p max-buf=262999 icmp),
-            args=%w(set-prop -p  igmp-accept-clear=off icmp)]
+      args=[%w(set-prop -p max-buf=262999) << :icmp,
+            args=%w(set-prop -p  igmp-accept-clear=off) << :icmp]
       described_class.expects(:ipadm).with(*args[0])
       described_class.expects(:ipadm).with(*args[1])
       expect(provider.properties=params[:properties]).to eq params[:properties]
