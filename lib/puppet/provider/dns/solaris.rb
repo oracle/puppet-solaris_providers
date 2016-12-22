@@ -17,7 +17,7 @@
 # This is only a pre-configured instance of svccfg
 Puppet::Type.type(:dns).provide(:dns,
                                 :parent =>
-Puppet::Type.type(:svccfg).provider(:svccfg)) do
+                                Puppet::Type.type(:svccfg).provider(:svccfg)) do
 
   desc "Provider for management of DNS for Oracle Solaris"
   confine :operatingsystem => [:solaris]

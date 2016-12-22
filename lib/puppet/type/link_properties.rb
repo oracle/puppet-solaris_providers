@@ -15,31 +15,31 @@
 #
 
 Puppet::Type.newtype(:link_properties) do
-    @doc = "Manage Oracle Solaris link properties"
+  @doc = "Manage Oracle Solaris link properties"
 
-    ensurable
+  ensurable
 
-    newparam(:link) do
-        desc "The name of the link"
-        isnamevar
-    end
+  newparam(:link) do
+    desc "The name of the link"
+    isnamevar
+  end
 
-    newparam(:temporary) do
-        desc "Optional parameter that specifies changes to the link are
+  newparam(:temporary) do
+    desc "Optional parameter that specifies changes to the link are
               temporary.  Changes last until the next reboot."
-        newvalues(:true, :false)
-    end
+    newvalues(:true, :false)
+  end
 
-    newproperty(:properties) do
-        desc "A hash table of propname=propvalue entries to apply to the link. See ipadm(8)"
+  newproperty(:properties) do
+    desc "A hash table of propname=propvalue entries to apply to the link. See ipadm(8)"
 
-        def property_matches?(current, desired)
-            desired.each do |key, value|
-                if current[key] != value
-                    return :false
-                end
-            end
-            return :true
+    def property_matches?(current, desired)
+      desired.each do |key, value|
+        if current[key] != value
+          return :false
         end
+      end
+      return :true
     end
+  end
 end

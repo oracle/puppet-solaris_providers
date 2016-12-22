@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 
-require File.expand_path(File.join(File.dirname(__FILE__), '..','..','puppet_x/oracle/solaris_providers/util/svcs.rb'))
+require_relative '../../puppet_x/oracle/solaris_providers/util/svcs.rb'
 require 'puppet/property/list'
 
 
@@ -191,7 +191,7 @@ Puppet::Type.newtype(:dns) do
           fail "'#{value}' is invalid, can not be cast to an Integer"
         end
       elsif data.empty?
-        # Empty values are valid to clear settings in smf
+      # Empty values are valid to clear settings in smf
       else
         fail "'#{value}' is invalid"
       end

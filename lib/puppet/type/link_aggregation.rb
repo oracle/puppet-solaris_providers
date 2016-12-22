@@ -97,7 +97,7 @@ Puppet::Type.newtype(:link_aggregation) do
   newproperty(:address) do
     desc "Specifies a fixed unicast hardware address to be used for the
               aggregation"
-              newvalues(/^(?:\p{Xdigit}{1,2}:){5}\p{Xdigit}{1,2}$/,:auto)
+    newvalues(/^(?:\p{Xdigit}{1,2}:){5}\p{Xdigit}{1,2}$/,:auto)
   end
   autorequire(:ip_interface) do
     children = catalog.resources.select { |resource|
@@ -112,8 +112,8 @@ Puppet::Type.newtype(:link_aggregation) do
   validate {
     if (self[:mode] != :absent && !self[:mode].nil?) &&
        (self[:lower_links] == :absent || self[:lower_links].nil?)
-        fail "lower_links must be defined when mode is specified"
-      end
+      fail "lower_links must be defined when mode is specified"
+    end
   }
 
 end

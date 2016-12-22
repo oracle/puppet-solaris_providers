@@ -15,8 +15,8 @@
 #
 
 
-require File.expand_path(File.join(File.dirname(__FILE__), '..','..','puppet_x/oracle/solaris_providers/util/validation.rb'))
-require File.expand_path(File.join(File.dirname(__FILE__), '..','..','puppet_x/oracle/solaris_providers/util/ilb.rb'))
+require_relative '../../puppet_x/oracle/solaris_providers/util/validation.rb'
+require_relative '../../puppet_x/oracle/solaris_providers/util/ilb.rb'
 require 'puppet/property/list'
 
 Puppet::Type.newtype(:ilb_server) do
@@ -92,7 +92,7 @@ Puppet::Type.newtype(:ilb_server) do
     validated at compilation time and may fail on individual nodes."
 
     validate do |value|
-        PuppetX::Oracle::SolarisProviders::Util::Ilb.valid_portspec?(value)
+      PuppetX::Oracle::SolarisProviders::Util::Ilb.valid_portspec?(value)
     end
   end
 

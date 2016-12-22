@@ -18,7 +18,7 @@ require_relative '../../../puppet_x/oracle/solaris_providers/util/svcs.rb'
 # This is only a pre-configured instance of svccfg
 Puppet::Type.type(:ldap).provide(:ldap,
                                  :parent =>
-Puppet::Type.type(:svccfg).provider(:svccfg)) do
+                                 Puppet::Type.type(:svccfg).provider(:svccfg)) do
 
   desc "Provider for management of the LDAP client for Oracle Solaris"
   confine :operatingsystem => [:solaris]

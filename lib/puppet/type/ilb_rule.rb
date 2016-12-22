@@ -15,8 +15,8 @@
 #
 
 
-require File.expand_path(File.join(File.dirname(__FILE__), '..','..','puppet_x/oracle/solaris_providers/util/validation.rb'))
-require File.expand_path(File.join(File.dirname(__FILE__), '..','..','puppet_x/oracle/solaris_providers/util/ilb.rb'))
+require_relative '../../puppet_x/oracle/solaris_providers/util/validation.rb'
+require_relative '../../puppet_x/oracle/solaris_providers/util/ilb.rb'
 require 'ipaddr'
 
 Puppet::Type.newtype(:ilb_rule) do
@@ -59,9 +59,9 @@ Puppet::Type.newtype(:ilb_rule) do
     validated at compilation time and may fail on individual nodes.
     "
 
-      validate do |value|
-        PuppetX::Oracle::SolarisProviders::Util::Ilb.valid_portspec?(value)
-      end
+    validate do |value|
+      PuppetX::Oracle::SolarisProviders::Util::Ilb.valid_portspec?(value)
+    end
 
   end
 
@@ -202,7 +202,7 @@ Puppet::Type.newtype(:ilb_rule) do
   autorequire(:ilb_server) do
     children = catalog.resources.select { |resource|
       resource.type == :ilb_server &&
-      resource[:servergroup] == self[:servergroup]
+        resource[:servergroup] == self[:servergroup]
     }
     children.each.collect { |child|
       child[:name]

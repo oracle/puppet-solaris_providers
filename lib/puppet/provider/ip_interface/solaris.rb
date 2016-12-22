@@ -15,37 +15,37 @@
 #
 
 Puppet::Type.type(:ip_interface).provide(:ip_interface) do
-    desc "Provider for management of IP interfaces for Oracle Solaris"
-    confine :operatingsystem => [:solaris]
-    defaultfor :osfamily => :solaris, :kernelrelease => ['5.11', '5.12']
-    commands :ipadm => '/usr/sbin/ipadm', :dladm => '/usr/sbin/dladm'
+  desc "Provider for management of IP interfaces for Oracle Solaris"
+  confine :operatingsystem => [:solaris]
+  defaultfor :osfamily => :solaris, :kernelrelease => ['5.11', '5.12']
+  commands :ipadm => '/usr/sbin/ipadm', :dladm => '/usr/sbin/dladm'
 
-    def self.instances
-        (dladm("show-link", "-p", "-o", "link").split("\n") &
-         ipadm("show-if", "-p", "-o", "ifname").split("\n")).collect do |ifname|
-            new(:name => ifname,
-                :ensure => :present)
-        end
+  def self.instances
+    (dladm("show-link", "-p", "-o", "link").split("\n") &
+     ipadm("show-if", "-p", "-o", "ifname").split("\n")).collect do |ifname|
+      new(:name => ifname,
+          :ensure => :present)
     end
+  end
 
-    def add_options
-       options = []
-       if @resource[:temporary] == :true
-         options << "-t"
-       end
-       options
+  def add_options
+    options = []
+    if @resource[:temporary] == :true
+      options << "-t"
     end
+    options
+  end
 
-    def exists?
-        ipadm("show-if", "-p", "-o", "IFNAME").split(
-              "\n").include? @resource[:name]
-    end
+  def exists?
+    ipadm("show-if", "-p", "-o", "IFNAME").split(
+      "\n").include? @resource[:name]
+  end
 
-    def create
-        ipadm('create-ip', add_options, @resource[:name])
-    end
+  def create
+    ipadm('create-ip', add_options, @resource[:name])
+  end
 
-    def destroy
-        ipadm('delete-ip', @resource[:name])
-    end
+  def destroy
+    ipadm('delete-ip', @resource[:name])
+  end
 end

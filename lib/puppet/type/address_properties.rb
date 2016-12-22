@@ -15,44 +15,44 @@
 #
 
 Puppet::Type.newtype(:address_properties) do
-    @doc = "Manage Oracle Solaris address properties"
+  @doc = "Manage Oracle Solaris address properties"
 
-    ensurable do
-        # remove the ability to specify :absent.  New values must be set.
-        newvalue(:present) do
-            provider.create
-        end
+  ensurable do
+    # remove the ability to specify :absent.  New values must be set.
+    newvalue(:present) do
+      provider.create
     end
+  end
 
-    newparam(:address) do
-        desc "The name of the address object"
-        isnamevar
-    end
+  newparam(:address) do
+    desc "The name of the address object"
+    isnamevar
+  end
 
-    newparam(:temporary) do
-        desc "Optional parameter that specifies changes to the address object
+  newparam(:temporary) do
+    desc "Optional parameter that specifies changes to the address object
               are temporary.  Changes last until the next reboot."
-        newvalues(:true, :false)
-    end
+    newvalues(:true, :false)
+  end
 
-    newproperty(:properties) do
-        desc "A hash table of propname=propvalue entries to apply to an
+  newproperty(:properties) do
+    desc "A hash table of propname=propvalue entries to apply to an
               address object. See ipadm(8)"
 
-        def insync?(is)
-          is = [] if is == :absent or is.nil?
-          return false unless is.length == should.length
-          is.zip(@should).all? {|a, b| property_matches?(a, b) }
-        end
+    def insync?(is)
+      is = [] if is == :absent or is.nil?
+      return false unless is.length == should.length
+      is.zip(@should).all? {|a, b| property_matches?(a, b) }
     end
+  end
 
-    autorequire(:address_object) do
-      children = catalog.resources.select { |resource|
-        resource.type == :address_object &&
-          self[:address].include?(resource[:name])
-      }
-      children.each.collect { |child|
-        child[:name]
-      }
-    end
+  autorequire(:address_object) do
+    children = catalog.resources.select { |resource|
+      resource.type == :address_object &&
+        self[:address].include?(resource[:name])
+    }
+    children.each.collect { |child|
+      child[:name]
+    }
+  end
 end

@@ -53,7 +53,7 @@ Puppet::Type.newtype(:ldap) do
     self.prop_type = :host
 
     # ensure should remains an array
-   def should
+    def should
       @should
     end
 

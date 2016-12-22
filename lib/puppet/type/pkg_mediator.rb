@@ -15,36 +15,36 @@
 #
 
 Puppet::Type.newtype(:pkg_mediator) do
-    @doc = "Manage Oracle Solaris package mediators"
+  @doc = "Manage Oracle Solaris package mediators"
 
-    ensurable
+  ensurable
 
-    newparam(:name) do
-        desc "The mediator name"
-        isnamevar
+  newparam(:name) do
+    desc "The mediator name"
+    isnamevar
+  end
+
+  newproperty(:version) do
+    desc "The version of the mediated interface to use"
+    newvalues(/none/io,/\A\d+(?:\.\d+){0,}\Z/)
+    munge do |value|
+      return value.downcase.capitalize.to_sym if value.match(/none/i)
+      value
     end
+  end
 
-    newproperty(:version) do
-        desc "The version of the mediated interface to use"
-        newvalues(/none/io,/\A\d+(?:\.\d+){0,}\Z/)
-        munge do |value|
-          return value.downcase.capitalize.to_sym if value.match(/none/i)
-          value
-        end
+  newproperty(:implementation) do
+    desc "The implementation of the mediated interface to use"
+    newvalues(/none/io,/\A[[:alnum:]-]+(?:@\d+(?:\.\d+){0,})?\Z/)
+    munge do |value|
+      return value.downcase.capitalize.to_sym if value.match(/none/i)
+      value
     end
+  end
 
-    newproperty(:implementation) do
-        desc "The implementation of the mediated interface to use"
-        newvalues(/none/io,/\A[[:alnum:]-]+(?:@\d+(?:\.\d+){0,})?\Z/)
-        munge do |value|
-          return value.downcase.capitalize.to_sym if value.match(/none/i)
-          value
-        end
+  validate {
+    if self[:version] == :None && self[:implementation] == :None
+      fail("Version and Implementation cannot both be :None use ensure => :absent instead")
     end
-
-    validate {
-      if self[:version] == :None && self[:implementation] == :None
-        fail("Version and Implementation cannot both be :None use ensure => :absent instead")
-      end
-    }
+  }
 end

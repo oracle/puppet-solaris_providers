@@ -15,31 +15,31 @@
 #
 
 Puppet::Type.newtype(:solaris_vlan) do
-    @doc = "Manage the configuration of Oracle Solaris VLAN links"
+  @doc = "Manage the configuration of Oracle Solaris VLAN links"
 
-    ensurable
+  ensurable
 
-    newparam(:name) do
-        desc "The name of the VLAN"
-        isnamevar
-    end
+  newparam(:name) do
+    desc "The name of the VLAN"
+    isnamevar
+  end
 
-    newparam(:force) do
-        desc "Optional parameter to force the creation of the VLAN link"
-        newvalues(:true, :false)
-    end
+  newparam(:force) do
+    desc "Optional parameter to force the creation of the VLAN link"
+    newvalues(:true, :false)
+  end
 
-    newparam(:temporary) do
-        desc "Optional parameter that specifies that the VLAN is
+  newparam(:temporary) do
+    desc "Optional parameter that specifies that the VLAN is
               temporary.  Temporary VLAN links last until the next reboot."
-        newvalues(:true, :false)
-    end
+    newvalues(:true, :false)
+  end
 
-    newproperty(:lower_link) do
-        desc "Specifies Ethernet link over which VLAN is created"
-    end
+  newproperty(:lower_link) do
+    desc "Specifies Ethernet link over which VLAN is created"
+  end
 
-    newproperty(:vlanid) do
-        desc "VLAN link ID"
-    end
+  newproperty(:vlanid) do
+    desc "VLAN link ID"
+  end
 end

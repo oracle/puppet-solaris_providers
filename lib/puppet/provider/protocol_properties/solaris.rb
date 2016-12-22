@@ -15,71 +15,71 @@
 #
 
 Puppet::Type.type(:protocol_properties).provide(:protocol_properties) do
-    desc "Provider for managing Oracle Solaris protocol object properties"
-    confine :operatingsystem => [:solaris]
-    defaultfor :osfamily => :solaris, :kernelrelease => ['5.11', '5.12']
-    commands :ipadm => '/usr/sbin/ipadm'
+  desc "Provider for managing Oracle Solaris protocol object properties"
+  confine :operatingsystem => [:solaris]
+  defaultfor :osfamily => :solaris, :kernelrelease => ['5.11', '5.12']
+  commands :ipadm => '/usr/sbin/ipadm'
 
-    mk_resource_methods
+  mk_resource_methods
 
-    def self.instances
-        props = Hash.new { |k,v| k[v] = Hash.new }
-        ipadm("show-prop", "-c", "-o",
-              "PROTO,PROPERTY,CURRENT,DEFAULT,PERSISTENT,POSSIBLE,PERM"
-             ).each_line do
-          |line|
-          protocol, property, value, _tmp = line.strip.split(':',4)
-          props[protocol][property] = value ? value : :absent
-        end
-
-        protocols = []
-        props.each do |key, value|
-            protocols << new(:name => key,
-                             :ensure => :present,
-                             :properties => value)
-        end
-        protocols
+  def self.instances
+    props = Hash.new { |k,v| k[v] = Hash.new }
+    ipadm("show-prop", "-c", "-o",
+          "PROTO,PROPERTY,CURRENT,DEFAULT,PERSISTENT,POSSIBLE,PERM"
+         ).each_line do
+      |line|
+      protocol, property, value, _tmp = line.strip.split(':',4)
+      props[protocol][property] = value ? value : :absent
     end
 
-    def self.prefetch(resources)
-      things = instances
-      resources.keys.each { |key|
-        things.find { |prop|
-          # key.to_s in case name uses newvalues and is converted to symbol
-          prop.name == key.to_s
-        }.tap { |provider|
-          next if provider.nil?
-          resources[key].provider = provider
-        }
+    protocols = []
+    props.each do |key, value|
+      protocols << new(:name => key,
+                       :ensure => :present,
+                       :properties => value)
+    end
+    protocols
+  end
+
+  def self.prefetch(resources)
+    things = instances
+    resources.keys.each { |key|
+      things.find { |prop|
+        # key.to_s in case name uses newvalues and is converted to symbol
+        prop.name == key.to_s
+      }.tap { |provider|
+        next if provider.nil?
+        resources[key].provider = provider
       }
-    end
+    }
+  end
 
-    # Return an array of prop=value strings to change
-    def change_props
-      out_of_sync=[]
-      # Compare the desired values against the current values
-      resource[:properties].each_pair { |prop,should_be|
-        is = properties[prop]
-        # Current Value == Desired Value
-        unless is == should_be
-          # Stash out of sync property
-          out_of_sync.push("%s=%s" % [prop, should_be])
-        end
-      }
-      out_of_sync
-    end
-
-    def properties=(value)
-      change_props.each do |prop|
-        ipadm("set-prop", "-p", prop, @resource[:name])
+  # Return an array of prop=value strings to change
+  def change_props
+    out_of_sync=[]
+    # Compare the desired values against the current values
+    resource[:properties].each_pair { |prop,should_be|
+      is = properties[prop]
+      # Current Value == Desired Value
+      unless is == should_be
+        # Stash out of sync property
+        out_of_sync.push("%s=%s" % [prop, should_be])
       end
-    end
+    }
+    out_of_sync
+  end
 
-    def exists?
-      @property_hash[:ensure] == :present
+  def properties=(value)
+    change_props.each do |prop|
+      ipadm("set-prop", "-p", prop, @resource[:name])
     end
+  end
 
-    def create
-      fail "protcol must exist before properties can be set"
-    end
+  def exists?
+    @property_hash[:ensure] == :present
+  end
+
+  def create
+    fail "protcol must exist before properties can be set"
+  end
 end

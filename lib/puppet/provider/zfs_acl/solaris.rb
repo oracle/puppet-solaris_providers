@@ -63,13 +63,13 @@ Puppet::Type.type(:zfs_acl).provide(:zfs_acl) do
 
   def acl
     return @property_hash[:acl] if @property_hash[:acl] &&
-      ! @property_hash[:acl].empty?
+                                   ! @property_hash[:acl].empty?
 
     line_expr = %r(^\d+:|^/|^:)
 
     entries = ls("-d", "-v", @resource[:file]).
-      each_line.
-      each_with_object([]) do |line,arr|
+                each_line.
+                each_with_object([]) do |line,arr|
       line.strip!
       # Skip any unexpected lines
       next unless lmatch = line.match(line_expr)
@@ -81,7 +81,7 @@ Puppet::Type.type(:zfs_acl).provide(:zfs_acl) do
       else
         arr[-1] << line
       end
-      end
+    end
 
     entries.each_with_object(@property_hash[:acl]=[]) do |ace,arr|
       arr.push(
@@ -118,8 +118,8 @@ Puppet::Type.type(:zfs_acl).provide(:zfs_acl) do
   end
 
   def create
-      self.acl= @resource[:acl]
-      return nil
+    self.acl= @resource[:acl]
+    return nil
   end
 
   def destroy
@@ -150,9 +150,9 @@ Puppet::Type.type(:zfs_acl).provide(:zfs_acl) do
       end
     }
 
-   # If the set is empty all default perms are
-   # currently set
-   (owner + group + everyone).empty?
+    # If the set is empty all default perms are
+    # currently set
+    (owner + group + everyone).empty?
   end
 
   def has_custom_perms?
@@ -171,11 +171,11 @@ Puppet::Type.type(:zfs_acl).provide(:zfs_acl) do
         return true
       when "owner@"
         # Owner additionally gets append_data in the default set
-       perms = perms - (Ace::Util.default_perms['owner'] + ['append_data'])
+        perms = perms - (Ace::Util.default_perms['owner'] + ['append_data'])
       when "group@"
-       perms = perms - Ace::Util.default_perms['group']
+        perms = perms - Ace::Util.default_perms['group']
       when "everyone@"
-       perms = perms - Ace::Util.default_perms['everyone']
+        perms = perms - Ace::Util.default_perms['everyone']
       end
 
       # Stop at the first ACE with custom permissions
@@ -218,19 +218,19 @@ Puppet::Type.type(:zfs_acl).provide(:zfs_acl) do
 
     # Order here is also important or it will never match the default
     unless owner_found
-    _default[0] = Ace.new({ 'target' => 'owner',
-      'perms' => Ace::Util.default_perms['owner'], 'perm_type' => 'allow' },
-                provider)
+      _default[0] = Ace.new({ 'target' => 'owner',
+                              'perms' => Ace::Util.default_perms['owner'], 'perm_type' => 'allow' },
+                            provider)
     end
     unless group_found
-    _default[1] = Ace.new({ 'target' => 'group',
-      'perms' => Ace::Util.default_perms['group'], 'perm_type' => 'allow' },
-                provider)
+      _default[1] = Ace.new({ 'target' => 'group',
+                              'perms' => Ace::Util.default_perms['group'], 'perm_type' => 'allow' },
+                            provider)
     end
     unless everyone_found
-    _default[2] = Ace.new({ 'target' => 'everyone',
-      'perms' => Ace::Util.default_perms['everyone'], 'perm_type' => 'allow' },
-                provider)
+      _default[2] = Ace.new({ 'target' => 'everyone',
+                              'perms' => Ace::Util.default_perms['everyone'], 'perm_type' => 'allow' },
+                            provider)
     end
 
     # Replace the ACL with our updated version

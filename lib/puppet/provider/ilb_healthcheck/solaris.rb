@@ -27,18 +27,18 @@ Puppet::Type.type(:ilb_healthcheck).provide(:ilb_healthcheck) do
     checks=[]
 
     ilbadm('show-healthcheck').each_line { |line|
-     next if line.match(/^HCNAME/)
-     name, timeout, count, interval, default_ping, test = line.strip.split(/\s+/,6)
-        checks.push(
-          new(:name => name,
-              :timeout => timeout,
-              :count => count,
-              :interval => interval,
-              :default_ping => (default_ping == "Y" ? :true : :false),
-              :test => test,
-              :ensure => :present
-             )
-        )
+      next if line.match(/^HCNAME/)
+      name, timeout, count, interval, default_ping, test = line.strip.split(/\s+/,6)
+      checks.push(
+        new(:name => name,
+            :timeout => timeout,
+            :count => count,
+            :interval => interval,
+            :default_ping => (default_ping == "Y" ? :true : :false),
+            :test => test,
+            :ensure => :present
+           )
+      )
     }
     return checks
   end

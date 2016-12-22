@@ -15,22 +15,22 @@
 #
 
 Puppet::Type.newtype(:pkg_variant) do
-    @doc = "Manage Oracle Solaris package variants"
+  @doc = "Manage Oracle Solaris package variants"
 
-    ensurable do
-        # remove the ability to specify :absent as deletion of variants is not
-        # supported.  New values must be set.
-        newvalue(:present) do
-            provider.create
-        end
+  ensurable do
+    # remove the ability to specify :absent as deletion of variants is not
+    # supported.  New values must be set.
+    newvalue(:present) do
+      provider.create
     end
+  end
 
-    newparam(:name) do
-        desc "The variant name"
-        isnamevar
-    end
+  newparam(:name) do
+    desc "The variant name"
+    isnamevar
+  end
 
-    newproperty(:value) do
-        desc "The value for the variant"
-    end
+  newproperty(:value) do
+    desc "The value for the variant"
+  end
 end

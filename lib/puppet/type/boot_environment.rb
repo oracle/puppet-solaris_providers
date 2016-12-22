@@ -15,45 +15,45 @@
 #
 
 Puppet::Type.newtype(:boot_environment) do
-    @doc = "Manage Oracle Solaris Boot Environments (BEs)"
+  @doc = "Manage Oracle Solaris Boot Environments (BEs)"
 
-    ensurable
+  ensurable
 
-    newparam(:name) do
-        desc "The BE name"
-        validate do |value|
-            raise Puppet::Error, "Invalid BE name:  #{value}" unless
-                value =~ /^[\d\w\.\-\:\_]+$/
-        end
-        isnamevar
+  newparam(:name) do
+    desc "The BE name"
+    validate do |value|
+      raise Puppet::Error, "Invalid BE name:  #{value}" unless
+        value =~ /^[\d\w\.\-\:\_]+$/
     end
+    isnamevar
+  end
 
-    newparam(:description) do
-        desc "Description for the new BE"
-    end
+  newparam(:description) do
+    desc "Description for the new BE"
+  end
 
-    newparam(:clone_be) do
-        desc "Create a new BE from an existing inactive BE."
-    end
+  newparam(:clone_be) do
+    desc "Create a new BE from an existing inactive BE."
+  end
 
-    newparam(:options) do
-        desc "Create the datasets for a new BE with specific ZFS
+  newparam(:options) do
+    desc "Create the datasets for a new BE with specific ZFS
               properties.  Specify options as a hash."
-    end
+  end
 
-    newparam(:zpool) do
-        desc "Create the new BE in the specified zpool. Zpool is ignored for
+  newparam(:zpool) do
+    desc "Create the new BE in the specified zpool. Zpool is ignored for
         a cloned BE"
-    end
+  end
 
-    newproperty(:activate) do
-        desc "Activate the specified BE"
-        newvalues(:true, :false)
-    end
+  newproperty(:activate) do
+    desc "Activate the specified BE"
+    newvalues(:true, :false)
+  end
 
-    validate {
-      if self[:clone_be] && self[:zpool]
-        warning "zpool is ignored when cloning a BE"
-      end
-    }
+  validate {
+    if self[:clone_be] && self[:zpool]
+      warning "zpool is ignored when cloning a BE"
+    end
+  }
 end

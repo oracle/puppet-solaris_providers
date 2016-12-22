@@ -17,7 +17,7 @@
 # This is only a pre-configured instance of svccfg
 Puppet::Type.type(:nis).provide(:nis,
                                 :parent =>
-Puppet::Type.type(:svccfg).provider(:svccfg)) do
+                                Puppet::Type.type(:svccfg).provider(:svccfg)) do
 
   desc "Provider for management of NIS client for Oracle Solaris"
   confine :operatingsystem => [:solaris]

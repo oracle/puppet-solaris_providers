@@ -115,25 +115,25 @@ Puppet::Type.type(:zone).provide(:solaris) do
   # read/write mode.
   def exec_cmd(var)
     if var[:input]
-    	execute("echo \"#{var[:input]}\" | #{var[:cmd]}", :failonfail => true, :combine => true)
+      execute("echo \"#{var[:input]}\" | #{var[:cmd]}", :failonfail => true, :combine => true)
     else
-        execute("#{var[:cmd]}", :failonfail => true, :combine => true)
+      execute("#{var[:cmd]}", :failonfail => true, :combine => true)
     end
   end
 
 
   def install(dummy_argument=:work_arround_for_ruby_GC_bug)
     if ['5.11', '5.12'].include? Facter.value(:kernelrelease)
-       if !@resource[:install_args] and @resource[:config_profile]
-         @resource[:install_args] = " -c " + @resource[:config_profile]
-       elsif !@resource[:install_args] and @resource[:archive]
-         @resource[:install_args] = " -a " + @resource[:archive]
-	     if @resource[:archived_zonename]
-	       @resource[:install_args] << " -z " + @resource[:archived_zonename]
-	     end
-       elsif @resource[:config_profile]
-	     @resource[:install_args] << " -c " + @resource[:config_profile]
-       end
+      if !@resource[:install_args] and @resource[:config_profile]
+        @resource[:install_args] = " -c " + @resource[:config_profile]
+      elsif !@resource[:install_args] and @resource[:archive]
+        @resource[:install_args] = " -a " + @resource[:archive]
+        if @resource[:archived_zonename]
+          @resource[:install_args] << " -z " + @resource[:archived_zonename]
+        end
+      elsif @resource[:config_profile]
+        @resource[:install_args] << " -c " + @resource[:config_profile]
+      end
     end
 
     if @resource[:clone] # TODO: add support for "-s snapshot"
@@ -226,28 +226,28 @@ Puppet::Type.type(:zone).provide(:solaris) do
 
   def start
     # Check the sysidcfg stuff
-   if ['5.10'].include? Facter.value(:kernelrelease)
-    if cfg = @resource[:sysidcfg]
-      self.fail "Path is required" unless @resource[:path]
-      zoneetc = File.join(@resource[:path], "root", "etc")
-      sysidcfg = File.join(zoneetc, "sysidcfg")
+    if ['5.10'].include? Facter.value(:kernelrelease)
+      if cfg = @resource[:sysidcfg]
+        self.fail "Path is required" unless @resource[:path]
+        zoneetc = File.join(@resource[:path], "root", "etc")
+        sysidcfg = File.join(zoneetc, "sysidcfg")
 
-      # if the zone root isn't present "ready" the zone
-      # which makes zoneadmd mount the zone root
-      zoneadm :ready unless File.directory?(zoneetc)
+        # if the zone root isn't present "ready" the zone
+        # which makes zoneadmd mount the zone root
+        zoneadm :ready unless File.directory?(zoneetc)
 
-      unless Puppet::FileSystem.exist?(sysidcfg)
-        begin
-          File.open(sysidcfg, "w", 0600) do |f|
-            f.puts cfg
+        unless Puppet::FileSystem.exist?(sysidcfg)
+          begin
+            File.open(sysidcfg, "w", 0600) do |f|
+              f.puts cfg
+            end
+          rescue => detail
+            puts detail.stacktrace if Puppet[:debug]
+            raise Puppet::Error, "Could not create sysidcfg: #{detail}", detail.backtrace
           end
-        rescue => detail
-          puts detail.stacktrace if Puppet[:debug]
-          raise Puppet::Error, "Could not create sysidcfg: #{detail}", detail.backtrace
         end
       end
     end
-   end
 
     # Boots the zone
     zoneadm :boot
@@ -271,8 +271,8 @@ Puppet::Type.type(:zone).provide(:solaris) do
   end
 
   def stop
-     # Shutdown the zone
-     zoneadm :halt
+    # Shutdown the zone
+    zoneadm :halt
   end
 
 
@@ -306,4 +306,3 @@ Puppet::Type.type(:zone).provide(:solaris) do
     end
   end
 end
-

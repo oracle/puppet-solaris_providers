@@ -15,7 +15,7 @@
 #
 
 
-require File.expand_path(File.join(File.dirname(__FILE__), '..','..','puppet_x/oracle/solaris_providers/util/svcs.rb'))
+require_relative '../../puppet_x/oracle/solaris_providers/util/svcs.rb'
 
 Puppet::Type.newtype(:svccfg) do
   @doc = "Manage SMF service properties with svccfg(8)."
@@ -180,18 +180,18 @@ Puppet::Type.newtype(:svccfg) do
     [self[:value]].flatten.each { |val|
       #
       # Validate Value arguments based on type
-    case self[:type]
-    when :astring, :ustring, :opaque, :boolean, :count, :fmri, :host, :hostname,
-         :integer, :net_address, :net_address_v4, :net_address_v6, :time, :uri
-      self.send(:"is_#{self[:type]}?", val,true)
-    when :dependency, :framework, :configfile, :method, :template,
-         :template_pg_pattern, :template_prop_pattern
+      case self[:type]
+      when :astring, :ustring, :opaque, :boolean, :count, :fmri, :host, :hostname,
+           :integer, :net_address, :net_address_v4, :net_address_v6, :time, :uri
+        self.send(:"is_#{self[:type]}?", val,true)
+      when :dependency, :framework, :configfile, :method, :template,
+           :template_pg_pattern, :template_prop_pattern
       # These are property groups
-    when nil, :absent
-      warning "Type should be provided in resource definition"
-    else
-      fail "unknown type #{self[:type]}"
-    end
+      when nil, :absent
+        warning "Type should be provided in resource definition"
+      else
+        fail "unknown type #{self[:type]}"
+      end
     }
   }
 

@@ -49,8 +49,8 @@ Puppet::Type.type(:ilb_servergroup).provide(:ilb_servergroup) do
   end
 
   def destroy
-     ilbadm("delete-servergroup", @resource[:name])
-     @property_hash[:ensure] = :absent
-     nil
+    ilbadm("delete-servergroup", @resource[:name])
+    @property_hash[:ensure] = :absent
+    nil
   end
 end

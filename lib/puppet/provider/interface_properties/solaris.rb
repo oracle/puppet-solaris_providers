@@ -15,80 +15,80 @@
 #
 
 Puppet::Type.type(:interface_properties).provide(:interface_properties) do
-    desc "Provider for managing Oracle Solaris interface properties"
-    confine :operatingsystem => [:solaris]
-    defaultfor :osfamily => :solaris, :kernelrelease => ['5.11', '5.12']
-    commands :ipadm => '/usr/sbin/ipadm'
+  desc "Provider for managing Oracle Solaris interface properties"
+  confine :operatingsystem => [:solaris]
+  defaultfor :osfamily => :solaris, :kernelrelease => ['5.11', '5.12']
+  commands :ipadm => '/usr/sbin/ipadm'
 
-    mk_resource_methods
+  mk_resource_methods
 
-    def self.instances
-      props = Hash.new { |k,v| k[v] = Hash.new { |k1,v1| k1[v1] = {} } }
+  def self.instances
+    props = Hash.new { |k,v| k[v] = Hash.new { |k1,v1| k1[v1] = {} } }
 
-        ipadm("show-ifprop", "-c", "-o",
-              "IFNAME,PROPERTY,PROTO,CURRENT,DEFAULT").each_line do |line|
-            ifname, property, proto, value, _default = line.strip().split(":")
-            # IPMP group cannot be controlled, fwifgroup is also skipped
-            next if proto == 'ip' && ['group','fwifgroup'].include?(property)
-            value ||= :absent
-            props[ifname][proto][property] = value
+    ipadm("show-ifprop", "-c", "-o",
+          "IFNAME,PROPERTY,PROTO,CURRENT,DEFAULT").each_line do |line|
+      ifname, property, proto, value, _default = line.strip().split(":")
+      # IPMP group cannot be controlled, fwifgroup is also skipped
+      next if proto == 'ip' && ['group','fwifgroup'].include?(property)
+      value ||= :absent
+      props[ifname][proto][property] = value
+    end
+    props.collect do |key, value|
+      new(
+        :name => key,
+        :ensure => :present,
+        :properties => value,
+      )
+    end
+  end
+
+  def self.prefetch(resources)
+    things = instances
+    resources.keys.each { |key|
+      things.find { |prop|
+        prop.name == key
+      }.tap { |provider|
+        next if provider.nil?
+        resources[key].provider = provider
+      }
+    }
+  end
+
+  def create
+    fail "Interface must exist before properties can be set"
+  end
+
+  # Return a hash of property strings by protocol
+  def change_props
+    out_of_sync= Hash.new {|k,v| k[v]=[]}
+    # Compare the desired values against the current values
+    resource[:properties].each_pair { |proto,hsh|
+      hsh.each_pair { |prop,should_be|
+        is = properties[proto][prop]
+
+        # Current Value == Desired Value
+        unless is == should_be
+          # Stash out of sync property
+          out_of_sync[proto].push("%s=%s" % [prop, should_be])
         end
-        props.collect do |key, value|
-          new(
-                :name => key,
-                :ensure => :present,
-                :properties => value,
-               )
-        end
-    end
-
-    def self.prefetch(resources)
-      things = instances
-      resources.keys.each { |key|
-        things.find { |prop|
-          prop.name == key
-        }.tap { |provider|
-          next if provider.nil?
-          resources[key].provider = provider
-        }
       }
-    end
+    }
 
-    def create
-      fail "Interface must exist before properties can be set"
-    end
+    out_of_sync
+  end
 
-    # Return a hash of property strings by protocol
-    def change_props
-      out_of_sync= Hash.new {|k,v| k[v]=[]}
-      # Compare the desired values against the current values
-      resource[:properties].each_pair { |proto,hsh|
-        hsh.each_pair { |prop,should_be|
-         is = properties[proto][prop]
-
-          # Current Value == Desired Value
-          unless is == should_be
-            # Stash out of sync property
-            out_of_sync[proto].push("%s=%s" % [prop, should_be])
-          end
-        }
+  def properties=(value)
+    # Support old style intf/proto names
+    name = @resource[:name].split('/')[0]
+    change_props.each_pair { |proto,props|
+      props.each { |prop|
+        ipadm("set-ifprop", "-p", prop, "-m", proto, name)
       }
+    }
+    @property_hash[:properties].merge(value)
+  end
 
-      out_of_sync
-    end
-
-    def properties=(value)
-      # Support old style intf/proto names
-      name = @resource[:name].split('/')[0]
-      change_props.each_pair { |proto,props|
-        props.each { |prop|
-          ipadm("set-ifprop", "-p", prop, "-m", proto, name)
-        }
-      }
-      @property_hash[:properties].merge(value)
-    end
-
-    def exists?
-      @property_hash[:ensure] == :present
-    end
+  def exists?
+    @property_hash[:ensure] == :present
+  end
 end

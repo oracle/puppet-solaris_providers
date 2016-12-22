@@ -225,7 +225,7 @@ Puppet::Type.type(:link_aggregation).provide(:link_aggregation) do
 
       # Update the property_hash
       @property_hash.keys { |prop|
-          @property_hash[prop] = resource[prop]
+        @property_hash[prop] = resource[prop]
       }
 
       # We have done this once
