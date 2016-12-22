@@ -92,6 +92,7 @@ Puppet::Type.type(:boot_environment).provide(:boot_environment) do
 
     if options = @resource[:options]
       options.each { |key, value| flags << "-o" << "#{key}=#{value}" }
+
     end
 
     # Skip zpool if clone_be is provided

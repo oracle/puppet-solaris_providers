@@ -19,6 +19,7 @@ Puppet::Type.type(:svccfg).provide(:svccfg) do
   defaultfor :operatingsystem => :solaris
   commands :svccfg => "/usr/sbin/svccfg", :svcprop => "/usr/bin/svcprop"
 
+
   include PuppetX::Oracle::SolarisProviders::Util::Svcs
 
   mk_resource_methods
