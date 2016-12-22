@@ -4,7 +4,7 @@ group(:development, :test) do
   gem 'puppetlabs_spec_helper', :require => true
   gem 'rspec-puppet', :require => true
   gem 'rspec', :require => false
-  gem 'rake', :require => false
+  gem 'rake', '< 11.0', :require => false
   gem 'pry', :require => false
   gem 'pry-rescue', :require => false
   gem 'pry-stack_explorer', :require => false
