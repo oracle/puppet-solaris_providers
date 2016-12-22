@@ -143,6 +143,7 @@ Puppet::Type.newtype(:zone) do
   newparam(:name) do
     desc "The name of the zone."
     isnamevar
+  end
 
   newparam(:config_profile) do
     desc "Path to the config_profile to use to configure a solaris zone.
