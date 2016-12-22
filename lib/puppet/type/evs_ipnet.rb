@@ -15,35 +15,35 @@
 #
 
 Puppet::Type.newtype(:evs_ipnet) do
-    @doc = "Manage the configuration of IPnet (subnet of IPv4 or IPv6
+  @doc = "Manage the configuration of IPnet (subnet of IPv4 or IPv6
             addresses)"
 
-    ensurable
-    newparam(:name) do
-        desc "The full name of IPnet including tenant name"
-        validate do |value|
-            if value.split("/").length != 3
-                raise Puppet::Error, "Invalid IPnet name\n"\
-                    "Name convention must be <tenant>/<evs>/<ipnet>"
-            end
-        end
+  ensurable
+  newparam(:name) do
+    desc "The full name of IPnet including tenant name"
+    validate do |value|
+      if value.split("/").length != 3
+        raise Puppet::Error, "Invalid IPnet name\n"\
+                             "Name convention must be <tenant>/<evs>/<ipnet>"
+      end
     end
+  end
 
-    ## read-only properties (updatable when idle) ##
-    newproperty(:subnet) do
-        desc "Subnet (either IPv4 or IPv6) for the IPnet"
-    end
+  ## read-only properties (updatable when idle) ##
+  newproperty(:subnet) do
+    desc "Subnet (either IPv4 or IPv6) for the IPnet"
+  end
 
-    newproperty(:defrouter) do
-        desc "The IP address of the default router for the given IPnet"
-    end
+  newproperty(:defrouter) do
+    desc "The IP address of the default router for the given IPnet"
+  end
 
-    newproperty(:uuid) do
-        desc "UUID of the IPnet"
-    end
+  newproperty(:uuid) do
+    desc "UUID of the IPnet"
+  end
 
-    ## read/write property (settable upon creation) ##
-    newproperty(:pool) do
-        desc "Sub-ranges of IP addresses within a subnet"
-    end
+  ## read/write property (settable upon creation) ##
+  newproperty(:pool) do
+    desc "Sub-ranges of IP addresses within a subnet"
+  end
 end

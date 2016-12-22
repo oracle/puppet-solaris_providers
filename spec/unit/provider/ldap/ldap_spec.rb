@@ -95,6 +95,7 @@ describe Puppet::Type.type(:ldap).provider(:ldap) do
     # properties set to :absent are not defined in the fixture. They may be added manually if desired
     describe "resource has expected SMF properties" do
       {
+        :name => "current",
         :profile => %q(bar-tls),
         :server_list => %q(lc-bar-02.us.foo.com \\ lc-foo-02.us.foo.com \\ lc-foo-01.us.foo.com),
         :preferred_server_list => %q(lc-bar-02.us.foo.com \\ lc-foo-02.us.foo.com \\ lc-foo-01.us.foo.com),
@@ -129,24 +130,24 @@ describe Puppet::Type.type(:ldap).provider(:ldap) do
   describe "property=" do
     it "formats string arguments" do
       resource[:search_base] = %q(dc=foo,dc=com)
+      testval = %q(dc=bar,dc=com)
       newval = %q(dc=bar,dc=com)
-      described_class.expects(:svccfg).with("-s", Ldap_fmri, "setprop", "config/search_base", "=", newval )
+      described_class.expects(:svccfg).with("-s", Ldap_fmri, "setprop", "config/search_base=", testval )
       expect(provider.search_base=newval).to eq(newval)
     end
 
     it "formats array arguments" do
       resource[:server_list] = "foo.com"
       newval = %w(baz.com quux.com)
-      testval = %Q^( \"baz.com\" \"quux.com\" )^
-      described_class.expects(:svccfg).with("-s", Ldap_fmri, "setprop", "config/server_list", "=", testval )
+      testval = %w^( baz.com quux.com )^
+      described_class.expects(:svccfg).with("-s", Ldap_fmri, "setprop", "config/server_list=", testval )
       expect(provider.server_list=newval).to eq(newval)
     end
 
-    it "formats empty arguments" do
-      resource[:profile] = "bar-tls"
-      newval = %q("")
-      described_class.expects(:svccfg).with("-s", Ldap_fmri, "setprop", "config/profile", "=", newval )
-      expect(provider.profile=newval).to eq(newval)
+    it "formats :absent argument" do
+      testval = %q^\'\'^
+      described_class.expects(:svccfg).with("-s", Ldap_fmri, "setprop", "config/profile=", testval )
+      expect(provider.send(:profile=,:absent)).to eq(testval)
     end
   end
 end

@@ -15,8 +15,8 @@
 #
 
 
-require File.expand_path(File.join(File.dirname(__FILE__), '..','..','puppet_x/oracle/solaris_providers/util/validation.rb'))
-require File.expand_path(File.join(File.dirname(__FILE__), '..','..','puppet_x/oracle/solaris_providers/util/ilb.rb'))
+require_relative '../../puppet_x/oracle/solaris_providers/util/validation.rb'
+require_relative '../../puppet_x/oracle/solaris_providers/util/ilb.rb'
 require 'puppet/property/list'
 
 Puppet::Type.newtype(:ilb_server) do
@@ -29,7 +29,7 @@ Puppet::Type.newtype(:ilb_server) do
   Creation of server groups without assigned rules will result in catalog
   changes for every run as puppet tries to enable the server."
 
-  validator = PuppetX::Oracle::SolarisProviders::Util::Validation.new
+  include PuppetX::Oracle::SolarisProviders::Util::Validation
 
   ensurable
 
@@ -57,9 +57,10 @@ Puppet::Type.newtype(:ilb_server) do
     Server is a hostspec in the format hostname or IP address.
     "
 
+    include PuppetX::Oracle::SolarisProviders::Util::Validation
     munge do |value|
       return value if value[0] == '['
-      if validator.valid_ipv6?(value)
+      if valid_ipv6?(value)
         value.insert(0,'[')
         value.insert(-1,']')
       end
@@ -74,7 +75,7 @@ Puppet::Type.newtype(:ilb_server) do
       else
         _host = value
       end
-      unless ( validator.valid_hostname?(_host) || validator.valid_ip?(_host) )
+      unless ( valid_hostname?(_host) || valid_ip?(_host) )
         fail "Invalid host or IP #{_host}"
       end
     end
@@ -91,7 +92,7 @@ Puppet::Type.newtype(:ilb_server) do
     validated at compilation time and may fail on individual nodes."
 
     validate do |value|
-        PuppetX::Oracle::SolarisProviders::Util::Ilb.valid_portspec?(value)
+      PuppetX::Oracle::SolarisProviders::Util::Ilb.valid_portspec?(value)
     end
   end
 

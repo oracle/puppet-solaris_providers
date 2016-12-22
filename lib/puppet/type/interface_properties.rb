@@ -15,43 +15,100 @@
 #
 
 Puppet::Type.newtype(:interface_properties) do
-    @doc = "Manage Oracle Solaris interface properties"
+  @doc = "Manage Oracle Solaris interface properties
+      Protocol must be defined either at the interface/resource name or in
+      the properties hash.
 
-    ensurable do
-        # remove the ability to specify :absent.  New values must be set.
-        newvalue(:present) do
-            provider.create
-        end
+        Preferred:
+        name: net0
+        Properties:
+        A complex hash of proto => { property => value },...
+        {
+          'ipv4' => { 'mtu' => '1776' },
+          'ipv6' => { 'mtu' => '2048' },
+        }
+
+        Old Syntax:
+        name: net0/ipv4
+        Properties:
+        A hash of property => value when Interface defines protocol
+        { 'mtu' => '1776' }
+  "
+
+  ensurable do
+    # remove the ability to specify :absent.  New values must be set.
+    newvalue(:present) do
+      # Do nothing
     end
-
-    newparam(:interface) do
-        desc "The name of the interface with protocol (if appropriate)"
-        validate do |iface|
-            if not iface =~ /^.*?\/.*?$/i
-                raise Puppet::Error, "Invalid interface name.  Interface name
-                    must specify name and protocol."
-            end
-        end
-        isnamevar
+    newvalue(:absent) do
+      # We can only ensure synchronization
+      fail "Interface properties cannot be removed"
     end
+  end
 
-    newparam(:temporary) do
-        desc "Optional parameter that specifies changes to the interface are
+  newparam(:name) do
+    desc "The name of the interface"
+    newvalues(/^[a-z_0-9]+[0-9]+(?:\/ipv[46]?)?$/)
+    isnamevar
+
+    validate do |value|
+      unless (3..16).include? value.split('/')[0].length
+        fail "Invalid interface '#{value}' must be 3-16 characters"
+      end
+      unless /^[a-z_0-9]+[0-9]+(?:\/ipv[46]?)?$/.match(value)
+        fail "Invalid interface name '#{value}' must match a-z _ 0-9"
+      end
+    end
+  end
+
+  newparam(:temporary) do
+    desc "Optional parameter that specifies changes to the interface are
               temporary.  Changes last until the next reboot."
-        newvalues(:true, :false)
+    newvalues(:true, :false)
+  end
+
+  newproperty(:properties) do
+    desc "A hash table of proto/propname => propvalue entries to apply to the
+              interface OR a complex hash of
+              { proto => { propname => propvalue },... }
+              Values are assigned as '='; list properties must be fully
+              specified.  If proto is absent the protocol must be defined
+              in the interface name. For proto 'ip' only the 'standby'
+              property can be managed.
+              See ipadm(8)"
+
+    def insync?(is)
+      # There will almost always be more properties on the system than
+      # defined in the resource. Make sure the properties in the resource
+      # are insync
+      should.each_pair { |proto,hsh|
+        return false unless is.has_key?(proto)
+        hsh.each_pair { |key,value|
+          # Stop after the first out of sync property
+          return false unless property_matches?(is[proto][key],value)
+        }
+      }
+      true
     end
 
-    newproperty(:properties) do
-        desc "A hash table of propname=propvalue entries to apply to the
-              interface. See ipadm(8)"
-
-        def property_matches?(current, desired)
-            desired.each do |key, value|
-                if current[key] != value
-                    return :false
-                end
-            end
-            return :true
-        end
+    munge do |value|
+      # If the supplied syntax isn't a hash of protocol options
+      # reformat the value to that format
+      if (value.keys & ["ip","ipv4","ipv6"]).empty?
+        intf, proto = resource[:name].split('/')
+        resource[:name] = intf
+        value = { proto => value }
+      end
+      return value
     end
+  end
+  autorequire(:ip_interface) do
+    children = catalog.resources.select { |resource|
+      resource.type == :ip_interface &&
+        self[:name].split('/').include?(resource[:name])
+    }
+    children.each.collect { |child|
+      child[:name]
+    }
+  end
 end

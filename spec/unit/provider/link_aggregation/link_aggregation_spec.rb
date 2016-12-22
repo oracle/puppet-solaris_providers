@@ -10,7 +10,6 @@ describe Puppet::Type.type(:link_aggregation).provider(:link_aggregation) do
       :lower_links => ["net10", "net20"],
       :mode => "trunk",
       :policy => "L4",
-      :address => "auto",
       :lacpmode => "off",
       :lacptimer => "short"
     }
@@ -44,6 +43,9 @@ describe Puppet::Type.type(:link_aggregation).provider(:link_aggregation) do
     described_class.expects(:dladm).with("show-aggr", "-P", "-p", "-o", "link")
     .returns File.read(my_fixture('dladm_show-aggr-P-p-o.txt'))
 
+    described_class.expects(:dladm).with(%w(show-linkprop -p mac-address -o link,value))
+      .returns File.read(my_fixture('dladm_show-linkprop_mac-address_link-value.txt'))
+
     # Just return the contents of this file for any aggr
     [0,1].each do |num|
       described_class.expects(:dladm).with("show-aggr", "-x", "-p", "-o", "port", "aggr#{num}")
@@ -75,7 +77,7 @@ describe Puppet::Type.type(:link_aggregation).provider(:link_aggregation) do
       :lower_links =>["net0", "net1"],
       :mode => "dlmp",
       :policy => :absent,
-      :address => :absent,
+      :address => "0:14:4f:29:cc:8d",
       :lacpmode => :absent,
       :lacptimer => :absent,
       :temporary => :false
@@ -86,7 +88,7 @@ describe Puppet::Type.type(:link_aggregation).provider(:link_aggregation) do
       :lower_links =>["net0", "net1"],
       :mode => "trunk",
       :policy => "L4",
-      :address => "auto",
+      :address => :auto,
       :lacpmode => "on",
       :lacptimer => "long",
       :temporary => :true
@@ -101,13 +103,17 @@ describe Puppet::Type.type(:link_aggregation).provider(:link_aggregation) do
   context "validation" do
     it "should use correct args for create" do
       described_class.expects(:dladm).with("create-aggr", '-l', 'net10', '-l',
-                                           'net20', '-m', :trunk, '-P', 'L4',
-                                           '-L', :off, '-T', :short, '-u',
-                                           'auto', 'aggr10')
+                                           'net20', '-m', :trunk, '-P', :L4,
+                                           '-L', :off, '-T', :short, 'aggr10')
       expect(provider.create).to eq(nil)
     end
     it "should use correct args for destroy" do
       described_class.expects(:dladm).with("delete-aggr", "aggr10")
+      expect(provider.destroy).to eq(nil)
+    end
+    it "should use correct args for temporary destroy" do
+      params[:temporary] = :true
+      described_class.expects(:dladm).with("delete-aggr", "-t", "aggr10")
       expect(provider.destroy).to eq(nil)
     end
 
@@ -138,10 +144,10 @@ describe Puppet::Type.type(:link_aggregation).provider(:link_aggregation) do
     end
 
     it "should use correct args for mode=" do
-      described_class.expects(:dladm).with("create-aggr", '-l', 'net10', '-l',
-                                           'net20', '-m', :trunk, '-P', 'L4',
-                                           '-L', :off, '-T', :short, '-u',
-                                           'auto', 'aggr10')
+      described_class.expects(:dladm).with("create-aggr", '-l', 'net10',
+                                           '-l', 'net20', '-m', :trunk, '-P',
+                                           :L4, '-L', :off, '-T', :short,
+                                           'aggr10')
       described_class.expects(:dladm).with("delete-aggr", params[:name])
       expect(provider.mode="trunk").to eq("trunk")
     end
@@ -163,15 +169,15 @@ describe Puppet::Type.type(:link_aggregation).provider(:link_aggregation) do
     end
     it "should use correct args for add_options" do
       expect(provider.add_options).to eq(["-l", "net10", "-l", "net20", "-m",
-                                         :trunk, "-P", "L4", "-L", :off, "-T",
-                                         :short, "-u", "auto"])
+                                         :trunk, "-P", :L4, "-L", :off, "-T",
+                                         :short, ])
     end
     it "returns :true for recreate_temporary" do
       described_class.expects(:dladm).with("delete-aggr", params[:name])
-      described_class.expects(:dladm).with("create-aggr", '-t', '-l', 'net10', '-l',
-                                           'net20', '-m', :trunk, '-P', 'L4',
-                                           '-L', :off, '-T', :short, '-u',
-                                           'auto', 'aggr10')
+      described_class.expects(:dladm).with("create-aggr", '-t', '-l',
+                                           'net10', '-l', 'net20', '-m',
+                                           :trunk, '-P', :L4, '-L', :off,
+                                           '-T', :short, 'aggr10')
       params[:temporary]=:true
       expect(provider.recreate_temporary).to eq(true)
     end

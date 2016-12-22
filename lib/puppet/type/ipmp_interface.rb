@@ -34,7 +34,9 @@ Puppet::Type.newtype(:ipmp_interface) do
     newvalues(:true, :false)
   end
 
-  newproperty(:interfaces, :parent => Puppet::Property::List) do
+  # This is a Puppet::Property::List but that breaks on internal
+  # representation as an Array
+  newproperty(:interfaces) do
     desc "An array of interface names to use for the IPMP interface"
 
     # This doesn't seem to catch 'aaa' or 'Net0'

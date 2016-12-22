@@ -16,7 +16,7 @@
 
 
 Puppet::Type.newtype(:zfs_acl) do
-  require Pathname.new(__FILE__).dirname + '../../' + 'puppet/type/zfs_acl/ace'
+  require_relative '../../puppet/type/zfs_acl/ace'
   @doc = "
   Manage NFSv4 ACL Specifications on ZFS Files.
   See chmod(1), acl(7)
@@ -230,7 +230,7 @@ See chmod(1) NFSv4 ACL Specification for additional details
 
       # Check target value
       unless @ace_valid.target.include?(value['target']) ||
-        value['target'].match(Regexp.union(@ace_valid.target_patterns))
+             value['target'].match(Regexp.union(@ace_valid.target_patterns))
         fail "Invalid target: #{value['target']}"
       end
 

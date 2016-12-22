@@ -116,16 +116,16 @@ Puppet::Type.type(:ilb_rule).provide(:ilb_rule) do
   def m_args
     # There will always be -m args
     _args = [:lbalg, :proxy_src].each.
-      collect { |field|
+              collect { |field|
       @resource[field] ? "#{field.to_s.tr('_','-')}=#{@resource[field]}" : next
     }
 
-      _args.insert(1,"type=#{@resource[:topo_type]}")
-      if @resource[:persistent] && @resource[:persistent].match(%r(^/\d+$))
-        _args.push "pmask=#{@resource[:persistent]}"
-      end
+    _args.insert(1,"type=#{@resource[:topo_type]}")
+    if @resource[:persistent] && @resource[:persistent].match(%r(^/\d+$))
+      _args.push "pmask=#{@resource[:persistent]}"
+    end
 
-      return ["-m",_args.compact.join(',')]
+    return ["-m",_args.compact.join(',')]
   end
 
   def h_args

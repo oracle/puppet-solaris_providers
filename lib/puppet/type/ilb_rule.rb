@@ -15,15 +15,15 @@
 #
 
 
-require File.expand_path(File.join(File.dirname(__FILE__), '..','..','puppet_x/oracle/solaris_providers/util/validation.rb'))
-require File.expand_path(File.join(File.dirname(__FILE__), '..','..','puppet_x/oracle/solaris_providers/util/ilb.rb'))
+require_relative '../../puppet_x/oracle/solaris_providers/util/validation.rb'
+require_relative '../../puppet_x/oracle/solaris_providers/util/ilb.rb'
 require 'ipaddr'
 
 Puppet::Type.newtype(:ilb_rule) do
   @doc = "Manage Solaris Integrated Load Balancer (ILB) rule configuration.
   Existing rules cannot be modified they will be removed and re-created"
 
-  validator = PuppetX::Oracle::SolarisProviders::Util::Validation.new
+  include PuppetX::Oracle::SolarisProviders::Util::Validation
 
   ensurable
 
@@ -43,8 +43,9 @@ Puppet::Type.newtype(:ilb_rule) do
   newproperty(:vip) do
     desc "(Virtual) destination IP address"
 
+    include PuppetX::Oracle::SolarisProviders::Util::Validation
     validate do |value|
-      fail "Invalid IP #{value}" unless validator.valid_ip?(value)
+      fail "Invalid IP #{value}" unless valid_ip?(value)
     end
   end
 
@@ -58,9 +59,9 @@ Puppet::Type.newtype(:ilb_rule) do
     validated at compilation time and may fail on individual nodes.
     "
 
-      validate do |value|
-        PuppetX::Oracle::SolarisProviders::Util::Ilb.valid_portspec?(value)
-      end
+    validate do |value|
+      PuppetX::Oracle::SolarisProviders::Util::Ilb.valid_portspec?(value)
+    end
 
   end
 
@@ -115,11 +116,12 @@ Puppet::Type.newtype(:ilb_rule) do
     to use as the proxy source address range. The range is limited to
     ten IP addresses."
 
+    include PuppetX::Oracle::SolarisProviders::Util::Validation
     validate do |value|
       ips = value.split('-')
       fail "Invalid IP range #{value}" if ips.length > 2
       ips.each { |ip|
-        fail "Invalid IP #{ip}" unless validator.valid_ip?(ip)
+        fail "Invalid IP #{ip}" unless valid_ip?(ip)
       }
       if ips.length == 2
         if (range = (IPAddr.new(ips[0])..IPAddr.new(ips[1])).to_a.length) > 10
@@ -200,7 +202,7 @@ Puppet::Type.newtype(:ilb_rule) do
   autorequire(:ilb_server) do
     children = catalog.resources.select { |resource|
       resource.type == :ilb_server &&
-      resource[:servergroup] == self[:servergroup]
+        resource[:servergroup] == self[:servergroup]
     }
     children.each.collect { |child|
       child[:name]

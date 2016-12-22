@@ -2,6 +2,7 @@ language: ruby
 sudo: false
 before_install:
   - gem install bundler -v 1.10
+  - echo "gem 'rake', '< 11.0'" >> Gemfile
 bundler_args: --without acceptance
 script:
   - "bundle exec rake $CHECK"

@@ -17,68 +17,103 @@
 require 'puppet/property/list'
 
 Puppet::Type.newtype(:link_aggregation) do
-    @doc = "Manage the configuration of Oracle Solaris link aggregations"
+  @doc = "Manage the configuration of Oracle Solaris link aggregations"
 
-    ensurable
+  ensurable
 
-    newparam(:name) do
-        desc "The name of the link aggregration"
-        isnamevar
-    end
+  newparam(:name) do
+    desc "The name of the link aggregration"
+    isnamevar
+  end
 
-    newparam(:temporary) do
-        desc "Optional parameter that specifies that the aggreation is
+  newparam(:temporary) do
+    desc "Optional parameter that specifies that the aggreation is
               temporary.  Temporary aggregation links last until the next
               reboot. Attempts to modify temporary aggregations will result
               in the aggregation being removed and re-created"
-        newvalues(:true, :false)
+    newvalues(:true, :false)
+  end
+
+  # This is a Puppet::Property::List but that breaks on internal
+  # representation as an Array
+  newproperty(:lower_links) do
+    desc "Specifies an array of links over which the aggrestion is created.
+
+     Modifying a partially defined pre-existing resource is not recommended.
+     As incompatible option combinations cannot be verified before
+     application.
+    "
+
+    # ensure should remains an array
+    def should
+      @should
     end
 
-    newproperty(:lower_links, :parent => Puppet::Property::List) do
-        desc "Specifies an array of links over which the aggrestion is created."
-
-        # ensure should remains an array
-        def should
-            @should
-        end
-
-        def insync?(is)
-            is = [] if is == :absent or is.nil?
-            is.sort == self.should.sort
-        end
-
-        # dladm returns multivalue entries delimited with a space
-       # def delimiter
-       #     " "
-       # end
-
+    def insync?(is)
+      is = [] if is == :absent or is.nil?
+      is.sort == self.should.sort
     end
 
-    newproperty(:mode) do
-        desc "Specifies which mode to set. Mode can not be changed on an
+    def delimiter
+      " "
+    end
+
+    validate do |value|
+      unless (3..16).include? value.length
+        fail "Invalid interface '#{value}' must be 3-16 characters"
+      end
+      unless /^[a-z][a-z_0-9]+[0-9]+$/.match(value)
+        fail "Invalid interface name '#{value}' must match a-z _ 0-9"
+      end
+    end
+
+  end
+
+  newproperty(:mode) do
+    desc "Specifies which mode to set. Mode can not be changed on an
         existing aggregation, instead the aggregation will be removed and
-        re-created"
-        newvalues(:trunk, :dlmp)
-    end
+        re-created.
+    "
+    newvalues(:trunk, :dlmp)
+  end
 
-    newproperty(:policy) do
-        desc "Specifies the port selection policy to use for load spreading
+  newproperty(:policy) do
+    desc "Specifies the port selection policy to use for load spreading
               of outbound traffic."
-    end
+    newvalues("L2","L3","L4","L2,L3")
+  end
 
-    newproperty(:lacpmode) do
-        desc "Specifies whether LACP should be used and, if used, the mode
+  newproperty(:lacpmode) do
+    desc "Specifies whether LACP should be used and, if used, the mode
               in which it should operate"
-        newvalues(:off, :active, :passive)
-    end
+    newvalues(:off, :active, :passive)
+  end
 
-    newproperty(:lacptimer) do
-        desc "Specifies the LACP timer value"
-        newvalues(:short, :long)
-    end
+  newproperty(:lacptimer) do
+    desc "Specifies the LACP timer value"
+    newvalues(:short, :long)
+  end
 
-    newproperty(:address) do
-        desc "Specifies a fixed unicast hardware address to be used for the
+  newproperty(:address) do
+    desc "Specifies a fixed unicast hardware address to be used for the
               aggregation"
+    newvalues(/^(?:\p{Xdigit}{1,2}:){5}\p{Xdigit}{1,2}$/,:auto)
+  end
+  autorequire(:ip_interface) do
+    children = catalog.resources.select { |resource|
+      resource.type == :ip_interface &&
+        self[:lower_links].include?(resource[:name])
+    }
+    children.each.collect { |child|
+      child[:name]
+    }
+  end
+
+  validate {
+    if (self[:mode] != :absent && !self[:mode].nil?) &&
+       (self[:lower_links] == :absent || self[:lower_links].nil?)
+      fail "lower_links must be defined when mode is specified"
     end
+  }
+
 end

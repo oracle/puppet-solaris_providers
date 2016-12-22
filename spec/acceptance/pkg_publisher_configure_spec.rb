@@ -64,11 +64,11 @@ describe 'Solaris pkg_publisher provider' do
     it 'should apply a manifest with no errors' do
       apply_manifest(mirror_pp, :catch_failures => true)
     end
-  
+
     it 'should apply the manifest again with no updates triggered' do
       expect(apply_manifest(mirror_pp, :catch_failures => true).exit_code).to be_zero
     end
-  
+
     it 'should correctly apply the origin value' do
       shell("pkg publisher -H -F tsv | head -1 | egrep -s '^puppet	true	false	true	origin	online	file:///tmp/puppet-repo1/	-$'", :acceptable_exit_codes => 0)
     end
@@ -83,11 +83,11 @@ describe 'Solaris pkg_publisher provider' do
     it 'should apply a manifest with no errors' do
       apply_manifest(sb_pp, :catch_failures => true)
     end
-  
+
     it 'should apply the manifest again with no updates triggered' do
       expect(apply_manifest(sb_pp, :catch_failures => true).exit_code).to be_zero
     end
-  
+
     it 'should correctly apply the new publisher to be first' do
       shell("pkg publisher -H -F tsv | head -1 | egrep -s '^puppet3	false	false	true	origin	online	file:///tmp/puppet-repo3/	-$'", :acceptable_exit_codes => 0)
     end
@@ -97,11 +97,11 @@ describe 'Solaris pkg_publisher provider' do
     it 'should apply a manifest with no errors' do
       apply_manifest(sa_pp, :catch_failures => true)
     end
-  
+
     it 'should apply the manifest again with no updates triggered' do
       expect(apply_manifest(sa_pp, :catch_failures => true).exit_code).to be_zero
     end
-  
+
     it 'should correctly apply the new publisher to be after' do
       shell("pkg publisher -H -F tsv | head -3 | tail -1 | egrep -s '^puppet3	false	false	true	origin	online	file:///tmp/puppet-repo3/	-$'", :acceptable_exit_codes => 0)
     end
@@ -111,11 +111,11 @@ describe 'Solaris pkg_publisher provider' do
     it 'should apply a manifest with no errors' do
       apply_manifest(dis_pp, :catch_failures => true)
     end
-  
+
     it 'should apply the manifest again with no updates triggered' do
       expect(apply_manifest(dis_pp, :catch_failures => true).exit_code).to be_zero
     end
-  
+
     it 'should correctly disable the publisher' do
       shell("pkg publisher -H -F tsv | head -3 | tail -1 | egrep -s '^puppet3	false	false	false	origin	online	file:///tmp/puppet-repo3/	-$'", :acceptable_exit_codes => 0)
     end
@@ -125,11 +125,11 @@ describe 'Solaris pkg_publisher provider' do
     it 'should apply a manifest with no errors' do
       apply_manifest(rm_pp, :catch_failures => true)
     end
-  
+
     it 'should apply the manifest again with no updates triggered' do
       expect(apply_manifest(rm_pp, :catch_failures => true).exit_code).to be_zero
     end
-  
+
     it 'should correctly disable the publisher' do
       shell("pkg publisher -H -F tsv | head -3 | tail -1 | egrep -s '^puppet3'", :acceptable_exit_codes => 1)
     end

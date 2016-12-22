@@ -5,6 +5,21 @@ require_relative  '../../../lib/puppet/type/address_object'
 
 describe Puppet::Type.type(:address_object) do
 
+  # Modify params inline to tests to change the resource
+  # before it is generated
+  let(:params) do
+    {
+      :name => "net10/v4",
+      :ensure => :present,
+    }
+  end
+  # Modify the resource inline to tests when you modeling the
+  # behavior of the generated resource
+  let(:resource) { described_class.new(params) }
+  let(:provider) { Puppet::Provider.new(resource) }
+  let(:catalog) { Puppet::Resource::Catalog.new }
+  let(:error_pattern) { /Invalid/ }
+
   before do
     @class = described_class
     @profile_name = "rspec profile"
@@ -14,12 +29,12 @@ describe Puppet::Type.type(:address_object) do
     expect(@class.key_attributes).to eq([:name])
   end
 
-  describe "when validating properties" do
+  describe "has property" do
     [ :address_type, :enable, :address, :remote_address, :down, :seconds,
       :hostname, :interface_id, :remote_interface_id, :stateful, :stateless
     ].each do |prop|
-      it "should have a #{prop} property" do
-        expect(@class.attrtype(prop)).to eq(:property)
+      it prop do
+        expect(described_class.attrtype(prop)).to be == :property
       end
     end
   end # validating properties
@@ -33,433 +48,336 @@ describe Puppet::Type.type(:address_object) do
     end
   end # validating properties
 
-  describe "when validating values" do
-
-    describe "for ensure" do
-      error_pattern = /Invalid value/m
-      def validate(ens)
-         @class.new(:name => @profile_name, :address_type => :static, :ensure => ens)
+  describe "parameter" do
+    {
+      :ensure => {
+        :accepts => [ "present", "absent" ],
+        :rejects => [ "foo" ],
+      },
+      :temporary => {
+        :accepts => [ "true", "false" ],
+        :rejects => [ "yes", "no" ],
+      },
+      :stateful => {
+        :accepts => %w(yes no),
+        :rejects => %w(true false foo),
+      },
+      :stateless => {
+        :accepts => %w(yes no),
+        :rejects => %w(true false foo),
+      },
+    }.each_pair { |target_param,cond|
+      context "#{target_param}" do
+        context "accepts" do
+          cond[:accepts].each do |thing|
+            it thing.inspect do
+              params[target_param] = thing
+              expect { resource }.not_to raise_error
+            end
+          end
+        end # Accepts
+        context "rejects" do
+          cond[:rejects].each do |thing|
+            it thing.inspect do
+              params[target_param] = thing
+              expect { resource }.to raise_error(Puppet::Error, error_pattern)
+            end
+          end
+        end # Rejects
       end
+    }
 
-      [ "present", "absent" ].each do |newval|
-        it "should accept a value of #{newval}" do
-          expect { validate(newval) }.not_to raise_error
-        end
-      end
-
-      it "should reject invalid values" do
-        expect { validate "foo" }.to raise_error Puppet::Error, error_pattern
-      end
-    end  # ensure
-
-    describe "for temporary" do
-      error_pattern = /temporary.*Invalid/m
-
-      def validate(temp)
-         @class.new(:name => @profile_name, :temporary => temp)
-      end
-
-      [ "true", "false" ].each do |follow_val|
-        it "should accept a value of #{follow_val}" do
-          expect { validate(follow_val) }.not_to raise_error
-        end
-      end
-
-      it "should reject an invalid value" do
-        expect { validate("foobar") }.to raise_error(Puppet::ResourceError,
-                                                       error_pattern)
-      end
-    end  # temporary
-
-    describe "for address_type" do
-      error_pattern = /address_type.*Invalid/m
-
-      def validate(atype)
-        @class.new(:name => @profile_name, :address_type => atype)
-      end
-
+    describe "address_type" do
       context "implied" do
         (
-          [[:address,'1.2.3.4'],[:remote_address,'foo'],[:down,'true']].product(
+          [
+            [:address,'1.2.3.4'],
+            [:remote_address,'foo'],
+            [:down,'true']].product(
             [[:seconds,5],[:hostname,'bar']] +
-            [[:interface_id,'1234:5678:90ab:cdef'],[:remote_interface_id,'1234:5678:90ab:cdef']])
+            [
+              [:interface_id,'::1a:2b:3c:4d'],
+              [:remote_interface_id,'::1a:2b:3c:4d']
+            ]
+          )
         ).each do |a|
-          it "should not accept both :#{a[0][0]} and :#{a[1][0]}" do
-            expect { @class.new(:name => "#{a[0][0]}-#{a[1][0]}",
-                                a[0][0] => a[0][1], a[1][0] => a[1][1])
-            }.to raise_error(Puppet::ResourceError,
-                             %r(incompatible property combination))
-
+          it "rejects :#{a[0][0]} and :#{a[1][0]}" do
+            params[a[0][0]] = a[0][1]
+            params[a[1][0]] = a[1][1]
+            expect { resource }.to raise_error(Puppet::ResourceError,
+                                               %r(incompatible property combination))
           end
         end
         (
-          [[:address,'1.2.3.4'],[:remote_address,'foo'],[:down,'true']].permutation(2).to_a +
-          [[:seconds,5],[:hostname,'bar']].permutation(2).to_a +
-          [[:interface_id,'1234:5678:90ab:cdef'],[:remote_interface_id,'1234:5678:90ab:cdef']].permutation(2).to_a
+          [
+            [:address,'1.2.3.4'],
+            [:remote_address,'foo'],
+            [:down,'true']
+          ].permutation(2).to_a +
+          [
+            [:seconds,5],[:hostname,'bar']].permutation(2).to_a +
+          [
+            [:interface_id,'::1a:2b:3c:4d'],
+            [:remote_interface_id,'::1a:2b:3c:4d']
+          ].permutation(2).to_a
         ).each do |a|
-          it "should accept both :#{a[0][0]} and :#{a[1][0]}" do
-            expect { @class.new(:name => "#{a[0][0]}-#{a[1][0]}",
-                                a[0][0] => a[0][1], a[1][0] => a[1][1])
-            }.to_not raise_error
+          it "accepts :#{a[0][0]} and :#{a[1][0]}" do
+            params[a[0][0]] = a[0][1]
+            params[a[1][0]] = a[1][1]
+            expect { resource }.not_to raise_error
           end
         end
         [[[:address,'1.2.3.4'],[:remote_address,'foo'],[:down,'true']]].each do |a|
-          it "should accept all of :#{a[0][0]}, :#{a[1][0]}, :#{a[2][0]}" do
-            expect { @class.new(:name => "#{a[0][0]}-#{a[1][0]}-#{a[2][0]}",
-                                a[0][0] => a[0][1], a[1][0] => a[1][1],
-                                  a[2][0] => a[2][1])
-            }.to_not raise_error
+          it "accepts all of :#{a[0][0]}, :#{a[1][0]}, :#{a[2][0]}" do
+            params[a[0][0]] = a[0][1]
+            params[a[1][0]] = a[1][1]
+            params[a[2][0]] = a[2][1]
+            expect { resource }.not_to raise_error
           end
         end
       end
+
       context "static" do
-        ["foo","bar.com","1.2.3.4"].each do |value|
-          it "should accept address #{value}" do
-            expect { @class.new(:name => "static-address", :address_type => :static,
-                                :address => value)
-            }.to_not raise_error
+        before (:each) { params[:address_type] = :static }
+        {
+          :address => {
+            :accepts => ["foo","bar.com","1.2.3.4"],
+            :rejects => ["foo..bar","1.2.3.256"],
+          },
+          :remote_address => {
+            :accepts => ["foo","bar.com","1.2.3.4"],
+            :rejects => ["foo..bar","1.2.3.256"],
+          },
+          :down => {
+            :accepts => ["true","false"],
+            :rejects => [],
+          },
+          :seconds => {
+            :accepts => [],
+            :rejects => [ "5", 10 ]
+          },
+          :hostname => {
+            :accepts => [],
+            :rejects => [ "foo.bar" ]
+          },
+          :interface_id => {
+            :accepts => [],
+            :rejects => [ "::1a:2b:3c:4d" ]
+          },
+          :remote_interface_id => {
+            :accepts => [],
+            :rejects => [ "::1a:2b:3c:4d" ] },
+        }.each_pair { |target_param,cond|
+          context "#{target_param}" do
+            context "accepts" do
+              cond[:accepts].each do |thing|
+                it thing.inspect do
+                  params[target_param] = thing
+                  expect { resource }.not_to raise_error
+                end
+              end
+            end # Accepts
+            context "rejects" do
+              cond[:rejects].each do |thing|
+                it thing.inspect do
+                  error_pattern = %r(is invalid|cannot specify)
+                  params[target_param] = thing
+                  expect { resource }.to raise_error(Puppet::Error, error_pattern)
+                end
+              end
+            end # Rejects
           end
-        end
-        ["foo..bar","1.2.3.256"].each do |value|
-          it "should not accept address #{value}" do
-            expect { @class.new(:name => "static-address", :address_type => :static,
-                                :address => value)
-            }.to raise_error(Puppet::ResourceError,
-                             %r(:address entry:.*is invalid))
-          end
-        end
-        ["foo","1.2.3.4"].each do |value|
-          it "should accept remote_address #{value}" do
-            expect { @class.new(:name => "static-remote_address", :address_type => :static,
-                                :remote_address => value)
-            }.to_not raise_error
-          end
-        end
-        ["foo..bar","1.2.3.300"].each do |value|
-          it "should not accept remote_address #{value}" do
-            expect { @class.new(:name => "static-remote_address", :address_type => :static,
-                                :remote_address => value)
-            }.to raise_error(Puppet::ResourceError,
-                             %r(:remote_address entry:.*is invalid))
-          end
-        end
-        ["true","false"].each do |value|
-          it "should accept down #{value}" do
-            expect { @class.new(:name => "static-down", :address_type => :static,
-                                :down => value)
-            }.to_not raise_error
-          end
-        end
-        it "should not accept seconds" do
-          expect { @class.new(:name => "static-seconds", :address_type => :static,
-                              :seconds => 5)
-          }.to raise_error(Puppet::ResourceError,
-                           %r(cannot specify.*seconds.*static))
-        end
-        it "should not accept hostname" do
-          expect { @class.new(:name => "static-hostname", :address_type => :static,
-                              :hostname => "foo")
-          }.to raise_error(Puppet::ResourceError,
-                           %r(cannot specify.*hostname.*static))
-        end
-        it "should not accept interface_id" do
-          expect { @class.new(:name => "static-interface_id", :address_type => :static,
-                              :interface_id => "1234:5678:90ab:cdef")
-          }.to raise_error(Puppet::ResourceError,
-                           %r(cannot specify.*interface_id.*static))
-        end
-        it "should not accept remote_interface_id" do
-          expect { @class.new(:name => "static-remote_interface_id", :address_type => :static,
-                              :remote_interface_id => "1234:5678:90ab:cdef")
-          }.to raise_error(Puppet::ResourceError,
-                           %r(cannot specify.*remote_interface_id.*static))
-        end
-      end
+        }
+      end # end static
+
       context "dhcp" do
-        it "should not accept address" do
-          expect { @class.new(:name => "dhcp-address", :address_type => :dhcp,
-                              :address => "foo")
-          }.to raise_error(Puppet::ResourceError,
-                           %r(cannot specify.*address.*dhcp))
-        end
-        it "should not accept remote_address" do
-          expect { @class.new(:name => "dhcp-remote_address", :address_type => :dhcp,
-                              :remote_address => "foo")
-          }.to raise_error(Puppet::ResourceError,
-                           %r(cannot specify.*remote_address.*dhcp))
-        end
-        it "should not accept down" do
-          expect { @class.new(:name => "dhcp-down", :address_type => :dhcp,
-                              :down => "true")
-          }.to raise_error(Puppet::ResourceError,
-                           %r(cannot specify.*down.*dhcp))
-        end
-        [5,"10","forever"].each do |value|
-          it "should accept seconds #{value}" do
-            expect { @class.new(:name => "dhcp-seconds", :address_type => :dhcp,
-                                :seconds => value)
-            }.to_not raise_error
+        before (:each) { params[:address_type] = :dhcp }
+        {
+          :address => {
+            :accepts => [],
+            :rejects => [ "1.2.3.4" ],
+          },
+          :remote_address => {
+            :accepts => [],
+            :rejects => [ "1.2.3.4" ],
+          },
+          :down => {
+            :accepts => [],
+            :rejects => [ "true", "false" ],
+          },
+          :seconds => {
+            :accepts => [5,"10","forever"],
+            :rejects => [],
+          },
+          :hostname => {
+            :accepts => ["foo"],
+            :rejects => ["foo..com"],
+          },
+          :interface_id => {
+            :accepts => [],
+            :rejects => ["::1a:2b:3c:4d"]
+          },
+          :remote_interface_id => {
+            :accepts => [],
+            :rejects => ["::1a:2b:3c:4d"]
+          },
+        }.each_pair { |target_param,cond|
+          context "#{target_param}" do
+            context "accepts" do
+              cond[:accepts].each do |thing|
+                it thing.inspect do
+                  params[target_param] = thing
+                  expect { resource }.not_to raise_error
+                end
+              end
+            end # Accepts
+            context "rejects" do
+              cond[:rejects].each do |thing|
+                it thing.inspect do
+                  error_pattern = %r(is invalid|cannot specify)
+                  params[target_param] = thing
+                  expect { resource }.to raise_error(Puppet::Error, error_pattern)
+                end
+              end
+            end # Rejects
           end
-        end
-        it "should accept hostname" do
-          expect { @class.new(:name => "dhcp-hostname", :address_type => :dhcp,
-                              :hostname => "foo")
-          }.to_not raise_error
-        end
-        it "should not accept interface_id" do
-          expect { @class.new(:name => "dhcp-interface_id", :address_type => :dhcp,
-                              :interface_id => "1234:5678:90ab:cdef")
-          }.to raise_error(Puppet::ResourceError,
-                           %r(cannot specify.*interface_id.*dhcp))
-        end
-        it "should not accept remote_interface_id" do
-          expect { @class.new(:name => "dhcp-remote_interface_id", :address_type => :dhcp,
-                              :remote_interface_id => "1234:5678:90ab:cdef")
-          }.to raise_error(Puppet::ResourceError,
-                           %r(cannot specify.*remote_interface_id.*dhcp))
-        end
-      end
+        }
+      end # End dhcp
       context "addrconf" do
-        it "should not accept address" do
-          expect { @class.new(:name => "addrconf-address", :address_type => :addrconf,
-                              :address => "foo")
-          }.to raise_error(Puppet::ResourceError,
-                           %r(cannot specify.*address.*addrconf))
-        end
-        it "should not accept remote_address" do
-          expect { @class.new(:name => "addrconf-remote_address", :address_type => :addrconf,
-                              :remote_address => "foo")
-          }.to raise_error(Puppet::ResourceError,
-                           %r(cannot specify.*remote_address.*addrconf))
-        end
-        it "should not accept down" do
-          expect { @class.new(:name => "addrconf-down", :address_type => :addrconf,
-                              :down => "true")
-          }.to raise_error(Puppet::ResourceError,
-                           %r(cannot specify.*down.*addrconf))
-        end
-        it "should not accept seconds" do
-          expect { @class.new(:name => "addrconf-seconds", :address_type => :addrconf,
-                              :seconds => 5)
-          }.to raise_error(Puppet::ResourceError,
-                           %r(cannot specify.*seconds.*addrconf))
-        end
-        it "should not accept hostname" do
-          expect { @class.new(:name => "addrconf-hostname", :address_type => :addrconf,
-                              :hostname => "foo")
-          }.to raise_error(Puppet::ResourceError,
-                           %r(cannot specify.*hostname.*addrconf))
-        end
-        ["1234:5678:90ab:cdef"].each do |value|
-          it "should accept interface_id #{value}" do
-            expect { @class.new(:name => "addrconf-interface_id", :address_type => :addrconf,
-                                :interface_id => value)
-            }.to_not raise_error
+        before (:each) { params[:address_type] = :addrconf }
+        {
+          :address => {
+            :accepts => [],
+            :rejects => [ "1.2.3.4" ],
+          },
+          :remote_address => {
+            :accepts => [],
+            :rejects => [ "1.2.3.4" ],
+          },
+          :down => {
+            :accepts => [],
+            :rejects => [ "true", "false" ],
+          },
+          :seconds => {
+            :accepts => [],
+            :rejects => [5,"10","forever"],
+          },
+          :hostname => {
+            :accepts => [],
+            :rejects => ["foo..com"],
+          },
+          :interface_id => {
+            :accepts => ["::1a:2b:3c:4d"],
+            :rejects => [],
+          },
+          :remote_interface_id => {
+            :accepts => ["::1a:2b:3c:4d"],
+            :rejects => [],
+          },
+        }.each_pair { |target_param,cond|
+          context "#{target_param}" do
+            context "accepts" do
+              cond[:accepts].each do |thing|
+                it thing.inspect do
+                  params[target_param] = thing
+                  expect { resource }.not_to raise_error
+                end
+              end
+            end # Accepts
+            context "rejects" do
+              cond[:rejects].each do |thing|
+                it thing.inspect do
+                  error_pattern = %r(is invalid|cannot specify)
+                  params[target_param] = thing
+                  expect { resource }.to raise_error(Puppet::Error, error_pattern)
+                end
+              end
+            end # Rejects
           end
-        end
-        ["1234:5678:90ab:cdef"].each do |value|
-          it "should accept remote_interface_id #{value}" do
-            expect { @class.new(:name => "addrconf-remote_interface_id", :address_type => :addrconf,
-                                :remote_interface_id => value)
-            }.to_not raise_error
-          end
-        end
+        }
       end
-      context "from_gz" do
-        it "should not accept address" do
-          expect { @class.new(:name => "from_gz-address", :address_type => :from_gz,
-                              :address => "foo")
-          }.to raise_error(Puppet::ResourceError,
-                           %r(cannot specify.*address.*from_gz))
+      [:from_gz, :inherited].each { |ctxt|
+        context "#{ctxt}" do
+          before (:each) { params[:address_type] = ctxt }
+          {
+            :address => {
+              :accepts => [],
+              :rejects => [ "1.2.3.4" ],
+            },
+            :remote_address => {
+              :accepts => [],
+              :rejects => [ "1.2.3.4" ],
+            },
+            :down => {
+              :accepts => [],
+              :rejects => [ "true", "false" ],
+            },
+            :seconds => {
+              :accepts => [],
+              :rejects => [5,"10","forever"],
+            },
+            :hostname => {
+              :accepts => [],
+              :rejects => ["foo..com"],
+            },
+            :interface_id => {
+              :accepts => [],
+              :rejects => ["::1a:2b:3c:4d"],
+            },
+            :remote_interface_id => {
+              :accepts => [],
+              :rejects => ["::1a:2b:3c:4d"],
+            },
+          }.each_pair { |target_param,cond|
+            context "#{target_param}" do
+              context "accepts" do
+                cond[:accepts].each do |thing|
+                  it thing.inspect do
+                    params[target_param] = thing
+                    expect { resource }.not_to raise_error
+                  end
+                end
+              end # Accepts
+              context "rejects" do
+                cond[:rejects].each do |thing|
+                  it thing.inspect do
+                    error_pattern = %r(is invalid|cannot specify)
+                    params[target_param] = thing
+                    expect { resource }.to raise_error(Puppet::Error, error_pattern)
+                  end
+                end
+              end # Rejects
+            end
+          }
         end
-        it "should not accept remote_address" do
-          expect { @class.new(:name => "from_gz-remote_address", :address_type => :from_gz,
-                              :remote_address => "foo")
-          }.to raise_error(Puppet::ResourceError,
-                           %r(cannot specify.*remote_address.*from_gz))
-        end
-        it "should not accept down" do
-          expect { @class.new(:name => "from_gz-down", :address_type => :from_gz,
-                              :down => "true")
-          }.to raise_error(Puppet::ResourceError,
-                           %r(cannot specify.*down.*from_gz))
-        end
-        it "should not accept seconds" do
-          expect { @class.new(:name => "from_gz-seconds", :address_type => :from_gz,
-                              :seconds => 5)
-          }.to raise_error(Puppet::ResourceError,
-                           %r(cannot specify.*seconds.*from_gz))
-        end
-        it "should not accept hostname" do
-          expect { @class.new(:name => "from_gz-hostname", :address_type => :from_gz,
-                              :hostname => "foo")
-          }.to raise_error(Puppet::ResourceError,
-                           %r(cannot specify.*hostname.*from_gz))
-        end
-        it "should not accept interface_id" do
-          expect { @class.new(:name => "from_gz-interface_id", :address_type => :from_gz,
-                              :interface_id => "1234:5678:90ab:cdef")
-          }.to raise_error(Puppet::ResourceError,
-                           %r(cannot specify.*interface_id.*from_gz))
-        end
-        it "should not accept remote_interface_id" do
-          expect { @class.new(:name => "from_gz-remote_interface_id", :address_type => :from_gz,
-                              :remote_interface_id => "1234:5678:90ab:cdef")
-          }.to raise_error(Puppet::ResourceError,
-                           %r(cannot specify.*remote_interface_id.*from_gz))
-        end
-      end
-      context "inherited" do
-        it "should not accept address" do
-          expect { @class.new(:name => "inherited-address", :address_type => :inherited,
-                              :address => "foo")
-          }.to raise_error(Puppet::ResourceError,
-                           %r(cannot specify.*address.*inherited))
-        end
-        it "should not accept remote_address" do
-          expect { @class.new(:name => "inherited-remote_address", :address_type => :inherited,
-                              :remote_address => "foo")
-          }.to raise_error(Puppet::ResourceError,
-                           %r(cannot specify.*remote_address.*inherited))
-        end
-        it "should not accept down" do
-          expect { @class.new(:name => "inherited-down", :address_type => :inherited,
-                              :down => "true")
-          }.to raise_error(Puppet::ResourceError,
-                           %r(cannot specify.*down.*inherited))
-        end
-        it "should not accept seconds" do
-          expect { @class.new(:name => "inherited-seconds", :address_type => :inherited,
-                              :seconds => 5)
-          }.to raise_error(Puppet::ResourceError,
-                           %r(cannot specify.*seconds.*inherited))
-        end
-        it "should not accept hostname" do
-          expect { @class.new(:name => "inherited-hostname", :address_type => :inherited,
-                              :hostname => "foo")
-          }.to raise_error(Puppet::ResourceError,
-                           %r(cannot specify.*hostname.*inherited))
-        end
-        it "should not accept interface_id" do
-          expect { @class.new(:name => "inherited-interface_id", :address_type => :inherited,
-                              :interface_id => "1234:5678:90ab:cdef")
-          }.to raise_error(Puppet::ResourceError,
-                           %r(cannot specify.*interface_id.*inherited))
-        end
-        it "should not accept remote_interface_id" do
-          expect { @class.new(:name => "inherited-remote_interface_id", :address_type => :inherited,
-                              :remote_interface_id => "1234:5678:90ab:cdef")
-          }.to raise_error(Puppet::ResourceError,
-                           %r(cannot specify.*remote_interface_id.*inherited))
-        end
-      end
+      }
 
     end  # address_type
 
-    describe "for enable" do
+    describe "enable" do
       error_pattern = /cannot specify/m
-      def validate(enab,tmp)
-        @class.new(:name => @profile_name, :enable => enab, :temporary => tmp)
-      end
-
       [ "true","false" ].each do |enable|
         context "temporary=true" do
-          it "should reject enable=#{enable}" do
-            expect { validate(enable,true) }.to raise_error(Puppet::ResourceError,
-                                                            error_pattern)
+          before(:each) { params[:temporary] = true }
+          it "rejects enable=#{enable}" do
+            params[:enable] = enable
+            expect{ resource }.to raise_error(Puppet::ResourceError,
+                                              error_pattern)
           end
         end
         context "temporary=false" do
-          it "should accept enable=#{enable}" do
-            expect { validate(enable,false) }.not_to raise_error
+          before(:each) { params[:temporary] = false }
+          it "accepts enable=#{enable}" do
+            expect { resource }.not_to raise_error
           end
         end
 
-        it "should reject an invalid value" do
-          expect { validate("foobar",false) }.to raise_error(Puppet::ResourceError,
-                                                       /Invalid value/)
+        it "rejects invalid values" do
+          params[:enable] = "foobar"
+          expect { resource }.to raise_error(Puppet::ResourceError,
+                                             /Invalid value/)
         end
-
       end
-
     end  # enable
-
-    describe "for stateful" do
-      error_pattern = /stateful.*Invalid/m
-
-      def validate(sful)
-         @class.new(:name => @profile_name, :stateful => sful)
-      end
-
-      [ "yes", "no" ].each do |follow_val|
-        it "should accept a value of #{follow_val}" do
-          expect { validate(follow_val) }.not_to raise_error
-        end
-      end
-
-      it "should reject an invalid value" do
-        expect { validate("foobar") }.to raise_error(Puppet::ResourceError,
-                                                       error_pattern)
-      end
-    end  # stateful
-
-    describe "for stateless" do
-      error_pattern = /stateless.*Invalid/m
-
-      def validate(sless)
-         @class.new(:name => @profile_name, :stateless => sless)
-      end
-
-      [ "yes", "no" ].each do |follow_val|
-        it "should accept a value of #{follow_val}" do
-          expect { validate(follow_val) }.not_to raise_error
-        end
-      end
-
-      it "should reject an invalid value" do
-        expect { validate("foobar") }.to raise_error(Puppet::ResourceError,
-                                                       error_pattern)
-      end
-    end  # stateless
-
-    describe "for interface_id" do
-      error_pattern = /interface_id.*Invalid/m
-
-      def validate(iid)
-         @class.new(:name => "addrconf-interface_id", :address_type => :addrconf, :interface_id => iid)
-      end
-
-      [ "1234:5678:90ab:cdef" ].each do |int_id|
-        it "should accept a value of #{int_id}" do
-          expect { validate(int_id) }.not_to raise_error
-        end
-      end
-
-      it "should reject an invalid value" do
-        expect { validate("foobar") }.to raise_error(Puppet::ResourceError,
-                                                       error_pattern)
-      end
-    end  # interface_id
-
-    describe "for remote_interface_id" do
-      error_pattern = /remote_interface_id.*Invalid/m
-
-      def validate(iid)
-         @class.new(:name => "addrconf-remote-interface_id", :address_type => :addrconf, :remote_interface_id => iid)
-      end
-
-      [ "1234:5678:90ab:cdef" ].each do |int_id|
-        it "should accept a value of #{int_id}" do
-          expect { validate(int_id) }.not_to raise_error
-        end
-      end
-
-      it "should reject an invalid value" do
-        expect { validate("foobar") }.to raise_error(Puppet::ResourceError,
-                                                       error_pattern)
-      end
-    end  # remote_interface_id
-
-
   end # validating values
 end

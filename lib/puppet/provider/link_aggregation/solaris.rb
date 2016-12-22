@@ -22,36 +22,56 @@ Puppet::Type.type(:link_aggregation).provide(:link_aggregation) do
 
   mk_resource_methods
 
+  class << self
+    attr_accessor :recreated
+  end
+  @recreated = false
+
   def self.instances
     persistent = []
     dladm("show-aggr", "-P", "-p", "-o", "link").each_line.collect do |line|
       persistent << line.chomp.strip()
     end
 
+    macs = {}
+    dladm(%w(show-linkprop -p mac-address -o link,value)).each_line.collect do |line|
+      link,mac = line.chomp.split
+      macs[link] = mac
+    end
+
     dladm("show-aggr", "-p", "-o",
           "link,mode,policy,addrpolicy,lacpactivity,lacptimer").
-          each_line.collect do |line|
-           link, mode, policy, addrpolicy, lacpactivity, lacptimer = \
-             line.chomp.split(":").map! { |e| ( e == "--" ) ? nil : e }
+      each_line.collect do |line|
+      # Strip partial mac address from addrpolicy fixed lines
+      line = line.gsub(/\\:/,'')
+      link, mode, policy, addrpolicy, lacpactivity, lacptimer = \
+                                                    line.chomp.split(":").map! { |e| ( e == "--" ) ? :absent : e }
 
-           links = []
-           dladm("show-aggr", "-x", "-p", "-o", "port", link).
-             each_line do |portline|
-             next if portline.strip() == ""
-             links << portline.chomp.strip()
-           end
+      aggr={
+        :name => link,
+        :ensure => :present,
+        :mode => mode,
+        :policy => policy,
+        :lacpmode => lacpactivity,
+        :lacptimer => lacptimer,
+        :temporary => persistent.include?(link) ? :false : :true
+      }
 
-           new(:name => link,
-               :ensure => :present,
-               :lower_links => links,
-               :mode => mode,
-               :policy => policy,
-               :address => addrpolicy,
-               :lacpmode => lacpactivity,
-               :lacptimer => lacptimer,
-               :temporary => persistent.include?(link) ? :false : :true
-              )
-         end
+      if addrpolicy && addrpolicy.match(/^fixed/)
+        aggr[:address] = macs[link]
+      else
+        aggr[:address] = :auto
+      end
+
+      links = dladm("show-aggr", "-x", "-p", "-o", "port", link).
+                each_line.collect do |portline|
+        next if portline.strip() == ""
+        portline.chomp.strip()
+      end
+      aggr[:lower_links] = links.compact
+
+      new(aggr)
+    end
   end
 
   def self.prefetch(resources)
@@ -68,7 +88,7 @@ Puppet::Type.type(:link_aggregation).provide(:link_aggregation) do
 
   # override mk_resource_method  property setters
   def lower_links=(value)
-    recreate_temporary && return
+    return value if recreate_temporary
     current = lower_links.kind_of?(Array) ? lower_links : []
     remove_list = []
     for entry in current - value
@@ -95,30 +115,38 @@ Puppet::Type.type(:link_aggregation).provide(:link_aggregation) do
   def mode=(value)
     # -m was removed in s12_99; mode must be changed via destroy/create
     destroy
+    # Populate resource from property hash...just in case only mode
+    # is being changed
+    @property_hash.each_pair { |prop,prop_val|
+      unless resource[prop]
+        next if prop_val == :absent
+        resource[prop] = prop_val
+      end
+    }
     create
     return @property_hash[:mode]= value
   end
 
   def policy=(value)
-    recreate_temporary && return
+    return value if recreate_temporary
     dladm("modify-aggr", "-P", value, resource[:name])
     return @property_hash[:policy]= value
   end
 
   def lacpmode=(value)
-    recreate_temporary && return
+    return value if recreate_temporary
     dladm("modify-aggr", "-L", value, resource[:name])
     return @property_hash[:lacpmode]= value
   end
 
   def lacptimer=(value)
-    recreate_temporary && return
+    return value if recreate_temporary
     dladm("modify-aggr", "-T", value, resource[:name])
     return @property_hash[:lacptimer]= value
   end
 
   def address=(value)
-    recreate_temporary && return
+    return value if recreate_temporary
     dladm("modify-aggr", "-u", value, resource[:name])
     return @property_hash[:address]= value
   end
@@ -129,34 +157,34 @@ Puppet::Type.type(:link_aggregation).provide(:link_aggregation) do
       options << "-t"
     end
 
-    if lowerlinks = resource[:lower_links]
-      if lowerlinks.is_a? Array
-        for link in lowerlinks
+    if resource[:lower_links] && resource[:lower_links] != :absent
+      if resource[:lower_links].is_a? Array
+        for link in resource[:lower_links]
           options << "-l" << link
         end
       else
-        options << "-l" << lowerlinks
+        options << "-l" << resource[:lower_links]
       end
     end
 
-    if mode = resource[:mode]
-      options << "-m" << mode
+    if resource[:mode] && resource[:mode] != :absent
+      options << "-m" << resource[:mode]
     end
 
-    if policy = resource[:policy]
-      options << "-P" << policy
+    if resource[:policy] && resource[:policy] != :absent
+      options << "-P" << resource[:policy]
     end
 
-    if lacpmode = resource[:lacpmode]
-      options << "-L" << lacpmode
+    if resource[:lacpmode] && resource[:lacpmode] != :absent
+      options << "-L" << resource[:lacpmode]
     end
 
-    if lacptimer = resource[:lacptimer]
-      options << "-T" << lacptimer
+    if resource[:lacptimer] && resource[:lacptimer] != :absent
+      options << "-T" << resource[:lacptimer]
     end
 
-    if address = resource[:address]
-      options << "-u" << address
+    if resource[:address] && resource[:address] != :auto
+      options << "-u" << resource[:address]
     end
     options
   end
@@ -172,7 +200,11 @@ Puppet::Type.type(:link_aggregation).provide(:link_aggregation) do
   end
 
   def destroy
-    dladm("delete-aggr", resource[:name])
+    args = [resource[:name]]
+    if resource[:temporary] == :true
+      args.unshift '-t'
+    end
+    dladm("delete-aggr", *args)
     @property_hash[:ensure]=:absent
     nil
   end
@@ -181,13 +213,25 @@ Puppet::Type.type(:link_aggregation).provide(:link_aggregation) do
     # Temporary aggregations cannot be modified, instead of failing and
     # forcing them to be removed if changes are desired remove and re-create
     # the aggregation
+
+    # Only do this once
+    return true if @recreated==true
+
     if resource[:temporary] == :true
-      destroy
+      # Don't use destroy here. We need to really destroy the interface
+      # and re-create it with the desired options
+      dladm("delete-aggr", resource[:name])
       create
-      return true
+
+      # Update the property_hash
+      @property_hash.keys { |prop|
+        @property_hash[prop] = resource[prop]
+      }
+
+      # We have done this once
+      return @recreated=true
     else
       return false
     end
   end
 end
-

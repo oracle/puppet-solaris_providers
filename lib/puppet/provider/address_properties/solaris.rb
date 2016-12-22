@@ -15,90 +15,78 @@
 #
 
 Puppet::Type.type(:address_properties).provide(:address_properties) do
-    desc "Provider for managing Oracle Solaris address object properties"
-    confine :operatingsystem => [:solaris]
-    defaultfor :osfamily => :solaris, :kernelrelease => ['5.11', '5.12']
-    commands :ipadm => '/usr/sbin/ipadm'
+  desc "Provider for managing Oracle Solaris address object properties"
+  confine :operatingsystem => [:solaris]
+  defaultfor :osfamily => :solaris, :kernelrelease => ['5.11', '5.12']
+  commands :ipadm => '/usr/sbin/ipadm'
 
-    def initialize(value={})
-        super(value)
-        @addrprops = {}
+  mk_resource_methods
+
+  def self.instances
+    props = {}
+
+    ipadm("show-addrprop", "-c", "-o",
+          "ADDROBJ,PROPERTY,CURRENT,PERM").each_line do |line| 
+      addrobj, property, value, perm = line.strip().split(":")
+      # Skip read-only properties
+      next if perm == 'r-'
+      # Skip empty values
+      next if (value == nil || value.empty?)
+      if not props.has_key? addrobj
+        props[addrobj] = {}
+      end
+      props[addrobj][property] = value
     end
 
-    def self.instances
-        props = {}
-
-        ipadm("show-addrprop", "-c", "-o", "ADDROBJ,PROPERTY,CURRENT").split(
-              "\n").collect do |line|
-            addrobj, property, value = line.strip().split(":")
-            next if value == nil
-            if not props.has_key? addrobj
-                props[addrobj] = {}
-            end
-            props[addrobj][property] = value
-        end
-
-        addresses = []
-        props.each do |key, value|
-            addresses << new(:name => key,
-                             :ensure => :present,
-                             :properties => value)
-        end
-        addresses
+    addresses = []
+    props.each do |key, value|
+      addresses << new(:name => key,
+                       :ensure => :present,
+                       :properties => value)
     end
+    addresses
+  end
 
-    def self.prefetch(resources)
-        # pull the instances on the system
-        props = instances
+  def self.prefetch(resources)
+    # pull the instances on the system
+    props = instances
 
-        # set the provider for the resource to set the property_hash
-        resources.keys.each do |name|
-            if provider = props.find{ |prop| prop.name == name}
-                resources[name].provider = provider
-            end
-        end
+    # set the provider for the resource to set the property_hash
+    resources.keys.each do |name|
+      if provider = props.find{ |prop| prop.name == name}
+        resources[name].provider = provider
+      end
     end
+  end
 
-    def properties
-        @property_hash[:properties]
+  # Return an array of prop=value strings to change
+  def change_props
+    out_of_sync=[]
+    # Compare the desired values against the current values
+    resource[:properties].each_pair { |prop,should_be|
+      is = properties[prop]
+      # Current Value == Desired Value
+      unless is == should_be
+        # Stash out of sync property
+        out_of_sync.push("%s=%s" % [prop, should_be])
+      end
+    }
+    out_of_sync
+  end
+
+  def properties=(value)
+    @resource[:temporary] == :true ? tmp = "-t" : tmp = nil
+    change_props.each do |prop|
+      args = [prop , tmp].compact
+      ipadm("set-addrprop", "-p", *args, @resource[:name])
     end
+  end
 
-    def properties=(value)
-        value.each do |key, val|
-            ipadm("set-addrprop", "-p", "#{key}=#{val}", @resource[:name])
-        end
-    end
+  def exists?
+    @property_hash[:ensure] == :present
+  end
 
-    def exists?
-        if @resource[:properties] == nil
-            return :false
-        end
-
-        @resource[:properties].each do |key, value|
-            p = exec_cmd(command(:ipadm), "show-addrprop","-c", "-p", key,
-                         "-o", "CURRENT", @resource[:address])
-            if p[:exit] == 1
-                Puppet.warning "Property '#{key}' not found for address " \
-                               "#{@resource[:address]}"
-                next
-            end
-
-            if p[:out].strip != value
-                @addrprops[key] = value
-            end
-        end
-
-        return @addrprops.empty?
-    end
-
-    def create
-        @addrprops.each do |key, value|
-            ipadm("set-addrprop", "-p", "#{key}=#{value}", @resource[:address])
-        end
-    end
-
-    def exec_cmd(*cmd)
-        output = Puppet::Util::Execution.execute(cmd, :failonfail => false)
-        {:out => output, :exit => $CHILD_STATUS.exitstatus}
-    end
+  def create
+    fail "address_object #{address} must exist"
+  end
 end

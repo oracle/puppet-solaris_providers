@@ -55,7 +55,7 @@ Puppet::Type.type(:system_attributes).provide(:system_attributes) do
     # return false if :ensure == :absent AND
     # no attributes are set
     return false if @resource[:ensure] == :absent &&
-      _attr.count('yes') == 0
+                    _attr.count('yes') == 0
 
     # Because we don't actually implement instances
     # populate the property_hash here

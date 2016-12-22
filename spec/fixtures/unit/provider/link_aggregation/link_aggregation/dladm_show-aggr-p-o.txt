@@ -1,2 +1,2 @@
-aggr0:dlmp:--:--:--:--
+aggr0:dlmp:--:fixed (12\::--:--
 aggr1:trunk:L4:auto:on:long

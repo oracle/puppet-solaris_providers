@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2013, 2014, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2013, 2016, Oracle and/or its affiliates. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,90 +15,71 @@
 #
 
 Puppet::Type.type(:protocol_properties).provide(:protocol_properties) do
-    desc "Provider for managing Oracle Solaris protocol object properties"
-    confine :operatingsystem => [:solaris]
-    defaultfor :osfamily => :solaris, :kernelrelease => ['5.11', '5.12']
-    commands :ipadm => '/usr/sbin/ipadm'
+  desc "Provider for managing Oracle Solaris protocol object properties"
+  confine :operatingsystem => [:solaris]
+  defaultfor :osfamily => :solaris, :kernelrelease => ['5.11', '5.12']
+  commands :ipadm => '/usr/sbin/ipadm'
 
-    def initialize(value={})
-        super(value)
-        @protoprops = {}
+  mk_resource_methods
+
+  def self.instances
+    props = Hash.new { |k,v| k[v] = Hash.new }
+    ipadm("show-prop", "-c", "-o",
+          "PROTO,PROPERTY,CURRENT,DEFAULT,PERSISTENT,POSSIBLE,PERM"
+         ).each_line do
+      |line|
+      protocol, property, value, _tmp = line.strip.split(':',4)
+      props[protocol][property] = value ? value : :absent
     end
 
-    def self.instances
-        props = {}
-
-        ipadm("show-prop", "-c", "-o", "PROTO,PROPERTY,CURRENT").split(
-              "\n").collect do |line|
-            protocol, property, value = line.strip().split(":")
-            next if value == nil
-            if not props.has_key? protocol
-                props[protocol] = {}
-            end
-            props[protocol][property] = value
-        end
-
-        protocols = []
-        props.each do |key, value|
-            protocols << new(:name => key,
-                             :ensure => :present,
-                             :properties => value)
-        end
-        protocols
+    protocols = []
+    props.each do |key, value|
+      protocols << new(:name => key,
+                       :ensure => :present,
+                       :properties => value)
     end
+    protocols
+  end
 
-    def self.prefetch(resources)
-        # pull the instances on the system
-        props = instances
+  def self.prefetch(resources)
+    things = instances
+    resources.keys.each { |key|
+      things.find { |prop|
+        # key.to_s in case name uses newvalues and is converted to symbol
+        prop.name == key.to_s
+      }.tap { |provider|
+        next if provider.nil?
+        resources[key].provider = provider
+      }
+    }
+  end
 
-        # set the provider for the resource to set the property_hash
-        resources.keys.each do |name|
-            if provider = props.find{ |prop| prop.name == name}
-                resources[name].provider = provider
-            end
-        end
+  # Return an array of prop=value strings to change
+  def change_props
+    out_of_sync=[]
+    # Compare the desired values against the current values
+    resource[:properties].each_pair { |prop,should_be|
+      is = properties[prop]
+      # Current Value == Desired Value
+      unless is == should_be
+        # Stash out of sync property
+        out_of_sync.push("%s=%s" % [prop, should_be])
+      end
+    }
+    out_of_sync
+  end
+
+  def properties=(value)
+    change_props.each do |prop|
+      ipadm("set-prop", "-p", prop, @resource[:name])
     end
+  end
 
-    def properties
-        @property_hash[:properties]
-    end
+  def exists?
+    @property_hash[:ensure] == :present
+  end
 
-    def properties=(value)
-        value.each do |key, val|
-            ipadm("set-prop", "-p", "#{key}=#{val}", @resource[:name])
-        end
-    end
-
-    def exists?
-        if @resource[:properties] == nil
-            return :false
-        end
-
-        @resource[:properties].each do |key, value|
-            p = exec_cmd(command(:ipadm), "show-prop","-c", "-p", key,
-                         "-o", "CURRENT", @resource[:protocol])
-            if p[:exit] == 1
-                Puppet.warning "Property '#{key}' not found for protocol " \
-                               "#{@resource[:protocol]}"
-                next
-            end
-
-            if p[:out].strip != value
-                @protoprops[key] = value
-            end
-        end
-
-        return @protoprops.empty?
-    end
-
-    def create
-        @protoprops.each do |key, value|
-            ipadm("set-prop", "-p", "#{key}=#{value}", @resource[:name])
-        end
-    end
-
-    def exec_cmd(*cmd)
-        output = Puppet::Util::Execution.execute(cmd, :failonfail => false)
-        {:out => output, :exit => $CHILD_STATUS.exitstatus}
-    end
+  def create
+    fail "protcol must exist before properties can be set"
+  end
 end

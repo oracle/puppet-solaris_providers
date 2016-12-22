@@ -14,20 +14,17 @@
 # limitations under the License.
 #
 
-require File.expand_path(File.join(File.dirname(__FILE__), '..','..','puppet_x/oracle/solaris_providers/util/validation.rb'))
+require_relative '../../puppet_x/oracle/solaris_providers/util/svcs.rb'
 require 'puppet/property/list'
 
-# DNS options
-simple_opts = ["debug", "rotate", "no-check-names", "inet6"]
-arg_opts =  ["ndots", "timeout", "retrans", "attempts", "retry"]
 
 Puppet::Type.newtype(:dns) do
   @doc = "Manage the configuration of the DNS client for Oracle Solaris"
-  validator = PuppetX::Oracle::SolarisProviders::Util::Validation.new
 
   newparam(:name) do
     desc "The symbolic name for the DNS client settings to use.  This name
               is used for human reference only."
+    newvalues("current")
     isnamevar
   end
 
@@ -39,6 +36,10 @@ Puppet::Type.newtype(:dns) do
     def should
       @should
     end
+    class << self
+      attr_accessor :prop_type
+    end
+    self.prop_type = :host
 
     def insync?(is)
       is = [] if is == :absent or is.nil?
@@ -51,14 +52,23 @@ Puppet::Type.newtype(:dns) do
       " "
     end
 
+    include PuppetX::Oracle::SolarisProviders::Util::Svcs
     validate do |value|
-      raise Puppet::Error, "nameserver IP address:  #{value} is
-                invalid" unless validator.valid_ip?(value)
+      fail "IP address:  #{value} is invalid" unless is_host?(value)
     end
   end
 
   newproperty(:domain) do
     desc "The local domain name"
+    class << self
+      attr_accessor :prop_type
+    end
+    self.prop_type = :hostname
+
+    include PuppetX::Oracle::SolarisProviders::Util::Svcs
+    validate do |value|
+      is_host?(value,true)
+    end
   end
 
   newproperty(:search, :parent => Puppet::Property::List) do
@@ -79,6 +89,15 @@ Puppet::Type.newtype(:dns) do
     def delimiter
       " "
     end
+    class << self
+      attr_accessor :prop_type
+    end
+    self.prop_type = :hostname
+
+    include PuppetX::Oracle::SolarisProviders::Util::Svcs
+    validate do |value|
+      is_host?(value,true)
+    end
   end
 
   newproperty(:sortlist, :parent => Puppet::Property::List) do
@@ -94,15 +113,19 @@ Puppet::Type.newtype(:dns) do
       return false unless is.length == should.length
       is.zip(@should).all? {|a, b| property_matches?(a, b) }
     end
+    class << self
+      attr_accessor :prop_type
+    end
+    self.prop_type = :net_address
 
     # svcprop returns multivalue entries delimited with a space
     def delimiter
       " "
     end
 
+    include PuppetX::Oracle::SolarisProviders::Util::Svcs
     validate do |value|
-      raise Puppet::Error, "sortlist IP address:  #{value} is
-                invalid" unless validator.valid_ip?(value)
+      is_net_address?(value,true)
     end
   end
 
@@ -112,6 +135,16 @@ Puppet::Type.newtype(:dns) do
               no-check-names, inet6.  For values with 'n', specify 'n' as an
               integer.  Specify multiple options as an array."
 
+    # DNS options
+    simple_opts = ["debug", "rotate", "no-check-names", "inet6"]
+    arg_opts =  ["ndots", "timeout", "retrans", "attempts", "retry"]
+
+    include PuppetX::Oracle::SolarisProviders::Util::Svcs
+
+    def should_to_s(newvalue)
+      to_svcs(newvalue)
+    end
+
     def should
       @should
     end
@@ -120,6 +153,17 @@ Puppet::Type.newtype(:dns) do
       return false unless is.length == should.length
       is.sort.zip(@should.sort).all? {|a, b| property_matches?(a, b) }
     end
+    class << self
+      attr_accessor :prop_type
+    end
+    self.prop_type = :array
+
+    newvalues('debug','rotate',
+              'no-check-names','inet6',
+              /ndots:(\d+)?/,/timeout:(\d+)?/,
+              /retrans:(\d+)?/,/attempts:(\d+)?/,
+              /retry:(\d+)?/,
+              :absent)
 
     # svcprop returns multivalue entries delimited with a space
     def delimiter
@@ -127,28 +171,29 @@ Puppet::Type.newtype(:dns) do
     end
 
     validate do |value|
+      return true if value == :absent
+
       data = value.split(":")
       if data.length == 1
         unless simple_opts.include? data[0]
-          fail "option #{value} is invalid"
+          fail "#{value} is invalid"
         end
       elsif data.length > 2
-          fail "option #{value} is invalid"
+        fail "#{value} is invalid"
       elsif data.length == 2
         unless arg_opts.include? data[0]
-          fail "option #{value} is invalid"
+          fail "#{value} is invalid"
         end
-
         # attempt to cast the integer specified
         begin
           Integer(data[1])
         rescue ArgumentError
-          fail "option '#{value}' is invalid, can not be cast to an Integer"
+          fail "'#{value}' is invalid, can not be cast to an Integer"
         end
       elsif data.empty?
-        # Empty values are valid to clear settings in smf
+      # Empty values are valid to clear settings in smf
       else
-        fail "option '#{value}' is invalid"
+        fail "'#{value}' is invalid"
       end
     end
   end

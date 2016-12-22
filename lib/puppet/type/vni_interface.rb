@@ -15,18 +15,18 @@
 #
 
 Puppet::Type.newtype(:vni_interface) do
-    @doc = "Manage the configuration of Solaris VNI interfaces"
+  @doc = "Manage the configuration of Solaris VNI interfaces"
 
-    ensurable
+  ensurable
 
-    newparam(:name) do
-        desc "The name of the VNI interface"
-        isnamevar
-    end
+  newparam(:name) do
+    desc "The name of the VNI interface"
+    isnamevar
+  end
 
-    newparam(:temporary)  do
-        desc "Optional parameter that specifies that the VNI interface is
+  newparam(:temporary)  do
+    desc "Optional parameter that specifies that the VNI interface is
               temporary.  Temporary interfaces last until the next reboot."
-        newvalues(:true, :false)
-    end
+    newvalues(:true, :false)
+  end
 end

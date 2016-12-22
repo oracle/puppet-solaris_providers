@@ -15,7 +15,7 @@
 #
 
 
-require File.expand_path(File.join(File.dirname(__FILE__), '..','..','puppet_x/oracle/solaris_providers/util/validation.rb'))
+require_relative '../../puppet_x/oracle/solaris_providers/util/validation.rb'
 
 Puppet::Type.newtype(:ilb_healthcheck) do
   @doc = "Manage Solaris Integrated Load Balancer (ILB) health check configuration.

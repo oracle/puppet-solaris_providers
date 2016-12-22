@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2013, 2014, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2013, 2016, Oracle and/or its affiliates. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,94 +15,80 @@
 #
 
 Puppet::Type.type(:interface_properties).provide(:interface_properties) do
-    desc "Provider for managing Oracle Solaris interface properties"
-    confine :operatingsystem => [:solaris]
-    defaultfor :osfamily => :solaris, :kernelrelease => ['5.11', '5.12']
-    commands :ipadm => '/usr/sbin/ipadm'
+  desc "Provider for managing Oracle Solaris interface properties"
+  confine :operatingsystem => [:solaris]
+  defaultfor :osfamily => :solaris, :kernelrelease => ['5.11', '5.12']
+  commands :ipadm => '/usr/sbin/ipadm'
 
-    def initialize(value={})
-        super(value)
-        @ifprops = {}
+  mk_resource_methods
+
+  def self.instances
+    props = Hash.new { |k,v| k[v] = Hash.new { |k1,v1| k1[v1] = {} } }
+
+    ipadm("show-ifprop", "-c", "-o",
+          "IFNAME,PROPERTY,PROTO,CURRENT,DEFAULT").each_line do |line|
+      ifname, property, proto, value, _default = line.strip().split(":")
+      # IPMP group cannot be controlled, fwifgroup is also skipped
+      next if proto == 'ip' && ['group','fwifgroup'].include?(property)
+      value ||= :absent
+      props[ifname][proto][property] = value
     end
+    props.collect do |key, value|
+      new(
+        :name => key,
+        :ensure => :present,
+        :properties => value,
+      )
+    end
+  end
 
-    def self.instances
-        props = {}
+  def self.prefetch(resources)
+    things = instances
+    resources.keys.each { |key|
+      things.find { |prop|
+        prop.name == key
+      }.tap { |provider|
+        next if provider.nil?
+        resources[key].provider = provider
+      }
+    }
+  end
 
-        ipadm("show-ifprop", "-c", "-o",
-              "IFNAME,PROPERTY,PROTO,CURRENT").split("\n").collect do |line|
-            ifname, property, proto, value = line.strip().split(":")
-            fullname = ifname + "/" + proto
-            if not props.has_key? fullname
-                props[fullname] = {}
-            end
-            props[fullname][property] = value
+  def create
+    fail "Interface must exist before properties can be set"
+  end
+
+  # Return a hash of property strings by protocol
+  def change_props
+    out_of_sync= Hash.new {|k,v| k[v]=[]}
+    # Compare the desired values against the current values
+    resource[:properties].each_pair { |proto,hsh|
+      hsh.each_pair { |prop,should_be|
+        is = properties[proto][prop]
+
+        # Current Value == Desired Value
+        unless is == should_be
+          # Stash out of sync property
+          out_of_sync[proto].push("%s=%s" % [prop, should_be])
         end
+      }
+    }
 
-        interfaces = []
-        props.each do |key, value|
-            interfaces << new(:name => key,
-                              :ensure => :present,
-                              :properties => value)
-        end
-        interfaces
-    end
+    out_of_sync
+  end
 
-    def self.prefetch(resources)
-        # pull the instances on the system
-        props = instances
+  def properties=(value)
+    # Support old style intf/proto names
+    name = @resource[:name].split('/')[0]
+    change_props.each_pair { |proto,props|
+      props.each { |prop|
+        ipadm("set-ifprop", "-p", prop, "-m", proto, name)
+      }
+    }
+    @property_hash[:properties].merge(value)
+  end
 
-        # set the provider for the resource to set the property_hash
-        resources.keys.each do |name|
-            if provider = props.find{ |prop| prop.name == name}
-                resources[name].provider = provider
-            end
-        end
-    end
-
-    def properties
-        @property_hash[:properties]
-    end
-
-    def properties=(value)
-        value.each do |key, val|
-            ipadm("set-ifprop", "-p", "#{key}=#{val}", @resource[:name])
-        end
-    end
-
-    def exists?
-        if @resource[:properties] == nil
-            return :false
-        end
-
-        ifname, protocol = @resource[:interface].split("/")
-
-        @resource[:properties].each do |key, value|
-            p = exec_cmd(command(:ipadm), "show-ifprop", "-m", protocol,
-                         "-p", key, "-c", "-o", "CURRENT", ifname)
-
-            if p[:exit] == 1
-                Puppet.warning "Property '#{key}' not found for interface
-                                #{ifname}"
-                next
-            end
-
-            if p[:out].strip != value
-                @ifprops[key] = value
-            end
-        end
-
-        return @ifprops.empty?
-    end
-
-    def create
-        name, proto = @resource[:interface].split("/")
-        @ifprops.each do |key, value|
-            ipadm("set-ifprop", "-m", proto, "-p", "#{key}=#{value}", name)
-        end
-    end
-
-    def exec_cmd(*cmd)
-        output = Puppet::Util::Execution.execute(cmd, :failonfail => false)
-        {:out => output, :exit => $CHILD_STATUS.exitstatus}
-    end
+  def exists?
+    @property_hash[:ensure] == :present
+  end
 end

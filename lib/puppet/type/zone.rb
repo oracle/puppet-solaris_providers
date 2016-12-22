@@ -17,49 +17,49 @@
 Puppet::Type.newtype(:zone) do
   @doc = "Manages Solaris zones."
 
-module Puppet::Zone
-  class StateMachine
-    # A silly little state machine.
-    def initialize
-      @state = {}
-      @sequence = []
-      @state_aliases = {}
-      @default = nil
-    end
+  module Puppet::Zone
+    class StateMachine
+      # A silly little state machine.
+      def initialize
+        @state = {}
+        @sequence = []
+        @state_aliases = {}
+        @default = nil
+      end
 
-    # The order of calling insert_state is important
-    def insert_state(name, transitions)
-      @sequence << name
-      @state[name] = transitions
-    end
+      # The order of calling insert_state is important
+      def insert_state(name, transitions)
+        @sequence << name
+        @state[name] = transitions
+      end
 
-    def alias_state(state, salias)
-      @state_aliases[state] = salias
-    end
+      def alias_state(state, salias)
+        @state_aliases[state] = salias
+      end
 
-    def name(n)
-      @state_aliases[n.to_sym] || n.to_sym
-    end
+      def name(n)
+        @state_aliases[n.to_sym] || n.to_sym
+      end
 
-    def index(state)
-      @sequence.index(name(state))
-    end
+      def index(state)
+        @sequence.index(name(state))
+      end
 
-    # return all states between fs and ss excluding fs
-    def sequence(fs, ss)
-      fi = index(fs)
-      si= index(ss)
-      (if fi > si
+      # return all states between fs and ss excluding fs
+      def sequence(fs, ss)
+        fi = index(fs)
+        si= index(ss)
+        (if fi > si
         then @sequence[si .. fi].map{|i| @state[i]}.reverse
         else @sequence[fi .. si].map{|i| @state[i]}
-      end)[1..-1]
-    end
+         end)[1..-1]
+      end
 
-    def cmp?(a,b)
-      index(a) < index(b)
+      def cmp?(a,b)
+        index(a) < index(b)
+      end
     end
   end
-end
 
   ensurable do
     desc "The running state of the zone.  The valid states directly reflect
@@ -148,7 +148,7 @@ end
   newparam(:config_profile) do
     desc "Path to the config_profile to use to configure a solaris zone.
           This is set when providing a sysconfig profile instead of running the
-	  sysconfig SCI tool on first boot of the zone."
+    sysconfig SCI tool on first boot of the zone."
   end
 
   newparam(:zonecfg_export) do

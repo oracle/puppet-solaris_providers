@@ -14,93 +14,119 @@
 # limitations under the License.
 #
 
-require File.expand_path(File.join(File.dirname(__FILE__), '..','..','puppet_x/oracle/solaris_providers/util/validation.rb'))
+require_relative '../../puppet_x/oracle/solaris_providers/util/svcs.rb'
 require 'puppet/property/list'
 
 Puppet::Type.newtype(:nis) do
-    @doc = "Manage the configuration of the NIS client for Oracle Solaris"
-    validator = PuppetX::Oracle::SolarisProviders::Util::Validation.new
+  @doc = "Manage the configuration of the NIS client for Oracle Solaris"
 
-    ensurable
+  ensurable
 
-    newparam(:name) do
-       desc "The symbolic name for the NIS domain and client settings to use.
+  newparam(:name) do
+    desc "The symbolic name for the NIS domain and client settings to use.
               Name can only be the literal value 'current'"
-       newvalues("current")
-       isnamevar
-    end
+    newvalues("current")
+    isnamevar
+  end
 
-    newproperty(:domainname) do
-        desc "The NIS domainname"
-    end
+  newproperty(:domainname) do
+    desc "The NIS domainname"
 
-    newproperty(:ypservers, :parent => Puppet::Property::List) do
-        desc "The hosts or IP addresses to use as NIS servers.  Specify
+    class << self
+      attr_accessor :prop_type
+    end
+    self.prop_type = :hostname
+
+    include PuppetX::Oracle::SolarisProviders::Util::Svcs
+    validate do |value|
+      is_hostname?(value,true)
+    end
+  end
+
+  newproperty(:ypservers, :parent => Puppet::Property::List) do
+    desc "The hosts or IP addresses to use as NIS servers.  Specify
               multiple entries as an array"
 
-        # ensure should remains an array
-        def should
-            @should
-        end
+    class << self
+      attr_accessor :prop_type
+    end
+    self.prop_type = :host
 
-        def insync?(is)
-            is = [] if is == :absent or is.nil?
-            is.to_a.flatten.sort == self.should.sort
-        end
+    include PuppetX::Oracle::SolarisProviders::Util::Svcs
 
-        # svcprop returns multivalue entries delimited with a space
-        def delimiter
-            " "
-        end
-
-        validate do |value|
-          unless validator.valid_ip?(value) || validator.valid_hostname?(value)
-                raise Puppet::Error, "ypserver entry:  #{value} is
-                    invalid"
-          end
-        end
+    # ensure should remains an array
+    def should
+      @should
     end
 
-    newproperty(:securenets) do
-        desc "Array of array entries for /var/yp/securenets. Each entry must
+    def insync?(is)
+      is = [] if is == :absent or is.nil?
+      is.to_a.flatten.sort == self.should.sort
+    end
+
+    # svcprop returns multivalue entries delimited with a space
+    def delimiter
+      " "
+    end
+
+    include PuppetX::Oracle::SolarisProviders::Util::Svcs
+    validate do |value|
+      is_host?(value,true)
+    end
+  end
+
+  newproperty(:securenets, :array_matching => :all) do
+    # This cannot be a Puppet::Property::List as we build it by hand in
+    # the provider when fetching instances
+    desc "Array of array entries for /var/yp/securenets. Each entry must
         be an array.  The first element in the entry array is either 'host' or a
         netmask.  The second element must be an IP network address.  Specify
         multiple entries as additional arrays"
 
-        def insync?(is)
-            is = [] if is == :absent or is.nil?
-            is.sort == self.should.sort
-        end
+    class << self
+      attr_accessor :prop_type
+    end
+    self.prop_type = :array
 
-        def should_to_s(newvalue)
-          newvalue.to_s
-        end
-
-        def is_to_s(currentvalue)
-          currentvalue.to_s
-        end
-
-        validate do |value|
-          unless value.kind_of?(Array)
-            fail("Argument `#{value}`:#{value.class} is not an array")
-          end
-            addr=value[1]
-            addr << "/" << value[0] unless value[0] == 'host'
-            unless validator.valid_ip?(addr)
-              fail("Invalid address `#{addr}` for entry `#{value}`")
-            end
-        end
+    def should
+      @should
     end
 
-    newproperty(:use_broadcast) do
-        desc "Send a broadcast datagram requesting needed bind information for
+    def insync?(is)
+      is = [] if is == :absent or is.nil?
+      is.sort == self.should.sort
+    end
+
+    def should_to_s(newvalue)
+      newvalue.to_s
+    end
+
+    def is_to_s(currentvalue)
+      currentvalue.to_s
+    end
+
+    include PuppetX::Oracle::SolarisProviders::Util::Svcs
+    validate do |value|
+      unless value.kind_of?(Array)
+        fail("Argument `#{value}`:#{value.class} is not an array")
+      end
+      addr=value[1]
+      addr << "/" << value[0] unless value[0] == 'host'
+      unless is_net_address?(addr)
+        fail("Invalid address `#{addr}` for entry `#{value}`")
+      end
+    end
+  end
+
+  newproperty(:use_broadcast) do
+    desc "Send a broadcast datagram requesting needed bind information for
               a specific NIS server."
-        newvalues(:true, :false)
-    end
+    newvalues(:true, :false)
+  end
 
-    newproperty(:use_ypsetme) do
-        desc "Only allow root on the client to change the binding to a desired
+  newproperty(:use_ypsetme) do
+    desc "Only allow root on the client to change the binding to a desired
               server."
-        newvalues(:true, :false)
-    end
+    newvalues(:true, :false)
+  end
 end

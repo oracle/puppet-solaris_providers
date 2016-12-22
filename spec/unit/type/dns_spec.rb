@@ -3,9 +3,26 @@ require 'spec_helper'
 
 describe Puppet::Type.type(:dns) do
 
+  # Modify params inline to tests to change the resource
+  # before it is generated
+  let(:params) do
+    {
+      :name => "current",
+      :domain => 'foo.com',
+      :nameserver => '127.0.0.1'
+    }
+      end
+
+  # Modify the resource inline to tests when you modeling the
+  # behavior of the generated resource
+  let(:resource) { described_class.new(params) }
+  let(:provider) { Puppet::Provider.new(resource) }
+  let(:catalog) { Puppet::Resource::Catalog.new }
+  let(:error_pattern) { / invalid/ }
+
   before do
     @class = described_class
-    @profile_name = "rspec profile"
+    @profile_name = "current"
   end
 
   it "should have :name as its keyattribute" do
@@ -188,4 +205,99 @@ describe Puppet::Type.type(:dns) do
     end  # options
 
   end # validating values
+
+  describe "parameter" do
+    [:nameserver].each { |type|
+      context "accepts #{type}" do
+        # A bunch of examples AND a multi-value string
+        %w(1.2.3.4 10.10.10.1 fe80::3e07:54ff:fe53:c704 [fe80::3e07:54ff:fe53:c704]) +
+          [ "1.2.3.4 2.3.4.5" ].each do |thing|
+          it thing.inspect do
+            params[type] = thing
+            expect { resource }.not_to raise_error
+          end
+        end
+      end
+      context "rejects #{type}" do
+        %w(1.2.3.256 fe80::3e07::c704).each do |thing|
+          it thing.inspect do
+            params[type] = thing
+            expect { resource }.to raise_error(Puppet::Error, error_pattern)
+          end
+        end
+      end
+    }
+    [:domain].each { |type|
+      context "accepts #{type}" do
+        %w(foo.com foo.bar.com).each do |thing|
+          it thing.inspect do
+            params[type] = thing
+            expect { resource }.not_to raise_error
+          end
+        end
+      end
+      context "rejects #{type}" do
+        %w(foo..com, "this.is;echo bad").each do |thing|
+          it thing.inspect do
+            params[type] = thing
+            expect { resource }.to raise_error(Puppet::Error, error_pattern)
+          end
+        end
+      end
+    }
+    [:search].each { |type|
+      context "accepts #{type}" do
+        %w(foo.com foo.bar.com).each do |thing|
+          it thing.inspect do
+            params[type] = thing
+            expect { resource }.not_to raise_error
+          end
+        end
+      end
+      context "rejects #{type}" do
+        %w(foo..com ).each do |thing|
+          it thing.inspect do
+            params[type] = thing
+            expect { resource }.to raise_error(Puppet::Error, error_pattern)
+          end
+        end
+      end
+    }
+    [:sortlist].each { |type|
+      context "accepts #{type}" do
+        %w(1.2.3.4 1.2.3.4/255.255.255.0).each do |thing|
+          it thing.inspect do
+            params[type] = thing
+            expect { resource }.not_to raise_error
+          end
+        end
+      end
+      context "rejects #{type}" do
+        %w(1.2.3.256 1.2.3.4/768).each do |thing|
+          it thing.inspect do
+            params[type] = thing
+            expect { resource }.to raise_error(Puppet::Error, error_pattern)
+          end
+        end
+      end
+    }
+    [:options].each { |type|
+      context "accepts #{type}" do
+        (%w(debug timeout:3)+[:absent]).each do |thing|
+          it thing.inspect do
+            params[type] = thing
+            expect { resource }.not_to raise_error
+          end
+        end
+      end
+      context "rejects #{type}" do
+        %w(fail timeout: timeout:2:3).each do |thing|
+          it thing.inspect do
+            params[type] = thing
+            expect { resource }.to raise_error(Puppet::Error, error_pattern)
+          end
+        end
+      end
+    }
+  end
 end

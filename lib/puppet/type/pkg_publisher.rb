@@ -16,104 +16,104 @@
 
 require 'puppet/property/list'
 Puppet::Type.newtype(:pkg_publisher) do
-    @doc = "Manage Oracle Solaris package publishers"
+  @doc = "Manage Oracle Solaris package publishers"
 
-    ensurable
+  ensurable
 
-    newparam(:name) do
-        desc "The publisher name"
-        isnamevar
-    end
+  newparam(:name) do
+    desc "The publisher name"
+    isnamevar
+  end
 
-    newproperty(:origin, :parent => Puppet::Property::List) do
-        desc "Which origin URI(s) to set.  For multiple origins, specify them
+  newproperty(:origin, :parent => Puppet::Property::List) do
+    desc "Which origin URI(s) to set.  For multiple origins, specify them
               as a list"
 
-        # ensure should remains an array
-        def should
-            @should
-        end
-
-        def insync?(is)
-            is = [] if is == :absent or is.nil?
-            is.sort == self.should.sort
-        end
-
-        def retrieve
-            provider.origin
-        end
-
-        # for origins with a file:// URI, strip any trailing / character
-        munge do |value|
-            if value.start_with? "file" and value.end_with? "/"
-                value = value.chomp("/")
-            else
-                value
-            end
-        end
-    end
-    newproperty(:enable) do
-        desc "Enable the publisher"
-        newvalues(:true, :false)
+    # ensure should remains an array
+    def should
+      @should
     end
 
-    newproperty(:sticky) do
-        desc "Set the publisher 'sticky'"
-        newvalues(:true, :false)
+    def insync?(is)
+      is = [] if is == :absent or is.nil?
+      is.sort == self.should.sort
     end
 
-    newproperty(:searchfirst) do
-        desc "Set the publisher first in the search order"
-        newvalues(:true)
+    def retrieve
+      provider.origin
     end
 
-    newproperty(:searchafter) do
-        desc "Set the publisher after the specified publisher in the search
+    # for origins with a file:// URI, strip any trailing / character
+    munge do |value|
+      if value.start_with? "file" and value.end_with? "/"
+        value = value.chomp("/")
+      else
+        value
+      end
+    end
+  end
+  newproperty(:enable) do
+    desc "Enable the publisher"
+    newvalues(:true, :false)
+  end
+
+  newproperty(:sticky) do
+    desc "Set the publisher 'sticky'"
+    newvalues(:true, :false)
+  end
+
+  newproperty(:searchfirst) do
+    desc "Set the publisher first in the search order"
+    newvalues(:true)
+  end
+
+  newproperty(:searchafter) do
+    desc "Set the publisher after the specified publisher in the search
               order"
-    end
+  end
 
-    newproperty(:searchbefore) do
-        desc "Set the publisher before the specified publisher in the search
+  newproperty(:searchbefore) do
+    desc "Set the publisher before the specified publisher in the search
               order"
-    end
+  end
 
-    newproperty(:proxy) do
-        desc "Use the specified web proxy URI to retrieve content for the
+  newproperty(:proxy) do
+    desc "Use the specified web proxy URI to retrieve content for the
               specified origin or mirror"
-    end
+  end
 
-    newproperty(:sslkey) do
-        desc "Specify the client SSL key"
-    end
+  newproperty(:sslkey) do
+    desc "Specify the client SSL key"
+  end
 
-    newproperty(:sslcert) do
-        desc "Specify the client SSL certificate"
-    end
+  newproperty(:sslcert) do
+    desc "Specify the client SSL certificate"
+  end
 
-    newproperty(:mirror, :parent => Puppet::Property::List) do
-        desc "Which mirror URI(s) to set.  For multiple mirrors, specify them
+  newproperty(:mirror, :parent => Puppet::Property::List) do
+    desc "Which mirror URI(s) to set.  For multiple mirrors, specify them
               as a list"
 
-        # ensure should remains an array
-        def should
-            @should
-        end
-
-        def insync?(is)
-            is = [] if is == :absent or is.nil?
-            is.sort == self.should.sort
-        end
-
-        def retrieve
-            provider.mirror
-        end
-
-        munge do |value|
-            if value.start_with? "file" and value.end_with? "/"
-                value = value.chomp("/")
-            else
-                value
-            end
-        end
+    # ensure should remains an array
+    def should
+      @should
     end
+
+    def insync?(is)
+      is = [] if is == :absent or is.nil?
+      is.sort == self.should.sort
+    end
+
+    def retrieve
+      provider.mirror
+    end
+
+    munge do |value|
+      if value.start_with? "file" and value.end_with? "/"
+        value = value.chomp("/")
+      else
+        value
+      end
+    end
+  end
 end

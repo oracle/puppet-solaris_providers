@@ -11,11 +11,11 @@ describe 'Solaris address_properties provider' do
                        'transmit' => 'off'}
       }
     EOP
-  
+
     it 'should apply a manifest with no errors' do
       apply_manifest(off42_manifest, :catch_failures => true)
     end
-  
+
     it 'should apply the manifest again with no updates triggered' do
       expect(apply_manifest(off42_manifest, :catch_failures => true).exit_code).to be_zero
     end
@@ -34,15 +34,15 @@ describe 'Solaris address_properties provider' do
         properties => { 'temporary'  => 'true', 'transmit' => 'off' }
       }
     EOP
-  
+
     it 'should apply the manifest with no errors' do
       apply_manifest(temp_manifest, :catch_failures => true)
     end
-  
+
     it 'should apply the manifest again with no updates triggered' do
       expect(apply_manifest(temp_manifest, :catch_failures => true).exit_code).to be_zero
     end
-  
+
     it 'should find the temporary value' do
       shell("ipadm show-addrprop -c -o ADDROBJ,PROPERTY,CURRENT,PERSISTENT | egrep -s '^lo0/v6:transmit:on:off$'", :acceptable_exit_codes => 0)
     end
@@ -61,7 +61,7 @@ describe 'Solaris address_properties provider' do
     it 'should apply a manifest with no errors' do
       apply_manifest(restore_manifest, :catch_failures => true)
     end
-  
+
     it 'should apply the manifest again with no updates triggered' do
       expect(apply_manifest(restore_manifest, :catch_failures => true).exit_code).to be_zero
     end

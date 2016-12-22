@@ -15,31 +15,31 @@
 #
 
 Puppet::Type.newtype(:ip_tunnel) do
-    @doc = "Manage the configuration of Oracle Solaris IP Tunnel links"
+  @doc = "Manage the configuration of Oracle Solaris IP Tunnel links"
 
-    ensurable
+  ensurable
 
-    newparam(:name) do
-        desc "The name of the iptunnel link"
-        isnamevar
-    end
+  newparam(:name) do
+    desc "The name of the iptunnel link"
+    isnamevar
+  end
 
-    newparam(:temporary)  do
-        desc "Optional parameter that specifies that the IP tunnel is
+  newparam(:temporary)  do
+    desc "Optional parameter that specifies that the IP tunnel is
               temporary.  Temporary IP tunnels last until the next reboot."
-        newvalues(:true, :false)
-    end
+    newvalues(:true, :false)
+  end
 
-    newproperty(:tunnel_type) do
-        desc "Specifies the type of tunnel to be created."
-        newvalues("ipv4", "ipv6", "6to4")
-    end
+  newproperty(:tunnel_type) do
+    desc "Specifies the type of tunnel to be created."
+    newvalues("ipv4", "ipv6", "6to4")
+  end
 
-    newproperty(:local_address) do
-        desc "IP address or hostname corresponding to the local tunnel address"
-    end
+  newproperty(:local_address) do
+    desc "IP address or hostname corresponding to the local tunnel address"
+  end
 
-    newproperty(:remote_address) do
-        desc "IP address or hostname corresponding to the remote tunnel address"
-    end
+  newproperty(:remote_address) do
+    desc "IP address or hostname corresponding to the remote tunnel address"
+  end
 end

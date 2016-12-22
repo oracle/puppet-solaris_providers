@@ -15,18 +15,18 @@
 #
 
 Puppet::Type.newtype(:ip_interface) do
-    @doc = "Manage the configuration of Oracle Solaris IP interfaces"
+  @doc = "Manage the configuration of Oracle Solaris IP interfaces"
 
-    ensurable
+  ensurable
 
-    newparam(:name) do
-        desc "The name of the IP interface"
-        isnamevar
-    end
+  newparam(:name) do
+    desc "The name of the IP interface"
+    isnamevar
+  end
 
-    newparam(:temporary)  do
-        desc "Optional parameter that specifies that the IP interface is
+  newparam(:temporary)  do
+    desc "Optional parameter that specifies that the IP interface is
               temporary.  Temporary interfaces last until the next reboot."
-        newvalues(:true, :false)
-    end
+    newvalues(:true, :false)
+  end
 end

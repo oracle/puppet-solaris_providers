@@ -15,17 +15,17 @@
 #
 
 Puppet::Type.newtype(:pkg_facet) do
-    @doc = "Manage Oracle Solaris package facets"
+  @doc = "Manage Oracle Solaris package facets"
 
-    ensurable
+  ensurable
 
-    newparam(:name) do
-        desc "The facet name"
-        isnamevar
-    end
+  newparam(:name) do
+    desc "The facet name"
+    isnamevar
+  end
 
-    newproperty(:value) do
-        desc "The value for the facet"
-        newvalues(/[tT]rue/, /[fF]alse/, /[nN]one/)
-    end
+  newproperty(:value) do
+    desc "The value for the facet"
+    newvalues(/[tT]rue/, /[fF]alse/, /[nN]one/)
+  end
 end

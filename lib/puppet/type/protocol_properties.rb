@@ -15,37 +15,55 @@
 #
 
 Puppet::Type.newtype(:protocol_properties) do
-    @doc = "Manage Oracle Solaris protocol properties"
+  @doc = "Manage Oracle Solaris protocol properties"
 
-    ensurable do
-        # remove the ability to specify :absent.  New values must be set.
-        newvalue(:present) do
-            provider.create
-        end
+  ensurable do
+    # remove the ability to specify :absent.  New values must be set.
+    newvalue(:present) do
+      provider.create
     end
+  end
 
-    newparam(:protocol) do
-        desc "The name of the protocol"
-        isnamevar
-    end
+  newparam(:name) do
+    desc "The name of the protocol"
+    isnamevar
+    newvalues(:dhcpv4,:dhcpv6,:icmp,:ip,:ipv4,:ipv6,
+              :sctp,:tcp,:udp,
+              # This is probably a non-exhaustive list so we allow any
+              # alphanumeric string as well
+              /^\p{Alnum}+$/)
+  end
 
-    newparam(:temporary) do
-        desc "Optional parameter that specifies changes to the protocol are
-              temporary.  Changes last until the next reboot."
-        newvalues(:true, :false)
-    end
+  newparam(:temporary) do
+    desc "Optional parameter that specifies changes to the protocol are
+              temporary.  Changes last until the next reboot.
+              This parameter is ignored"
+    newvalues(:true, :false)
+  end
 
-    newproperty(:properties) do
-        desc "A hash table of propname=propvalue entries to apply to an
+  newproperty(:properties) do
+    desc "A hash table of propname=propvalue entries to apply to an
               protocol. See ipadm(8)"
 
-        def property_matches?(current, desired)
-            desired.each do |key, value|
-                if current[key] != value
-                    return :false
-                end
-            end
-            return :true
-        end
+    def insync?(is)
+      # There will almost always be more properties on the system than
+      # defined in the resource. Make sure the properties in the resource
+      # are insync
+      should.each_pair { |prop,value|
+        return false unless is.has_key?(prop)
+        # Stop after the first out of sync property
+        return false unless property_matches?(is[prop],value)
+      }
+      true
     end
+
+    validate { |hsh|
+      fail "Invalid, must be a hash" unless hsh.kind_of? Hash
+      fail "Invalid, cannot be empty" if hsh.empty?
+      hsh.each_pair { |key,value|
+        fail "key #{key} must be a-Z - _" unless key.match(/[\p{Alnum}_-]+/)
+        fail "value #{value} must be a-Z - _" unless key.match(/[\p{Alnum}_-]+/)
+      }
+    }
+  end
 end
