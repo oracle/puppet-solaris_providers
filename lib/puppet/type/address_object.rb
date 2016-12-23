@@ -35,7 +35,7 @@ Puppet::Type.newtype(:address_object) do
     desc "The type of address object to create.  Valid values are static,
               dhcp, addrconf."
     # add from_gz and inherited as a valid values, even though users should not specify it
-    newvalues(:static, :dhcp, :addrconf, :from_gz, :inherited)
+    newvalues(:static, :dhcp, :addrconf, :from_gz, :inherited, :vrrp)
   end
 
   newproperty(:enable) do
@@ -62,6 +62,21 @@ Puppet::Type.newtype(:address_object) do
     desc "A literal IP address or a hostname corresponding to an optional
               remote end-point.  An optional prefix length may be specified.
               Only valid with an address_type of 'static'"
+
+    include PuppetX::Oracle::SolarisProviders::Util::Validation
+    validate do |value|
+      unless valid_ip?(value) || valid_hostname?(value)
+        fail "#{value} is invalid"
+      end
+    end
+  end
+
+  newproperty(:routername) do
+    desc "A literal IP address or a hostname. Specifies the VRRP router name
+  this vrrp address is created for. For l2 type VRRP router, 'routername' is
+  optional as the VRRP router name can be directly derived from the interface
+  (VRRP VNIC) this address is created on. But it will be vali- dated if
+  specified. For l3 type VRRP router, this option is mandatory. "
 
     include PuppetX::Oracle::SolarisProviders::Util::Validation
     validate do |value|
@@ -192,6 +207,7 @@ Puppet::Type.newtype(:address_object) do
     # Address types with acceptable properties
     @type_props = {
       :static => [:address,:remote_address,:down],
+      :vrrp => [:address,:routername],
       :dhcp => [:seconds,:hostname],
       :addrconf => [:interface_id,:remote_interface_id],
       :from_gz => [:bogus],

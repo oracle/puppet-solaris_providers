@@ -34,6 +34,8 @@ describe Puppet::Type.type(:address_object).provider(:address_object) do
     [
       [:temporary,:true,%w(-t)],
       [:address_type,:static,["-T", :static]],
+      [:address_type,:vrrp,["-T", :vrrp]],
+      [:routername,'1.2.3.4',["-n", '1.2.3.4']],
       [:address_type,:dhcp,["-T", :dhcp]],
       [:address,"1.2.3.4",%w(-a local=1.2.3.4)],
       [:remote_address,"1.2.3.4",%w(-a remote=1.2.3.4)],
