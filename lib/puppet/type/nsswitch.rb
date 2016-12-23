@@ -15,7 +15,7 @@
 #
 
 Puppet::Type.newtype(:nsswitch) do
-  @doc = "Name service switch configuration data"
+  @doc = "Name service switch configuration data. See: nsswitch.conf(5)"
 
   newparam(:name) do
     desc "The symbolic name for the nsswitch settings to use.  This name
@@ -101,5 +101,13 @@ Puppet::Type.newtype(:nsswitch) do
 
   newproperty(:sudoer) do
     desc "The sudoer database lookup override.  Used with sudo only"
+  end
+
+  newproperty(:ipnodes) do
+    desc "The ipnodes database lookup override."
+  end
+
+  newproperty(:protocol) do
+    desc "The protocol database lookup override."
   end
 end
