@@ -90,6 +90,9 @@
    
 
 ###  Bugs Fixes and Enhancements:
+* 19888183 publisher provider is applied on each puppet run
+* 22072780 pkg_publisher provider applies 'searchfirst' every time
+* 22125767 nsswitch provider missing ipnodes, protocols
 * 23593308 rspec tests need to be written for solaris_providers ipmp_interface
 * 24696809 Puppet link aggregation modules cascading errors
 * 24836004 '-' is valid in pkg mediator implementation

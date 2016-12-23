@@ -45,7 +45,7 @@ describe Puppet::Type.type(:pkg_publisher).provider(:pkg_publisher) do
         :proxy => nil,
         :searchafter => nil,
         :searchbefore => nil,
-        :searchfirst => true,
+        :searchfirst => :true,
         :sslcert => nil,
         :sslkey => nil,
         :sticky => "true"
@@ -73,7 +73,7 @@ describe Puppet::Type.type(:pkg_publisher).provider(:pkg_publisher) do
         :proxy => nil,
         :searchafter => nil,
         :searchbefore => nil,
-        :searchfirst => true,
+        :searchfirst => :true,
         :sslcert => nil,
         :sslkey => nil,
         :sticky => "true"

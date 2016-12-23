@@ -31,7 +31,7 @@ Puppet::Type.type(:pkg_publisher).provide(:pkg_publisher) do
 
       # set the order of the publishers
       if not publisher_order.include?("name")
-        publisher_order << name
+        publisher_order.push name
       end
       # strip off any trailing "/" characters
       if origin.end_with?("/")
@@ -63,7 +63,7 @@ Puppet::Type.type(:pkg_publisher).provide(:pkg_publisher) do
 
         index = publisher_order.index(name)
         if index == 0
-          publishers[name]["searchfirst"] = true
+          publishers[name]["searchfirst"] = :true
           publishers[name]["searchafter"] = nil
         else
           publishers[name]["searchfirst"] = nil
