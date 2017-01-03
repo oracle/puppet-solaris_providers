@@ -100,38 +100,32 @@ describe Puppet::Type.type(:nis) do
          @class.new(:name => @profile_name, :securenets => snets)
       end
 
-      it "should fail if argument is not an array" do
-        expect { @class.new(:name => @profile_name,
-                            :securenets => {'host' => '1.1.1.1'})
-        }.to raise_error(Puppet::Error, /is not an array/)
-      end
       it "should allow a value to be set" do
         expect { @class.new(:name => @profile_name,
-                            :securenets => [['host','1.1.1.1']])
+                            :securenets => ['1.1.1.1'])
         }.not_to raise_error
       end
       it "should allow multiple values to be set" do
         expect { @class.new(:name => @profile_name,
                             :securenets => [
-                              ['255.255.255.0','1.1.1.1'],
-                              ['host','1.1.1.2'],
-                              ['host','1.1.1.3']
+                              '1.1.1.1/255.255.255.0',
+                              '1.1.1.2/host',
+                              'host/1.1.1.3',
+                              '1.1.1.4'
         ]
                            ) }.not_to raise_error
         end
       it "should fail on invalid multiple values" do
         expect { @class.new(:name => @profile_name,
                             :securenets => [
-                              ['255.255.255.0','1.1.1.1'],
-                              ['toast','1.1.1.2'],
-                              ['host','1.1.1.3']
+                              '1.1.1.1/toast',
         ]
-                           ) }.to raise_error(Puppet::Error, /Invalid address/)
+                           ) }.to raise_error(Puppet::Error, /invalid net_address/)
         end
       it "should fail if argument value is not an IP address" do
         expect { @class.new(:name => @profile_name,
-                            :securenets => [['host', '1.1.1']])
-        }.to raise_error(Puppet::Error, /Invalid address/)
+                            :securenets => ['1.1.1'])
+        }.to raise_error(Puppet::Error, /invalid net_address/)
       end
     end  # securenets
 
