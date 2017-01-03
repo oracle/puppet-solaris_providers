@@ -167,6 +167,10 @@ describe Puppet::Type.type(:address_object) do
           :remote_interface_id => {
             :accepts => [],
             :rejects => [ "::1a:2b:3c:4d" ] },
+          :routername => {
+            :accepts => [],
+            :rejects => [ "1.2.3.256" ],
+          },
         }.each_pair { |target_param,cond|
           context "#{target_param}" do
             context "accepts" do
@@ -189,6 +193,64 @@ describe Puppet::Type.type(:address_object) do
           end
         }
       end # end static
+
+      context "vrrp" do
+        before (:each) { params[:address_type] = :vrrp }
+        {
+          :routername => {
+            :accepts => ["foo.com","2.3.4.5"],
+            :rejects => [ "1.2.3.256" ],
+          },
+          :address => {
+            :accepts => [ "1.2.3.4"],
+            :rejects => [ "1.2.3.256" ],
+          },
+          :remote_address => {
+            :accepts => [],
+            :rejects => [ "1.2.3.4" ],
+          },
+          :down => {
+            :accepts => [],
+            :rejects => [ "true", "false" ],
+          },
+          :seconds => {
+            :accepts => [],
+            :rejects => [5,"10","forever"],
+          },
+          :hostname => {
+            :accepts => [],
+            :rejects => ["foo.com"],
+          },
+          :interface_id => {
+            :accepts => [],
+            :rejects => ["::1a:2b:3c:4d"]
+          },
+          :remote_interface_id => {
+            :accepts => [],
+            :rejects => ["::1a:2b:3c:4d"]
+          },
+        }.each_pair { |target_param,cond|
+          context "#{target_param}" do
+            context "accepts" do
+              cond[:accepts].each do |thing|
+                it thing.inspect do
+                  params[target_param] = thing
+                  expect { resource }.not_to raise_error
+                end
+              end
+            end # Accepts
+            context "rejects" do
+              cond[:rejects].each do |thing|
+                it thing.inspect do
+                  error_pattern = %r(is invalid|cannot specify)
+                  params[target_param] = thing
+                  expect { resource }.to raise_error(Puppet::Error, error_pattern)
+                end
+              end
+            end # Rejects
+          end
+        }
+      end # End vrrp
 
       context "dhcp" do
         before (:each) { params[:address_type] = :dhcp }
@@ -220,6 +282,10 @@ describe Puppet::Type.type(:address_object) do
           :remote_interface_id => {
             :accepts => [],
             :rejects => ["::1a:2b:3c:4d"]
+          },
+          :routername => {
+            :accepts => [],
+            :rejects => [ "1.2.3.256" ],
           },
         }.each_pair { |target_param,cond|
           context "#{target_param}" do
@@ -274,6 +340,10 @@ describe Puppet::Type.type(:address_object) do
             :accepts => ["::1a:2b:3c:4d"],
             :rejects => [],
           },
+          :routername => {
+            :accepts => [],
+            :rejects => [ "1.2.3.256" ],
+          },
         }.each_pair { |target_param,cond|
           context "#{target_param}" do
             context "accepts" do
@@ -327,6 +397,10 @@ describe Puppet::Type.type(:address_object) do
             :remote_interface_id => {
               :accepts => [],
               :rejects => ["::1a:2b:3c:4d"],
+            },
+            :routername => {
+              :accepts => [],
+              :rejects => [ "1.2.3.256" ],
             },
           }.each_pair { |target_param,cond|
             context "#{target_param}" do

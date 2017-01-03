@@ -6,7 +6,7 @@ describe Puppet::Type.type(:svccfg).provider(:svccfg) do
 
   let(:params) do
     {
-      :name => "foo", :ensure => :present,
+      :name => "foo",
       :fmri => "svc:/application/puppet:agent",
       :property => "refresh/timeout_seconds",
       :type => "count",

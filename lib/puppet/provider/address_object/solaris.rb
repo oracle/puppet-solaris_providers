@@ -144,6 +144,10 @@ Puppet::Type.type(:address_object).provide(:address_object) do
       options << "-a" << "remote=#{remote_address}"
     end
 
+    if @resource[:routername]
+      options << "-n" << resource[:routername]
+    end
+
     if @resource[:down] == :true
       options << "-d"
     end
