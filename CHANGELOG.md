@@ -107,6 +107,7 @@
 * 23593229 rspec tests need to be written for solaris_providers boot_environment
 * 23593308 rspec tests need to be written for solaris_providers ipmp_interface
 * 23593316 rspec tests need to be written for solaris_providers protocol_properties
+* 23593319 rspec tests need to be written for solaris_providers vnic
 * 24696809 Puppet link aggregation modules cascading errors
 * 24836004 '-' is valid in pkg mediator implementation
 * 24836209 nis provider needs to support multiple securenets entries
@@ -141,6 +142,7 @@
 * 25306877 puppet svccfg should check for pg and allow nested property groups
 * 25306904 puppet dns,nis,ldap,protocol_properties prefetch fails after input auto munge
 * 25348321 puppet boot_environment needs to validate all properties and parameters
+* 25354751 puppet vnic provider needs to support / and - as valid vnic name characters
 
 # 1.2.2
 This release unifies the source for the oracle-solaris_providers IPS package.
