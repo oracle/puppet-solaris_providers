@@ -103,6 +103,7 @@
 * 19888183 publisher provider is applied on each puppet run
 * 22072780 pkg_publisher provider applies 'searchfirst' every time
 * 22125767 nsswitch provider missing ipnodes, protocols
+* 22126108 add process scheduler administration provider
 * 23593229 rspec tests need to be written for solaris_providers boot_environment
 * 23593308 rspec tests need to be written for solaris_providers ipmp_interface
 * 23593316 rspec tests need to be written for solaris_providers protocol_properties
