@@ -108,6 +108,8 @@
 * 23593308 rspec tests need to be written for solaris_providers ipmp_interface
 * 23593316 rspec tests need to be written for solaris_providers protocol_properties
 * 23593319 rspec tests need to be written for solaris_providers vnic
+* 23593225 rspec tests need to be written for solaris_providers etherstub
+* 23593310 puppet module rspec tests and validation for nsswitch
 * 24696809 Puppet link aggregation modules cascading errors
 * 24836004 '-' is valid in pkg mediator implementation
 * 24836209 nis provider needs to support multiple securenets entries

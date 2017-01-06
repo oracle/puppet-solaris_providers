@@ -15,99 +15,47 @@
 #
 
 Puppet::Type.newtype(:nsswitch) do
-  @doc = "Name service switch configuration data. See: nsswitch.conf(5)"
+  @doc = "Name service switch configuration data. See: nsswitch.conf(5). Values
+  shown as absent use the default lookup.
+
+The following database limitations are also applicable:
+* default: Sets the default lookup configuration
+* sudoer: Used only with sudo
+* tnrhtp: Requires trusted extensions
+* tnrhdb: Requires trusted extensions
+"
+
+  ensurable
 
   newparam(:name) do
-    desc "The symbolic name for the nsswitch settings to use.  This name
-              is used for human reference only."
+    desc "The symbolic name for the nsswitch settings to use.
+          Only the value 'current' is accepted."
+    newvalues(:current)
     isnamevar
   end
 
-  newproperty(:default) do
-    desc "The default configuration entry"
-  end
+  [:default, :host, :password, :group, :network, :rpc, :ether,
+  :netmask, :bootparam, :publickey, :netgroup, :automount, :alias, :service,
+  :project, :auth_attr, :prof_attr, :tnrhtp, :tnrhdb, :sudoer, :ipnodes,
+  :protocol, :printer].each { |prop|
 
-  newproperty(:host) do
-    desc "The host database lookup override"
-  end
+  newproperty(prop) do
+    desc "The #{prop} database configuration entry"
 
-  newproperty(:password) do
-    desc "The password database lookup override"
-  end
+    # Mostly validate options ignoring any additional criteria
+    validate do |value|
+      next if value == 'absent'
+      fail "cannot be empty" if value.empty?
+      %w(files ldap dns).each { |word|
+        fail "duplicate entry #{word}" if value.scan(word).length > 1
+      }
+      unless value.gsub(/\b(files|ldap|dns)\b|:\[.*\]|\s/,'').empty?
+        # return the offending portion without removing interstitial spaces
+        fail "Invalid database '" <<
+             value.gsub(/files|ldap|dns|:\[.*\]/,'').strip << "'"
+      end
+    end
 
-  newproperty(:group) do
-    desc "The group database lookup override"
   end
-
-  newproperty(:network) do
-    desc "The network database lookup override"
-  end
-
-  newproperty(:rpc) do
-    desc "The rpc database lookup override"
-  end
-
-  newproperty(:ether) do
-    desc "The ether database lookup override"
-  end
-
-  newproperty(:netmask) do
-    desc "The netmask database lookup override"
-  end
-
-  newproperty(:bootparam) do
-    desc "The bootparam database lookup override"
-  end
-
-  newproperty(:publickey) do
-    desc "The publickey database lookup override"
-  end
-
-  newproperty(:netgroup) do
-    desc "The netgroup database lookup override"
-  end
-
-  newproperty(:automount) do
-    desc "The automount database lookup override"
-  end
-
-  newproperty(:alias) do
-    desc "The alias database lookup override"
-  end
-
-  newproperty(:service) do
-    desc "The service database lookup override"
-  end
-
-  newproperty(:project) do
-    desc "The project database lookup override"
-  end
-
-  newproperty(:auth_attr) do
-    desc "The auth_attr database lookup override"
-  end
-
-  newproperty(:prof_attr) do
-    desc "The prof_attr database lookup override"
-  end
-
-  newproperty(:tnrhtp) do
-    desc "The tnrhtp database lookup override.  Requires trusted extensions"
-  end
-
-  newproperty(:tnrhdb) do
-    desc "The tnrhdb database lookup override.  Requires trusted extensions"
-  end
-
-  newproperty(:sudoer) do
-    desc "The sudoer database lookup override.  Used with sudo only"
-  end
-
-  newproperty(:ipnodes) do
-    desc "The ipnodes database lookup override."
-  end
-
-  newproperty(:protocol) do
-    desc "The protocol database lookup override."
-  end
+  }
 end
