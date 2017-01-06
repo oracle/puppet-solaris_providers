@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2013, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2013, 2017, Oracle and/or its affiliates. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -53,10 +53,10 @@ Puppet::Type.type(:etherstub).provide(:etherstub) do
   end
 
   def create
-    dladm("create-etherstub", add_options, @resource[:name])
+    dladm("create-etherstub", *add_options, @resource[:name])
   end
 
   def destroy
-    dladm("delete-etherstub", add_options, @resource[:name])
+    dladm("delete-etherstub", *add_options, @resource[:name])
   end
 end
