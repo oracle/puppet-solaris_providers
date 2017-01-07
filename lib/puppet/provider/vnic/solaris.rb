@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2013, 2014, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2013, 2017, Oracle and/or its affiliates. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -20,12 +20,13 @@ Puppet::Type.type(:vnic).provide(:vnic) do
   defaultfor :osfamily => :solaris, :kernelrelease => ['5.11', '5.12']
   commands :dladm => '/usr/sbin/dladm'
 
+  mk_resource_methods
+
   def self.instances
     vnics = []
     dladm("show-vnic", "-p", "-o", "link,over,macaddress").split(
       "\n").collect do |line|
       link, over, mac = line.split(":", 3)
-      next if not link =~ /^[[:alpha:]]([\w.]){1,29}([\d])$/i
       # remove the escape character
       vnics << new(:name => link,
                    :ensure => :present,
@@ -47,16 +48,8 @@ Puppet::Type.type(:vnic).provide(:vnic) do
     end
   end
 
-  def lower_link
-    @property_hash[:lower_link]
-  end
-
   def lower_link=(value)
     dladm("modify-vnic", "-l", value, @resource[:name])
-  end
-
-  def mac_address
-    @property_hash[:mac_address]
   end
 
   def mac_address=(value)
@@ -80,7 +73,7 @@ Puppet::Type.type(:vnic).provide(:vnic) do
   end
 
   def create
-    dladm('create-vnic', '-l', @resource[:lower_link], add_options,
+    dladm('create-vnic', '-l', @resource[:lower_link], *add_options,
           @resource[:name])
   end
 

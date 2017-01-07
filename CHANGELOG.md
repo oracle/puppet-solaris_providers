@@ -1,20 +1,26 @@
 # 2.0.0
   *Puppet 4 related changes and Bug Fixes*
 ## Incompatible Changes:
-* NIS provider securenets argument changes from an Array to an Array of Arrays
-  * Previous versions indicated secure nets must be a Hash in error messages.
+* NIS provider securenets argument changes from an Array of components allowing
+  a single entry to an Array of string entries.
+  * Previous versions indicated securenets must be a Hash in error messages.
   * Incorrect Format did not allow multiple `'host'` definitions
   ```Ruby
     :securenets => {'host' => '1.1.1.1'}
   ```
-  * Old Correct Format
+  * Old Correct Format allowed one entry
   ```Ruby
     :securenets => ['host','1.1.1.1']
   ```
   * New Format
   ```Ruby
-    :securenets => [['host','1.1.1.1']]
-    :securenets => [['host','1.1.1.1'],['255.255.255.0','2.2.2.2']]
+    :securenets => ['1.1.1.1']
+    :securenets => ['1.1.1.1','2.2.2.2/255.255.255.0']
+  ```
+  * Allowed Format
+  ```Ruby
+    :securenets => ['host/1.1.1.1']
+    :securenets => ['1.1.1.1/host','2.2.2.2/255.255.255.0']
   ```
 * link_aggregation
   * now strictly checks option combinations which previously failed during
@@ -87,6 +93,9 @@
   * Puppet will now fail if a non-existent boot environment is provided as the
     argument for clone_be
   * zpool is ignored if clone_be is provided
+  * The new read only/ignored property running has been added to allow puppet
+    resource boot_environment output to indicate both the activate and running
+    BE.
    
 
 ###  Bugs Fixes and Enhancements:
@@ -94,8 +103,13 @@
 * 19888183 publisher provider is applied on each puppet run
 * 22072780 pkg_publisher provider applies 'searchfirst' every time
 * 22125767 nsswitch provider missing ipnodes, protocols
+* 22126108 add process scheduler administration provider
+* 23593229 rspec tests need to be written for solaris_providers boot_environment
 * 23593308 rspec tests need to be written for solaris_providers ipmp_interface
 * 23593316 rspec tests need to be written for solaris_providers protocol_properties
+* 23593319 rspec tests need to be written for solaris_providers vnic
+* 23593225 rspec tests need to be written for solaris_providers etherstub
+* 23593310 puppet module rspec tests and validation for nsswitch
 * 24696809 Puppet link aggregation modules cascading errors
 * 24836004 '-' is valid in pkg mediator implementation
 * 24836209 nis provider needs to support multiple securenets entries
@@ -129,6 +143,8 @@
 * 25306835 puppet boot_environment needs to understand the new snapshot format
 * 25306877 puppet svccfg should check for pg and allow nested property groups
 * 25306904 puppet dns,nis,ldap,protocol_properties prefetch fails after input auto munge
+* 25348321 puppet boot_environment needs to validate all properties and parameters
+* 25354751 puppet vnic provider needs to support / and - as valid vnic name characters
 
 # 1.2.2
 This release unifies the source for the oracle-solaris_providers IPS package.

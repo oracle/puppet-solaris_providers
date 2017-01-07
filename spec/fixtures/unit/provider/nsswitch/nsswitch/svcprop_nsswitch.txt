@@ -1,0 +1,22 @@
+config/alias astring files\ ldap\ dns
+config/auth_attr astring files\ ldap\ dns
+config/automount astring files\ ldap\ dns
+config/bootparam astring files\ ldap\ dns
+config/default astring files\ ldap\ dns
+config/ether astring files\ ldap\ dns
+config/group astring files\ ldap\ dns
+config/host astring files\ ldap\ dns
+config/netgroup astring files\ ldap\ dns
+config/netmask astring files\ ldap\ dns
+config/network astring files\ ldap\ dns
+config/password astring files\ ldap\ dns
+config/printer astring user\ files
+config/prof_attr astring files\ ldap\ dns
+config/project astring files\ ldap\ dns
+config/publickey astring files\ ldap\ dns
+config/rpc astring files\ ldap\ dns
+config/service astring files\ ldap\ dns
+config/sudoer astring files\ ldap\ dns
+config/tnrhdb astring files\ ldap\ dns
+config/tnrhtp astring files\ ldap\ dns
+config/value_authorization astring solaris.smf.value.name-service.switch

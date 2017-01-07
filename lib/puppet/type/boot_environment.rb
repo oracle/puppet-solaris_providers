@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2013, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2013, 2017 Oracle and/or its affiliates. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,6 +14,7 @@
 # limitations under the License.
 #
 
+require 'shellwords'
 Puppet::Type.newtype(:boot_environment) do
   @doc = "Manage Oracle Solaris Boot Environments (BEs)"
 
@@ -29,25 +30,53 @@ Puppet::Type.newtype(:boot_environment) do
   end
 
   newparam(:description) do
-    desc "Description for the new BE"
+    desc "Description for the new BE. Description cannot be changed after BE
+    creation."
+    newvalues(/^[\s\p{Alnum}\-\:\_\.]+$/)
   end
 
   newparam(:clone_be) do
-    desc "Create a new BE from an existing inactive BE."
+    desc "Create a new BE from an existing inactive BE or BE@snapshot.
+      Clone BE cannot be changed after BE creation."
+    newvalues(/^[\p{Alnum}\-\:\_\.]+(?:@[\p{Alnum}\-\:\_\.]+)?$/)
   end
 
   newparam(:options) do
-    desc "Create the datasets for a new BE with specific ZFS
-              properties.  Specify options as a hash."
+    desc "Create the datasets for a new BE with specific zfs(8)
+              properties.  Specify options as a hash.
+    Properties are not synchronized after BE creation.
+    "
+    munge do |value|
+      value.each_pair { |key,val|
+        value[key] = val.shellescape
+      }
+    end
+    validate do |value|
+      fail "Invalid must be a Hash" unless value.kind_of?(Hash)
+
+      value.keys.each { |key|
+        unless key.match(/^[\p{Alnum}\-\:\_\.]+$/)
+          fail "Invalid option '#{key}' must be ALNUM - : _ ."
+        end
+      }
+    end
   end
 
   newparam(:zpool) do
     desc "Create the new BE in the specified zpool. Zpool is ignored for
-        a cloned BE"
+        a cloned BE. Zpool cannot be changed after BE creation."
+    newvalues(/^[\p{Alnum}\-\:\_\.]+$/)
+  end
+
+  newproperty(:running) do
+    desc "An existing BE may be Active and/or Running. This parameter has no
+          effect on behavior and exists only for display purposes."
+    newvalues(:true,:false)
   end
 
   newproperty(:activate) do
-    desc "Activate the specified BE"
+    desc "Activate the specified BE. Only one BE may be active at a time.
+    Activating an instance does not reboot the system to change the running BE."
     newvalues(:true, :false)
   end
 

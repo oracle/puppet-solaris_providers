@@ -51,7 +51,13 @@ Puppet::Type.type(:nis).provide(:nis,
           ary = value.gsub(%r(\\),'').split
           value = []
           ary.each_with_index { |val,idx|
-            idx.even? ? value.push([val]) : value[-1].push(val)
+            val = '' if val == 'host'
+            if idx.even?
+              value.push(val)
+            else
+              value[-1] << '/' unless value[-1] && value[-1].empty?
+              value[-1] << val
+            end
           }
         end
         props[prop] = value if validprops.include? prop.to_sym

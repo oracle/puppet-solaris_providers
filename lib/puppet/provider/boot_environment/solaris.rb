@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2013, 2014, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2013, 2017, Oracle and/or its affiliates. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -24,15 +24,22 @@ Puppet::Type.type(:boot_environment).provide(:boot_environment) do
     beadm(:list, "-H").split("\n").collect do |line|
       data = line.split(";")
       name = data[0]
-      if data[2].include? "R"
+      if data[2].include? "N"
         activate = :true
       else
         activate = :false
       end
+      if data[2].include? "R"
+        running = :true
+      else
+        running = :false
+      end
 
       new(:name => name,
           :ensure => :present,
-          :activate => activate)
+          :activate => activate,
+          :running => running
+         )
     end
   end
 
@@ -54,8 +61,15 @@ Puppet::Type.type(:boot_environment).provide(:boot_environment) do
 
   def activate=(value)
     if value == :true
-      beadm("activate", @resource[:name])
+      beadm(:activate, @resource[:name])
     end
+  end
+
+  def running
+    @property_hash[:activate]
+  end
+  def running=(value)
+      warn "Cannot change the running state of a BE"
   end
 
   def exists?
@@ -64,6 +78,10 @@ Puppet::Type.type(:boot_environment).provide(:boot_environment) do
 
   def build_flags
     flags = []
+
+    if @resource[:activate]
+      flags << "-a"
+    end
 
     if description = @resource[:description]
       flags << "-d" << "'#{description}'"
@@ -92,11 +110,11 @@ Puppet::Type.type(:boot_environment).provide(:boot_environment) do
 
     if options = @resource[:options]
       options.each { |key, value| flags << "-o" << "#{key}=#{value}" }
-
     end
 
     # Skip zpool if clone_be is provided
-    if zp = @resource[:zpool] && !@resource[:clone_be]
+    if @resource[:zpool] && !@resource[:clone_be]
+      zp = @resource[:zpool]
       found = false
       for line in zpool(:list, "-o", "name", "-H").each_line do
         if zp == line.strip
@@ -112,16 +130,12 @@ Puppet::Type.type(:boot_environment).provide(:boot_environment) do
   end
 
   def create
-    beadm(:create, build_flags, @resource[:name])
-    if @resource[:activate] == :true
-      beadm(:activate, @resource[:name])
-    end
+    beadm(:create, *build_flags, @resource[:name])
   end
 
   def destroy
     if beadm(:list, "-H", @resource[:name]).split(";")[2] =~ /N/
-      Puppet.warning "Unable to destroy #{@resource[:name]} as it is
-                            the active BE."
+      fail "Unable to destroy #{@resource[:name]} as it is the active BE."
     else
       beadm(:destroy, "-f", "-F", @resource[:name])
     end

@@ -25,7 +25,7 @@ Puppet::Type.newtype(:vnic) do
     isnamevar
 
     validate do |vnic_value|
-      if not vnic_value =~ /^[[:alpha:]]([\w.]){1,29}([\d])$/i
+      if not vnic_value =~ /^[[:alpha:]]([\w\/.-]){1,29}([\d])$/i
         raise Puppet::Error, "Invalid VNIC name: #{vnic_value}"
       end
     end
