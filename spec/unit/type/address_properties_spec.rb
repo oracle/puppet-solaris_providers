@@ -1,5 +1,3 @@
-#!/usr/bin/env rspec
-
 require 'spec_helper'
 require_relative  '../../../lib/puppet/type/address_properties'
 

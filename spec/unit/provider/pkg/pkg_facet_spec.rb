@@ -1,5 +1,3 @@
-#!/usr/bin/env ruby
-
 require 'spec_helper'
 describe Puppet::Type.type(:pkg_facet).provider(:pkg_facet) do
 

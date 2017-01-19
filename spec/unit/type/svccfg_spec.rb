@@ -1,4 +1,3 @@
-#!/usr/bin/env rspec
 require 'spec_helper'
 
 type_class = Puppet::Type.type(:svccfg)

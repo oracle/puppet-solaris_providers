@@ -1,5 +1,3 @@
-#!/usr/bin/env ruby
-
 require 'spec_helper'
 describe Puppet::Type.type(:address_object).provider(:address_object) do
 
