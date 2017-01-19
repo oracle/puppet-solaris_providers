@@ -44,15 +44,22 @@ The following database limitations are also applicable:
 
     # Mostly validate options ignoring any additional criteria
     validate do |value|
+      unless prop == :printer
+        expr=%r(\b(files|ldap|dns)\b|:\[.*\]|\s)
+        expr_spc=%r(\b(files|ldap|dns)\b|:\[.*\])
+      else
+        expr=%r(\b(files|ldap|dns|user)\b|:\[.*\]|\s)
+        expr_spc=%r(\b(files|ldap|dns|user)\b|:\[.*\])
+      end
       next if value == 'absent'
       fail "cannot be empty" if value.empty?
-      %w(files ldap dns).each { |word|
+      %w(files ldap dns user).each { |word|
         fail "duplicate entry #{word}" if value.scan(word).length > 1
       }
-      unless value.gsub(/\b(files|ldap|dns)\b|:\[.*\]|\s/,'').empty?
+      unless value.gsub(expr,'').empty?
         # return the offending portion without removing interstitial spaces
         fail "Invalid database '" <<
-             value.gsub(/files|ldap|dns|:\[.*\]/,'').strip << "'"
+             value.gsub(expr_spc,'').strip << "'"
       end
     end
 

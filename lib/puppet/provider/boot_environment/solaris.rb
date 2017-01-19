@@ -79,7 +79,7 @@ Puppet::Type.type(:boot_environment).provide(:boot_environment) do
   def build_flags
     flags = []
 
-    if @resource[:activate]
+    if @resource[:activate] == :true
       flags << "-a"
     end
 
