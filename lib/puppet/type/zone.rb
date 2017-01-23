@@ -91,7 +91,11 @@ Puppet::Type.newtype(:zone) do
     seqvalue :installed, :up => :install, :down => :stop
     seqvalue :running, :up => :start
 
-    alias_state :incomplete => :installed, :ready => :installed, :shutting_down => :running
+    alias_state(:incomplete => :installed,
+                :ready => :installed,
+                :shutting_down => :running,
+                :unavailable => :down
+               )
 
     defaultto :running
 
@@ -164,11 +168,12 @@ Puppet::Type.newtype(:zone) do
   end
 
   newparam(:archive) do
-    desc "The archive file containing an archived zone."
+    desc "The archive file (UAR) containing an archived zone."
   end
 
   newparam(:archived_zonename) do
-    desc "The archived zone to configure and install"
+    desc "If the UAR contains multiple zones. The archived zone to configure
+    and install"
   end
   
   newparam(:clone) do
