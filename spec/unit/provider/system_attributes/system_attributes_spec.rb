@@ -1,5 +1,3 @@
-#!/usr/bin/env ruby
-
 require 'spec_helper'
 
 describe Puppet::Type.type(:system_attributes).provider(:system_attributes) do

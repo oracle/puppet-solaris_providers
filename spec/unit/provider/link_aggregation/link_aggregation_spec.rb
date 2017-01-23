@@ -1,5 +1,3 @@
-#!/usr/bin/env ruby
-
 require 'spec_helper'
 describe Puppet::Type.type(:link_aggregation).provider(:link_aggregation) do
 

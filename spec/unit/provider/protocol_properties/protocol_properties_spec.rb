@@ -1,5 +1,3 @@
-#!/usr/bin/env ruby
-
 require 'spec_helper'
 
 describe Puppet::Type.type(:protocol_properties).provider(:protocol_properties) do

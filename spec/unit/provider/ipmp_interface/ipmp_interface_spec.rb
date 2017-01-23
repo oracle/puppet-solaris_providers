@@ -1,5 +1,3 @@
-#!/usr/bin/env ruby
-
 require 'spec_helper'
 
 describe Puppet::Type.type(:ipmp_interface).provider(:ipmp_interface) do

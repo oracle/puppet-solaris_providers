@@ -1,5 +1,3 @@
-#!/usr/bin/env ruby
-
 require 'spec_helper'
 
 describe Puppet::Type.type(:process_scheduler).provider(:process_scheduler) do

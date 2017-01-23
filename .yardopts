@@ -1,0 +1,8 @@
+--markup markdown
+--markup-provider=redcarpet
+--readme docs/readme_stub.md
+--template-path yardoc/templates
+--files CO*.md,api/**/*.md
+--hide-void-return
+--output-dir=docs
+lib/**/*.rb

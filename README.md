@@ -26,54 +26,20 @@ The Oracle Solaris Providers module currently enables configuration of the
 following:
 
 * Boot Environments via beadm
-
-  * [boot_environment](doc/boot_environment.md)
-
 * Naming Services via svccfg, svcprop
-  * [dns](doc/dns.md)
-  * [ldap](doc/ldap.md)
-  * [nis](doc/nis.md)
-  * [nsswitch](doc/nsswitch.md)
 * Image Pacakging System (IPS) configuration via pkg
-  * [pkg_facet](doc/pkg_facet.md)
-  * [pkg_mediator](doc/pkg_mediator.md)
-  * [pkg_publisher](doc/pkg_publisher.md)
-  * [pkg_variant](doc/pkg_variant.md)
 * Solaris Integrated Load Balancer (ILB) via ilbadm
-  * [ilb_server](doc/ilb_server.md)
-  * [ilb_servergroup](doc/ilb_servergroup.md)
-  * [ilb_healthcheck](doc/ilb_healthcheck.md)
-  * [ilb_rule](doc/ilb_rule.md)
 * Solaris Elastic Virtual Switch (EVS)  via evsadm
-  * [evs](doc/evs.md)
-  * [evs_ipnet](doc/evs_ipnet.md)
-  * [evs_properties](doc/evs_properties.md)
-  * [evs_vport](doc/evs_vport.md)
 * Service Management Facility (SMF) Properties via svccfg, svcprop
-  * [svccfg](doc/svccfg.md)
 * IP Interface Configuration via ipadm
-  * [address_object](doc/address_object.md)
-  * [address_properties](doc/address_properties.md)
-  * [interface_properties](doc/interface_properties.md)
-  * [ip_interface](doc/ip_interface.md)
-  * [ipmp_interface](doc/ipmp_interface.md)
-  * [protocol_properties](doc/protocol_properties.md)
-  * [vni_interface](doc/vni_interface.md)
 * Datalink Management via dladm
-  * [etherstub](doc/etherstub.md)
-  * [ip_tunnel](doc/ip_tunnel.md)
-  * [link_aggregation](doc/link_aggregation.md)
-  * [link_properties](doc/link_properties.md)
-  * [solaris_vlan](doc/solaris_vlan.md)
-  * [vnic](doc/vnic.md)
-* ZFS via chmod
-  * [zfs_acl](doc/zfs_acl.md)
-  * [system_attributes](doc/system_attributes.md)
+* ZFS ACLs and file Attributes via chmod
 
 Oracle Solaris Providers override the core Puppet providers for:
 
 * Zones via zoneadm, zonecfg
-  * [zone](doc/zone.md)
+
+### See [documentation index](docs/_index.html) for details
 
 ## Setup
 

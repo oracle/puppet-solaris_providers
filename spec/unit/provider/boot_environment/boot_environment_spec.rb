@@ -1,5 +1,3 @@
-#!/usr/bin/env ruby
-
 require 'spec_helper'
 
 describe Puppet::Type.type(:boot_environment).provider(:boot_environment) do
@@ -73,7 +71,13 @@ describe Puppet::Type.type(:boot_environment).provider(:boot_environment) do
         with(:create, '-d', '\'new be\'', '-o', 'property=value', 'be1')
       expect(provider.create).to eq(nil)
     end
-    it "an active BE" do
+    it "an inactive BE with :activate => false" do
+      params[:activate] = :false
+      described_class.expects(:beadm).
+        with(:create, '-d', '\'new be\'', '-o', 'property=value', 'be1')
+      expect(provider.create).to eq(nil)
+    end
+    it "an active BE with :activate => true" do
       params[:activate] = :true
       described_class.expects(:beadm).
         with(:create, '-a', '-d', '\'new be\'', '-o', 'property=value', 'be1')

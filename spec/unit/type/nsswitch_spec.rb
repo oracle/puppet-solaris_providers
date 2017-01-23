@@ -1,4 +1,3 @@
-#!/usr/bin/env rspec
 require 'spec_helper'
 
 describe Puppet::Type.type(:nsswitch) do
@@ -52,8 +51,10 @@ describe Puppet::Type.type(:nsswitch) do
         end
       end
       context "rejects #{type}" do
-        (%w(guess hesiod filesldap ldapfiles) +
+        (%w(guess hesiod filesldap ldapfiles user) +
          ["files guess"]).each do |thing|
+          # only printer accepts user
+          next if type == :printer && thing == "user"
           it thing.inspect do
             params[type] = thing
             expect { resource }.to raise_error(Puppet::Error, error_pattern)
@@ -73,5 +74,13 @@ describe Puppet::Type.type(:nsswitch) do
         end
       end
     }
+    context "accepts printer" do
+      %w(user).each do |thing|
+        it thing.inspect do
+          params[:printer] = thing
+          expect { resource }.not_to raise_error
+        end
+      end
+    end
   end
 end

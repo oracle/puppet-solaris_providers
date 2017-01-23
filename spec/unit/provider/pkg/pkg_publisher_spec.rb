@@ -1,5 +1,3 @@
-#!/usr/bin/env ruby
-
 require 'spec_helper'
 require_relative  '../../../../lib/puppet/type/pkg_publisher'
 require_relative '../../../../lib/puppet/provider/pkg_publisher/solaris.rb'

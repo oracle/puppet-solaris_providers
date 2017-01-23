@@ -42,7 +42,7 @@ Puppet::Type.type(:nsswitch).provide(:nsswitch,
   end
 
   def self.prefetch(resources)
-    binding.pry
+    things = instances
     resources.keys.each { |key|
       things.find { |prop|
         # key.to_s in case name uses newvalues and is converted to symbol
