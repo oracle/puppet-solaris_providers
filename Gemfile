@@ -11,6 +11,9 @@ group(:development, :test) do
   gem 'psych', :require => false
   gem 'puppet', '4.7.0', :require => true
   gem 'pkg-config', :require => false
+  # Docs
+  gem 'puppet-strings'
+  gem 'redcarpet'
 end
 
 gem "rubocop", "~> 0.26.1", :platforms => [:ruby]

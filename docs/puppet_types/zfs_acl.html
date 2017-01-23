@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>
+  Resource Type: zfs_acl
+  
+    &mdash; Documentation by YARD 0.9.5
+  
+</title>
+
+  <link rel="stylesheet" href="../css/style.css" type="text/css" charset="utf-8" />
+
+  <link rel="stylesheet" href="../css/common.css" type="text/css" charset="utf-8" />
+
+<script type="text/javascript" charset="utf-8">
+  pathId = "puppet_types::zfs_acl";
+  relpath = '../';
+</script>
+
+
+  <script type="text/javascript" charset="utf-8" src="../js/jquery.js"></script>
+
+  <script type="text/javascript" charset="utf-8" src="../js/app.js"></script>
+
+
+  </head>
+  <body>
+    <div class="nav_wrap">
+      <iframe id="nav" src="../puppet_type_list.html"></iframe>
+      <div id="resizer"></div>
+    </div>
+
+    <div id="main" tabindex="-1">
+      <div id="header">
+        <div id="menu">
+  
+    <a href="../_index.html">Index (z)</a> &raquo;
+    <span class='title'><span class='object_link'>Resource Types</span></span>
+     &raquo; 
+    <span class="title">zfs_acl</span>
+  
+</div>
+
+        <div id="search">
+  
+    <a class="full_list_link" id="puppet_type_list_link"
+        href="../puppet_type_list.html">
+
+        <svg width="24" height="24">
+          <rect x="0" y="4" width="24" height="4" rx="1" ry="1"></rect>
+          <rect x="0" y="12" width="24" height="4" rx="1" ry="1"></rect>
+          <rect x="0" y="20" width="24" height="4" rx="1" ry="1"></rect>
+        </svg>
+    </a>
+  
+</div>
+        <div class="clear"></div>
+      </div>
+
+      <iframe id="search_frame" src="../puppet_type_list.html"></iframe>
+
+      <div id="content"><h1>Resource Type: zfs_acl</h1>
+<div class="box_info">
+  <dl>
+    <dt>Defined in:</dt>
+    <dd>
+      lib/puppet/type/zfs_acl.rb
+    </dd>
+  </dl>
+  
+  <dl>
+    <dt>Providers:</dt>
+    <dd>
+      
+        <span class='object_link'><a href="../puppet_providers_zfs_acl/zfs_acl.html" title="puppet_providers_zfs_acl::zfs_acl (puppet_provider)">zfs_acl</a></span><br/>
+      
+    </dd>
+  </dl>
+  
+</div>
+<h2>Overview</h2>
+<div class="docstring">
+  <div class="discussion">
+    <p>Manage NFSv4 ACL Specifications on ZFS Files.
+  See chmod(1), acl(7)</p>
+
+<p>Simple examples:</p>
+
+<p>This is a contrived example to show setting permissions equavalent to 755
+   it could be more easily acomplished via the File provider. Once any acl
+   customization is required all permissions must be managed via this provider.</p>
+
+<pre class="code ruby"><code class="ruby">    zfs_acl { &#39;/root/foo&#39;:
+      ensure =&gt; &#39;present&#39;,
+      acl    =&gt; [
+        {
+         &#39;target&#39; =&gt; &#39;owner@&#39;,
+         &#39;perm_type&#39; =&gt; &#39;allow&#39;,
+         &#39;perms&#39; =&gt; [&#39;read_data&#39;, &#39;write_data&#39;, &#39;append_data&#39;, &#39;execute&#39;],
+        },
+        {
+         &#39;target&#39; =&gt; &#39;group@&#39;,
+         &#39;perm_type&#39; =&gt; &#39;allow&#39;,
+         &#39;perms&#39; =&gt; [&#39;read_data&#39;, &#39;execute&#39;],
+        },
+        {
+         &#39;target&#39; =&gt; &#39;everyone@&#39;,
+         &#39;perm_type&#39; =&gt; &#39;allow&#39;,
+         &#39;perms&#39; =&gt; [&#39;read_data&#39;, &#39;execute&#39;],
+        },
+     ],
+    }
+</code></pre>
+
+<p>The following example sets permissions equavalent to 755 and also grants
+  the full set of permissions to user jack but removes the write_acl
+  permission. The *_set permissions are expended internally and applied
+  individually.</p>
+
+<pre class="code ruby"><code class="ruby">    zfs_acl { &#39;/root/foo&#39;:
+      ensure =&gt; &#39;present&#39;,
+      acl    =&gt; [
+        {
+          &#39;target&#39; =&gt; &#39;user:jack&#39;,
+          &#39;perm_type&#39; =&gt; &#39;deny&#39;,
+          &#39;perms&#39; =&gt; &#39;write_acl&#39;,
+        },
+        {
+          &#39;target&#39; =&gt; &#39;user:jack&#39;,
+          &#39;perm_type&#39; =&gt; &#39;allow&#39;,
+          &#39;perms&#39; =&gt; &#39;full_set&#39;,
+        },
+        {
+         &#39;target&#39; =&gt; &#39;owner@&#39;,
+         &#39;perm_type&#39; =&gt; &#39;allow&#39;,
+         &#39;perms&#39; =&gt; [&#39;read_data&#39;, &#39;write_data&#39;, &#39;append_data&#39;, &#39;execute&#39;],
+        },
+        {
+         &#39;target&#39; =&gt; &#39;group@&#39;,
+         &#39;perm_type&#39; =&gt; &#39;allow&#39;,
+         &#39;perms&#39; =&gt; [&#39;read_data&#39;, &#39;execute&#39;],
+        },
+        {
+         &#39;target&#39; =&gt; &#39;everyone@&#39;,
+         &#39;perm_type&#39; =&gt; &#39;allow&#39;,
+         &#39;perms&#39; =&gt; [&#39;read_data&#39;, &#39;execute&#39;],
+        },
+     ],
+    }
+</code></pre>
+
+<p><strong>Autorequires:</strong> If Puppet is managing the file of a zfs_acl resource or
+  the user or group of an ACE, the zfs_acl type will autorequire them.</p>
+
+<p><strong>Note:</strong> Use of the File provider to manage permissions in addition to this
+  type may result in changes being applied at every catalog application.</p>
+
+  </div>
+</div>
+<div class="tags">
+  
+
+</div>
+<div class="tags">
+  <p class="tag_title">Properties</p>
+  <ul>
+    
+    <li>
+      <span class="name">acl</span>
+      
+      
+      <div class="docstring">
+        <div class="discussion">
+          <p>Access Control List, an ordered array of ACE hashes to set on the
+ file. Ordering of the ACL is important.  The 0th ACL entry will be first
+ in the array.</p>
+
+<p>Each ACE is defined in the format</p>
+
+<pre class="code ruby"><code class="ruby">      {
+        target        =&gt; &#39;&lt;target_string&gt;&#39;,
+        perms         =&gt; [&lt;perms_array&gt;],
+        inheritance   =&gt; [&lt;flags_array&gt;],
+        perm_type     =&gt; &lt;&#39;allow&#39;|&#39;deny&#39;|&#39;audit&#39;|&#39;alarm&#39;&gt;
+      }
+</code></pre>
+
+<p>Target: Target string includes the standard owner@, group@,
+  and everyone@ as well as the fine grained user:<username> and
+  group:<groupname> targets. The usersid:, groupsid:, and sid: targets
+  are not supported by this module.</p>
+
+<p>Attempts to set permissions for non-existent users and groups will fail.</p>
+
+<p>Perms:
+ Individual Permissions:
+     &#39;read_data&#39;, &#39;write_data&#39;, &#39;append_data&#39;, &#39;read_xattr&#39;, &#39;write_xattr&#39;,
+     &#39;execute&#39;, &#39;delete_child&#39;, &#39;read_attributes&#39;, &#39;write_attributes&#39;,
+     &#39;delete&#39;, &#39;read_acl&#39;, &#39;write_acl&#39;, &#39;write_owner&#39;, &#39;synchronize&#39;</p>
+
+<p>Directory Permissions:
+     &#39;list_directory&#39;, &#39;add_subdirectory&#39;, &#39;add_file&#39;</p>
+
+<p>Special Sets:
+     &#39;full_set&#39;, &#39;modify_set&#39;, &#39;read_set&#39;, and &#39;write_set&#39;
+     <strong>Note:</strong> Sets are provided for compatiblity, permissions are
+     managed and reported individually.</p>
+
+<p>&#39;full_set&#39;
+     All permissions.</p>
+
+<p>&#39;modify_set&#39;
+     All permissions except write_acl and write_owner.
+     Approximately: rwx</p>
+
+<p>&#39;read_set&#39;
+     read_data, read_acl, read_attributes, and read_xattr.
+     Approximately: r--</p>
+
+<p>&#39;write_set&#39;
+     write_data, append_data, write_attributes, and write_xattr
+     Approximately: -w-</p>
+
+<p>Inheritance: &#39;file_inherit&#39;, &#39;dir_inherit&#39;, &#39;inherit_only&#39;, &#39;no_propagate&#39;, &#39;absent&#39;</p>
+
+<p>Perm Type: &#39;allow&#39;, &#39;deny&#39;, &#39;audit&#39;, &#39;alarm&#39;
+  Currently, Solaris does not generate alarms.</p>
+
+<p>See chmod(1) NFSv4 ACL Specification for additional details</p>
+
+        </div>
+      </div>
+      
+      
+    </li>
+    
+    <li>
+      <span class="name">ensure</span>
+      
+      <span class="default"> (defaults to: <em>present</em>)</span>
+      
+      
+      <div class="docstring">
+        <div class="discussion">
+          <p>The basic property that the resource should be in.</p>
+
+        </div>
+      </div>
+      
+      
+      <div>
+        Supported values:
+        <ul>
+          
+          <li>
+            
+            present
+          </li>
+          
+          <li>
+            
+            absent
+          </li>
+          
+        </ul>
+      </div>
+      
+    </li>
+    
+    <li>
+      <span class="name">file</span>
+      
+      
+      <div class="docstring">
+        <div class="discussion">
+          <p>Fully specified path to the file to be managed</p>
+
+        </div>
+      </div>
+      
+      
+      <div>
+        Supported values:
+        <ul>
+          
+          <li>
+            
+            /^\/.*/
+          </li>
+          
+        </ul>
+      </div>
+      
+    </li>
+    
+  </ul>
+</div>
+
+
+<div class="tags">
+  <p class="tag_title">Parameters</p>
+  <ul>
+    
+    <li>
+      <span class="name">name (namevar)</span>
+      
+      
+      <div class="docstring">
+        <div class="discussion">
+          <p>The name for the set of ACLs to set on the file.
+Fully qualified paths will be propagated to the file parameter</p>
+
+        </div>
+      </div>
+      
+      
+    </li>
+    
+    <li>
+      <span class="name">purge_acl</span>
+      
+      <span class="default"> (defaults to: <em>true</em>)</span>
+      
+      
+      <div class="docstring">
+        <div class="discussion">
+          <p>Clear all ACEs which are not explicitly defined for this resource.
+This is the only implemented behavior</p>
+
+        </div>
+      </div>
+      
+      
+      <div>
+        Supported values:
+        <ul>
+          
+          <li>
+            
+            true
+          </li>
+          
+        </ul>
+      </div>
+      
+    </li>
+    
+    <li>
+      <span class="name">set_default_perms</span>
+      
+      <span class="default"> (defaults to: <em>true</em>)</span>
+      
+      
+      <div class="docstring">
+        <div class="discussion">
+          <p>Use the default set of permissions in addition to specified ACEs,
+  where applicable directory permissions are automatically granted
+  from the listed set.</p>
+
+<p><strong>Note</strong> Only explicitly defined permissions will be shown in change output.</p>
+
+<p>Default: true</p>
+
+<p>Equavalent to:</p>
+
+<pre class="code ruby"><code class="ruby">       {
+         target      =&gt; &#39;owner@&#39;,
+         perms       =&gt; [ &#39;read_xattr&#39;, &#39;write_xattr&#39;, &#39;read_attributes&#39;,
+                          &#39;write_attributes&#39;, &#39;read_acl&#39;, &#39;write_acl&#39;,
+                          &#39;write_owner&#39;, &#39;synchronize&#39; ]&#39;,
+         perm_type  =&gt; &#39;allow&#39;
+       },
+       {
+         target    =&gt; &#39;group@&#39;,
+         perms     =&gt; [ &#39;read_xattr&#39;, &#39;read_attributes&#39;, &#39;read_acl&#39;, &#39;synchronize&#39; ]&#39;,
+         perm_type =&gt;  &#39;allow&#39;
+       },
+       {
+         target     =&gt; &#39;everyone@&#39;,
+         perms      =&gt; [ &#39;read_xattr&#39;, &#39;read_attributes&#39;, &#39;read_acl&#39;, &#39;synchronize&#39; ]&#39;,
+         perm_type  =&gt; &#39;allow&#39;
+       }
+</code></pre>
+
+        </div>
+      </div>
+      
+      
+      <div>
+        Supported values:
+        <ul>
+          
+          <li>
+            
+            true
+          </li>
+          
+          <li>
+            
+            false
+          </li>
+          
+        </ul>
+      </div>
+      
+    </li>
+    
+  </ul>
+</div>
+
+
+</div>
+
+      <div id="footer">
+  Generated on Mon Jan 23 16:57:28 2017 by
+  <a href="http://yardoc.org" title="Yay! A Ruby Documentation Tool" target="_parent">yard</a>
+  0.9.5 (ruby-2.1.6).
+</div>
+
+    </div>
+  </body>
+</html>
