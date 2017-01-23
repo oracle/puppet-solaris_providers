@@ -39,7 +39,7 @@ Oracle Solaris Providers override the core Puppet providers for:
 
 * Zones via zoneadm, zonecfg
 
-### See [documentation index](docs/_index.html) for details
+### See [documentation index](https://oracle.github.io/puppet-solaris_providers/_index.html) for details
 
 ## Setup
 
