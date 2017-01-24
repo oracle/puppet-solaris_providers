@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2013, 2014, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2013, 2017, Oracle and/or its affiliates. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -20,24 +20,31 @@ Puppet::Type.type(:link_properties).provide(:link_properties) do
   defaultfor :osfamily => :solaris, :kernelrelease => ['5.11', '5.12']
   commands :dladm => '/usr/sbin/dladm'
 
+  mk_resource_methods
+
   def initialize(value={})
     super(value)
     @linkprops = {}
   end
 
   def self.instances
-    dladm("show-link", "-p", "-o", "link").
-      split("\n").collect do |link|
-      props = {}
-      dladm("show-linkprop", "-c", "-o", "property,value",
-            link.strip()).split("\n").collect do |line|
-        next if line.strip.end_with? ":"
-        data = line.split(":", 2)
-        name, value = data
-        props[name] = value.delete("\\")  # remove the escape character
+    links = Hash.new{ |h,k| h[k] = {} }
+    dladm("show-linkprop", "-c", "-o",
+          'LINK,PROPERTY,PERM,VALUE,DEFAULT,POSSIBLE').
+      each_line do |line|
+      line = line.gsub('\\:','%colon%')
+      link,prop,perm,value,_default,_possible = line.split(":")
+      next if perm != 'rw'
+      value = value.gsub('%colon%',':')
+      if value.empty?
+        value = :absent
+        value = _default unless _default.empty?
       end
+      links[link][prop] = value
+    end
 
-      new(:name => link.strip(),
+    links.each_pair.collect do |link,props|
+      new(:name => link,
           :ensure => :present,
           :properties => props)
     end
@@ -51,15 +58,11 @@ Puppet::Type.type(:link_properties).provide(:link_properties) do
     end
   end
 
-  def properties
-    @property_hash[:properties]
-  end
-
   def properties=(value)
-    dladm("set-linkprop", add_properties(value), @resource[:name])
+    dladm("set-linkprop", *add_properties(value), @resource[:name])
   end
 
-  def add_properties(props)
+  def add_properties(props=@resource[:properties])
     a = []
     props.each do |key, value|
       a << "#{key}=#{value}"
@@ -68,35 +71,11 @@ Puppet::Type.type(:link_properties).provide(:link_properties) do
   end
 
   def exists?
-    if @resource[:properties] == nil
-      return :false
-    end
-
-    @resource[:properties].each do |key, value|
-      p = exec_cmd(command(:dladm), "show-linkprop", @resource[:link],
-                   "-c", "-p", key, "-o", "value")
-      if p[:exit] == 1
-        Puppet.warning "Property '#{key}' not found for link " \
-                       "#{@resource[:link]}"
-        next
-      end
-
-      if p[:out].strip != value
-        @linkprops[key] = value
-      end
-    end
-
-    return @linkprops.empty?
+    @property_hash[:ensure] == :present
   end
 
   def create
-    if @linkprops
-      dladm("set-linkprop", add_properties(@linkprops), @resource[:link])
-    end
-  end
-
-  def exec_cmd(*cmd)
-    output = Puppet::Util::Execution.execute(cmd, :failonfail => false)
-    {:out => output, :exit => $CHILD_STATUS.exitstatus}
+    # Cannot create link props. They must already exist
+    fail("Link must exist for properties to be set.")
   end
 end
