@@ -1,5 +1,6 @@
 # 2.0.1
 ## Bugs Fixes and Enhancements
+* 23593309 rspec tests need to be written for solaris_providers link_properties
 * 25416733 puppet nsswitch does not accept user as a printer database
 * 25416766 puppet module regressions 2.0.0
 * 25438739 puppet zone provider does not understand 'unavailable' state
