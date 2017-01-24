@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2013, 2016, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2013, 2017, Oracle and/or its affiliates. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -33,13 +33,21 @@ Puppet::Type.newtype(:link_properties) do
   newproperty(:properties) do
     desc "A hash table of propname=propvalue entries to apply to the link. See ipadm(8)"
 
-    def property_matches?(current, desired)
-      desired.each do |key, value|
-        if current[key] != value
-          return :false
-        end
-      end
-      return :true
+    def insync?(is)
+      # There will almost always be more properties on the system than
+      # defined in the resource. Make sure the properties in the resource
+      # are insync
+      should.each_pair { |prop,value|
+        return false unless is.has_key?(prop)
+        # Stop after the first out of sync property
+        return false unless property_matches?(is[prop],value)
+      }
+      true
+    end
+
+    validate do |value|
+      fail "must be a Hash" unless value.kind_of?(Hash)
+      fail "Hash cannot be empty" if value.empty?
     end
   end
 end
