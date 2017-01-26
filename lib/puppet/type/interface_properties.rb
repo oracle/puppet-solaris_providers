@@ -52,10 +52,10 @@ Puppet::Type.newtype(:interface_properties) do
     isnamevar
 
     validate do |value|
-      unless (3..16).include? value.split('/')[0].length
+      unless (3..16).cover? value.split('/')[0].length
         fail "Invalid interface '#{value}' must be 3-16 characters"
       end
-      unless /^[a-z_0-9]+[0-9]+(?:\/ipv[46]?)?$/.match(value)
+      unless /^[a-z_0-9]+[0-9]+(?:\/ipv[46]?)?$/ =~ value
         fail "Invalid interface name '#{value}' must match a-z _ 0-9"
       end
     end
@@ -81,13 +81,13 @@ Puppet::Type.newtype(:interface_properties) do
       # There will almost always be more properties on the system than
       # defined in the resource. Make sure the properties in the resource
       # are insync
-      should.each_pair { |proto,hsh|
-        return false unless is.has_key?(proto)
-        hsh.each_pair { |key,value|
+      should.each_pair do |proto,hsh|
+        return false unless is.key?(proto)
+        hsh.each_pair do |key,value|
           # Stop after the first out of sync property
           return false unless property_matches?(is[proto][key],value)
-        }
-      }
+        end
+      end
       true
     end
 
@@ -103,12 +103,12 @@ Puppet::Type.newtype(:interface_properties) do
     end
   end
   autorequire(:ip_interface) do
-    children = catalog.resources.select { |resource|
+    children = catalog.resources.select do |resource|
       resource.type == :ip_interface &&
         self[:name].split('/').include?(resource[:name])
-    }
-    children.each.collect { |child|
+    end
+    children.each.collect do |child|
       child[:name]
-    }
+    end
   end
 end

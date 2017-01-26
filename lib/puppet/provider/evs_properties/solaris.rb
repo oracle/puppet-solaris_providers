@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2015, 2017 Oracle and/or its affiliates. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -32,8 +32,7 @@ Puppet::Type.type(:evs_properties).provide(:evs_properties) do
     begin
       p = evsadm("show-prop", "-c", "-o", "property,value")
     rescue Puppet::ExecutionFailure => e
-      raise Puppet::Error, "Failed to prefetch client property: \n" \
-                           "#{e.inspect}"
+      fail "Failed to prefetch client property: \n #{e.inspect}"
     end
 
     property, value = p.strip.split(":", 2)
@@ -43,7 +42,6 @@ Puppet::Type.type(:evs_properties).provide(:evs_properties) do
 
     Puppet.debug "Client Property: #{client_property.inspect}"
     client_property
-
   end
 
   def self.get_control_properties
@@ -53,30 +51,29 @@ Puppet::Type.type(:evs_properties).provide(:evs_properties) do
     vxlan_addrs = []
     begin
       evsadm("show-controlprop", "-c", "-o",
-             "property,value,vlan_range,vxlan_range,host,flat").\
+             "property,value,vlan_range,vxlan_range,host,flat").
         split("\n").collect do |each_prop|
-        each_prop.gsub! "\\:", "\\"
-        property, value, vlan_range, vxlan_range, host, flat = \
-                                                        each_prop.strip().split(":")
+        each_prop.gsub! "\\:", "%colon%"
+        property, value, vlan_range, vxlan_range, host, flat =
+          each_prop.strip().split(":")
         case property
         when "l2-type"
           control_props[:l2_type] = value
         when "uplink-port"
           next if value.empty?
           host = "" if host == nil
-          val = "#{value};#{vlan_range};#{vxlan_range};#{host};"\
-                "#{flat}"
+          val = [value,vlan_range,vxlan_range,host,flat].join(';')
           uplink_ports << val
         when "uri-template"
-          value.gsub! "\\", ":"
+          value.gsub! "%colon%", ":"
           host = "" if host == nil
-          val = "#{value};#{host}"
+          val = [value,host].join(';')
           uri_templates << val
         when "vlan-range"
           control_props[:vlan_range] = value
         when "vxlan-addr"
           host = "" if host == nil
-          val = "#{value};#{vxlan_range};#{host}"
+          val = [value,vxlan_range,host].join(';')
           vxlan_addrs << val
         when "vxlan-ipvers"
           control_props[:vxlan_ipvers] = value
@@ -185,21 +182,20 @@ Puppet::Type.type(:evs_properties).provide(:evs_properties) do
   def flush
     case @resource[:name]
     when "controller_property"
-      if @property_flush.has_key?(:controller)
-        raise Puppet::Error, "controller_property does not have "\
-                             "'controller' property. Try client_property"
+      if @property_flush.key?(:controller)
+        fail "controller_property does not have " <<
+             "'controller' property. Try client_property"
       end
 
       props = []
       @property_flush.each do |key, value|
         # Change symbol to string
-        k = key.to_s.gsub! "_", "-"
+        k = key.to_s.tr! "_", "-"
         case k
         # uplink-port property takes up to five values:
         # link, [vlan-range], [vxlan-range], [host] and [flat]
         when "uplink-port"
-          link, vlan, vxlan, host, flat = \
-                                   value.strip().split(";", -1)
+          link, vlan, vxlan, host, flat = value.strip().split(";", -1)
 
           # store host parameter if exists
           host = host != "" ? ["-h", host] : []
@@ -258,20 +254,19 @@ Puppet::Type.type(:evs_properties).provide(:evs_properties) do
         # Do not terminate the script even if there is an error
         # Just continue to next script
         rescue Puppet::ExecutionFailure => e
-          Puppet.err "Cannot apply the property: \n#{e.inspect}"
+          fail "Cannot apply the property: \n#{e.inspect}"
         end
       end
 
     when "client_property"
-      unless @property_flush.has_key?(:controller)
-        raise Puppet::Error,
-              "'controller' property must be specified"
+      unless @property_flush.key?(:controller)
+        fail "'controller' property must be specified"
       end
       prop = "controller=#{@property_flush[:controller]}"
       begin
         set_client_property(prop)
       rescue Puppet::ExecutionFailure => e
-        raise Puppet::Error, "Cannot apply the property:\n #{e.inspect}"
+        fail "Cannot apply the property:\n #{e.inspect}"
       end
     end
 
@@ -279,4 +274,3 @@ Puppet::Type.type(:evs_properties).provide(:evs_properties) do
     @property_hash = resource.to_hash
   end
 end
-

@@ -37,32 +37,31 @@ The following database limitations are also applicable:
   [:default, :host, :password, :group, :network, :rpc, :ether,
   :netmask, :bootparam, :publickey, :netgroup, :automount, :alias, :service,
   :project, :auth_attr, :prof_attr, :tnrhtp, :tnrhdb, :sudoer, :ipnodes,
-  :protocol, :printer].each { |prop|
+  :protocol, :printer].each do |prop|
 
-  newproperty(prop) do
-    desc "The #{prop} database configuration entry"
+    newproperty(prop) do
+      desc "The #{prop} database configuration entry"
 
-    # Mostly validate options ignoring any additional criteria
-    validate do |value|
-      unless prop == :printer
-        expr=%r(\b(files|ldap|dns)\b|:\[.*\]|\s)
-        expr_spc=%r(\b(files|ldap|dns)\b|:\[.*\])
-      else
-        expr=%r(\b(files|ldap|dns|user)\b|:\[.*\]|\s)
-        expr_spc=%r(\b(files|ldap|dns|user)\b|:\[.*\])
-      end
-      next if value == 'absent'
-      fail "cannot be empty" if value.empty?
-      %w(files ldap dns user).each { |word|
-        fail "duplicate entry #{word}" if value.scan(word).length > 1
-      }
-      unless value.gsub(expr,'').empty?
-        # return the offending portion without removing interstitial spaces
-        fail "Invalid database '" <<
-             value.gsub(expr_spc,'').strip << "'"
+      # Mostly validate options ignoring any additional criteria
+      validate do |value|
+        unless prop == :printer
+          expr=%r(\b(files|ldap|dns)\b|:\[.*\]|\s)
+          expr_spc=%r(\b(files|ldap|dns)\b|:\[.*\])
+        else
+          expr=%r(\b(files|ldap|dns|user)\b|:\[.*\]|\s)
+          expr_spc=%r(\b(files|ldap|dns|user)\b|:\[.*\])
+        end
+        next if value == 'absent'
+        fail "cannot be empty" if value.empty?
+        %w(files ldap dns user).each do |word|
+          fail "duplicate entry #{word}" if value.scan(word).length > 1
+        end
+        unless value.gsub(expr,'').empty?
+          # return the offending portion without removing interstitial spaces
+          fail "Invalid database '" <<
+               value.gsub(expr_spc,'').strip << "'"
+        end
       end
     end
-
   end
-  }
 end

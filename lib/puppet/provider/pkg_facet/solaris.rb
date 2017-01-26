@@ -54,9 +54,8 @@ Puppet::Type.type(:pkg_facet).provide(:pkg_facet) do
     if @property_hash[:ensure] == :present and @resource[:value] != nil
       # retrieve the string representation of @resource[:value] since it
       # gets translated to an object by Puppet
-      return (@property_hash[:ensure] == :present and \
-              @property_hash[:value].downcase == \
-              @resource[:value].downcase)
+      return (@property_hash[:ensure] == :present &&
+              @property_hash[:value].casecmp(@resource[:value]).zero?)
     end
     @property_hash[:ensure] == :present
   end
@@ -72,8 +71,8 @@ Puppet::Type.type(:pkg_facet).provide(:pkg_facet) do
     # Apply any stashed changes and remove the class variable
     cv = Puppet::Type::Pkg_facet::ProviderPkg_facet.send(:class_variable_get, :@@classvars)
     # If changes have been stashed apply them
-    if cv[:changes].length > 0
-      Puppet.debug("Applying %s deferred facet changes" % cv[:changes].length)
+    unless cv[:changes].empty?
+      Puppet.debug("Applying %s defered facet changes" % cv[:changes].length)
       pkg("change-facet", cv[:changes])
     end
 

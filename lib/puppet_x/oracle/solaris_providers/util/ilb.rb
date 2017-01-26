@@ -21,22 +21,22 @@ require File.expand_path(File.join(File.dirname(__FILE__), '..', 'util.rb'))
 # instead of true false as in validation.rb
 class PuppetX::Oracle::SolarisProviders::Util::Ilb
   def self.valid_portspec?(value)
-    if value.match(/\d+-\d+/)
+    if value =~ /\d+-\d+/
       # Check port ranges
-      value.split('-').each { |prt|
-        unless prt.match(/^\d+$/)
+      value.split('-').each do |prt|
+        unless prt =~ /^\d+$/
           fail "Invalid port spec #{value} -> #{prt}"
         end
-        unless (1...65535).include?(prt.to_i)
+        unless (1...65535).cover?(prt.to_i)
           fail "Invalid port #{prt} out of range 1-65535"
         end
-      }
-    elsif value.match(/^\d+$/)
+      end
+    elsif value =~ /^\d+$/
       # Check purely numeric ports
-      unless (1...65535).include?(value.to_i)
+      unless (1...65535).cover?(value.to_i)
         fail "Invalid port #{value} out of range 1-65535"
       end
-    elsif !value.match(/^\p{Alnum}+$/)
+    elsif value !~ /^\p{Alnum}+$/
       # Sort of check string options
       fail "Invalid port #{value} is not numeric or alpha numeric"
     end

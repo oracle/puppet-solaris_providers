@@ -67,15 +67,15 @@ Puppet::Type.type(:zfs_acl).provide(:zfs_acl) do
 
     line_expr = %r(^\d+:|^/|^:)
 
-    entries = ls("-d", "-v", @resource[:file]).
-                each_line.
-                each_with_object([]) do |line,arr|
+    entries = ls("-d", "-v", @resource[:file])
+                .each_line
+                .each_with_object([]) do |line,arr|
       line.strip!
       # Skip any unexpected lines
       next unless lmatch = line.match(line_expr)
 
       # lines which begin with a number are the start of an ACE
-      if $&.match(/^\d+:/)
+      if $& =~ /^\d+:/
         arr.push("")
         arr[-1] = lmatch.post_match
       else
@@ -113,10 +113,6 @@ Puppet::Type.type(:zfs_acl).provide(:zfs_acl) do
     @property_hash[:acl] = [] && acl
   end
 
-  def merge_acl
-
-  end
-
   def create
     self.acl= @resource[:acl]
     return nil
@@ -138,7 +134,7 @@ Puppet::Type.type(:zfs_acl).provide(:zfs_acl) do
 
     # Walk each ACE reduce the set of defaults for each
     # perms array with matches in discovered set
-    acl.each { |ace|
+    acl.each do |ace|
       next unless ace.perm_type == 'allow'
       case ace.target
       when "owner@"
@@ -148,7 +144,7 @@ Puppet::Type.type(:zfs_acl).provide(:zfs_acl) do
       when "everyone@"
         everyone = everyone - ace.perms
       end
-    }
+    end
 
     # If the set is empty all default perms are
     # currently set
@@ -161,7 +157,7 @@ Puppet::Type.type(:zfs_acl).provide(:zfs_acl) do
 
     # Walk each ACE reduce the set of defaults for each
     # perms array with matches in discovered set
-    acl.each { |ace|
+    acl.each do |ace|
       perms = ace.perms.dup - ['read_data', 'write_data', 'execute']
 
       case ace.target
@@ -180,7 +176,7 @@ Puppet::Type.type(:zfs_acl).provide(:zfs_acl) do
 
       # Stop at the first ACE with custom permissions
       return true if not perms.empty?
-    }
+    end
     return false
   end
 
@@ -193,7 +189,7 @@ Puppet::Type.type(:zfs_acl).provide(:zfs_acl) do
     _acl = []
     _default = []
     # Add the default permission set to the first acl entry for owner, everyone and group
-    value.each { |ace|
+    value.each do |ace|
       unless ace.perm_type == 'allow'
         _acl.push(ace)
         next
@@ -214,7 +210,7 @@ Puppet::Type.type(:zfs_acl).provide(:zfs_acl) do
       else
         _acl.push ace
       end
-    }
+    end
 
     # Order here is also important or it will never match the default
     unless owner_found

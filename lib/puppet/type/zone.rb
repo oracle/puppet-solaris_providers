@@ -49,10 +49,12 @@ Puppet::Type.newtype(:zone) do
       def sequence(fs, ss)
         fi = index(fs)
         si= index(ss)
-        (if fi > si
-        then @sequence[si .. fi].map{|i| @state[i]}.reverse
-        else @sequence[fi .. si].map{|i| @state[i]}
-         end)[1..-1]
+        (
+          if fi > si
+          then @sequence[si .. fi].map{|i| @state[i]}.reverse
+          else @sequence[fi .. si].map{|i| @state[i]}
+          end
+        )[1..-1]
       end
 
       def cmp?(a,b)
@@ -94,8 +96,7 @@ Puppet::Type.newtype(:zone) do
     alias_state(:incomplete => :installed,
                 :ready => :installed,
                 :shutting_down => :running,
-                :unavailable => :down
-               )
+                :unavailable => :down)
 
     defaultto :running
 
@@ -122,7 +123,6 @@ Puppet::Type.newtype(:zone) do
     end
 
     def sync
-
       method = nil
       direction = up? ? :up : :down
 
@@ -134,14 +134,13 @@ Puppet::Type.newtype(:zone) do
         provider_sync_send(method)
       end
 
-      ("zone_#{self.should}").intern
+      "zone_#{self.should}".intern
     end
 
     # Are we moving up the property tree?
     def up?
       self.class.fsm.cmp?(self.retrieve, self.should)
     end
-
   end
 
   newparam(:name) do

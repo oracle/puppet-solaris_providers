@@ -33,13 +33,12 @@ Puppet::Type.type(:evs_ipnet).provide(:evs_ipnet) do
       ipnet_list = evsadm("show-ipnet", "-c", "-o",
                           "name,tenant").split("\n")
     rescue Puppet::ExecutionFailure => e
-      raise Puppet::Error,  "Unable to populate IPnet: \n"\
-                            "#{e.inspect}"
+      fail "Unable to populate IPnet: \n#{e.inspect}"
     end
     ipnet_list
   end
 
-  def self.get_ipnet_properties(ipnet_name, tenant,  ensure_val)
+  def self.get_ipnet_properties(ipnet_name, tenant, ensure_val)
     ipnet_properties = {}
     ipnet_fullname = tenant + "/" + ipnet_name
 
@@ -72,7 +71,8 @@ Puppet::Type.type(:evs_ipnet).provide(:evs_ipnet) do
     get_ipnet_prop_list.collect do |each_ipnet|
       ipnet, tenant, subnet = each_ipnet.strip.split(":")
       ipnet_properties = get_ipnet_properties(
-        ipnet, tenant, :present)
+        ipnet, tenant, :present
+      )
       new(ipnet_properties) # Create a provider instance
     end
   end
@@ -92,14 +92,14 @@ Puppet::Type.type(:evs_ipnet).provide(:evs_ipnet) do
   def create
     # Subnet value is required to create an IPnet instance
     if @resource[:subnet].nil?
-      raise Puppet::Error, "Subnet value is missing"
+      fail "Subnet value is missing"
     end
 
     tenant, ipnet_name = get_tenant_and_ipnet_name
     begin
       create_ipnet(tenant, ipnet_name, add_properties(@resource))
     rescue Puppet::ExecutionFailure => e
-      raise Puppet::Error, "Cannot add the IPnet: \n #{e.inspect}"
+      fail "Cannot add the IPnet: \n #{e.inspect}"
     end
   end
 
@@ -108,21 +108,21 @@ Puppet::Type.type(:evs_ipnet).provide(:evs_ipnet) do
     begin
       delete_ipnet(tenant, ipnet_name)
     rescue Puppet::ExecutionFailure => e
-      raise Puppet::Error, "Cannot remove the IPnet: \n #{e.inspect}"
+      fail "Cannot remove the IPnet: \n #{e.inspect}"
     end
   end
 
   ## read-only properties (settable upon creation) ##
   def defrouter=(value)
-    raise Puppet::Error, "defrouter property is settable only upon creation"
+    fail "defrouter property is settable only upon creation"
   end
 
   def subnet=(value)
-    raise Puppet::Error, "subnet property is settable only upon creation"
+    fail "subnet property is settable only upon creation"
   end
 
   def uuid=(value)
-    raise Puppet::Error, "uuid property is settable only upon creation"
+    fail "uuid property is settable only upon creation"
   end
 
   ## read/write property (always updatable) ##
@@ -166,7 +166,7 @@ Puppet::Type.type(:evs_ipnet).provide(:evs_ipnet) do
 
     parsed_val = fullname.strip.split("/")
     if (parsed_val.length != 3)
-      raise Puppet::Error, "Invalid IPnet name"
+      fail "Invalid IPnet name"
     end
     tenant, evs, ipnet = parsed_val
     return tenant, evs + "/" + ipnet
@@ -199,7 +199,7 @@ Puppet::Type.type(:evs_ipnet).provide(:evs_ipnet) do
       begin
         set_ipnet(tenant, ipnet_name, pool_prop)
       rescue Puppet::ExecutionFailure => e
-        raise Puppet::Error, "Cannot update the pool property. \n" \
+        fail "Cannot update the pool property. \n" \
                              "#{e.inspect}"
       end
     end

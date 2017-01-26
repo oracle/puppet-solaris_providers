@@ -19,17 +19,17 @@ require File.expand_path(File.join(File.dirname(__FILE__), '..','util.rb'))
 module PuppetX::Oracle::SolarisProviders::Util::Validation
   def valid_hostname?(hostname)
     # Reject things that bear a strong resembalance to an IPv4 address
-    return false if hostname.match(/\A(?:\d{1,3}\.?){4}\Z/)
+    return false if hostname =~ /\A(?:\d{1,3}\.?){4}\Z/
     # Reject overlong names or repeated dot(.)
     return false if hostname.length > 255 or hostname.scan('..').any?
     hostname = hostname[0...-1] if hostname.index('.', -1)
-    return hostname.split('.').collect { |i|
+    return hostname.split('.').collect do |i|
       ( i.size <= 63 ) and not (
         i.rindex('-', 0) or
         i.index('-', -1) or
         i.scan(/[^a-z\d-]/i).any?
       )
-    }.all?
+      end.all?
   end
 
   def valid_ip?(value)

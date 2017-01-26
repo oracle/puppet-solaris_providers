@@ -25,8 +25,8 @@ Puppet::Type.type(:nis).provide(:nis,
   commands :svccfg => '/usr/sbin/svccfg', :svcprop => '/usr/bin/svcprop'
 
   class << self; attr_accessor :client_fmri, :domain_fmri end
-  Client_fmri = "svc:/network/nis/client"
-  Domain_fmri = "svc:/network/nis/domain"
+  Client_fmri = "svc:/network/nis/client".freeze
+  Domain_fmri = "svc:/network/nis/domain".freeze
 
 
   mk_resource_methods
@@ -39,18 +39,17 @@ Puppet::Type.type(:nis).provide(:nis,
       svcprop("-p", "config", svc).each_line do |line|
         data = line.split()
         fullprop = data[0]
-        if data.length > 2
-          value = data[2..-1].join(" ")
-        else
-          value = nil
-        end
+        value =
+          if data.length > 2
+            data[2..-1].join(" ")
+          end
 
         prop = fullprop.split("/")[1].intern
         # Rebuild securenets input format
         if prop == :securenets
-          ary = value.gsub(%r(\\),'').split
+          ary = value.delete('\\').split
           value = []
-          ary.each_with_index { |val,idx|
+          ary.each_with_index do |val,idx|
             val = '' if val == 'host'
             if idx.even?
               value.push(val)
@@ -58,7 +57,7 @@ Puppet::Type.type(:nis).provide(:nis,
               value[-1] << '/' unless value[-1] && value[-1].empty?
               value[-1] << val
             end
-          }
+          end
         end
         props[prop] = value if validprops.include? prop.to_sym
       end
@@ -70,15 +69,15 @@ Puppet::Type.type(:nis).provide(:nis,
 
   def self.prefetch(resources)
     things = instances
-    resources.keys.each { |key|
-      things.find { |prop|
+    resources.keys.each do |key|
+      things.find do |prop|
         # key.to_s in case name uses newvalues and is converted to symbol
         prop.name == key.to_s
-      }.tap { |provider|
+      end.tap do |provider|
         next if provider.nil?
         resources[key].provider = provider
-      }
-    }
+      end
+    end
   end
 
   def exists?

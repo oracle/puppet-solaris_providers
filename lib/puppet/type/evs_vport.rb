@@ -36,7 +36,7 @@ Puppet::Type.newtype(:evs_vport) do
     desc "The full name of Virtual Port for EVS"
     munge do |value|
       if value.split("/").length != 3
-        raise Puppet::Error, "Invalid VPort name\n" \
+        fail "Invalid VPort name\n" \
                              "Name convention must be <tenant>/<evs>/<vport>"
       else
         value
@@ -65,7 +65,7 @@ Puppet::Type.newtype(:evs_vport) do
       value.split(",").collect do |each_val|
         if not ["mac-nospoof", "restricted", "ip-nospoof",
                 "dhcp-nospoof", "none", ""].include? each_val
-          raise Puppet::Error, "Invalid value \"#{each_val}\". "\
+          fail "Invalid value \"#{each_val}\". "\
                                "Valid values are mac-nospoof, restricted, "\
                                "ip-nospoof, dhcp-nospoof, none."
         end

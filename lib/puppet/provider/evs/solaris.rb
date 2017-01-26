@@ -32,7 +32,7 @@ Puppet::Type.type(:evs).provide(:evs) do
       evs_list = evsadm("show-evs", "-c", "-o", "evs,tenant,status")
                    .split("\n")
     rescue Puppet::ExecutionFailure => e
-      raise Puppet::Error, "Unable to populate EVS instances: \n" \
+      fail "Unable to populate EVS instances: \n" \
                            "#{e.inspect}"
     end
     evs_list
@@ -99,7 +99,7 @@ Puppet::Type.type(:evs).provide(:evs) do
     begin
       create_evs(tenant, evs, add_properties(@resource))
     rescue Puppet::ExecutionFailure => e
-      raise Puppet::Error, "Cannot create EVS: \n#{e.inspect}"
+      fail "Cannot create EVS: \n#{e.inspect}"
     end
   end
 
@@ -108,7 +108,7 @@ Puppet::Type.type(:evs).provide(:evs) do
     begin
       delete_evs(tenant, evs)
     rescue Puppet::ExecutionFailure => e
-      raise Puppet::Error, "Cannot delete EVS: \n#{e.inspect}"
+      fail "Cannot delete EVS: \n#{e.inspect}"
     end
   end
 
@@ -128,19 +128,19 @@ Puppet::Type.type(:evs).provide(:evs) do
 
   ## read-only properties (settable upon creation) ##
   def l2_type=(value)
-    raise Puppet::Error, "l2_type property is settable only upon creation"
+    fail "l2_type property is settable only upon creation"
   end
 
   def vlanid=(value)
-    raise Puppet::Error, "valid property is settable only upon creation"
+    fail "valid property is settable only upon creation"
   end
 
   def vni=(value)
-    raise Puppet::Error, "vni property is settable only upon creation"
+    fail "vni property is settable only upon creation"
   end
 
   def uuid=(value)
-    raise Puppet::Error, "uuid property is settable only upon creation"
+    fail "uuid property is settable only upon creation"
   end
 
   # Create EVS instance
@@ -179,7 +179,7 @@ Puppet::Type.type(:evs).provide(:evs) do
     if usrstr.length == 2
       return usrstr[0], usrstr[1]
     else
-      raise Puppet::Error, "Invalid EVS name #{@resource[:name]} \n" \
+      fail "Invalid EVS name #{@resource[:name]} \n" \
                            "Name convention must be <tenant>/<evs>"
     end
   end
@@ -216,7 +216,7 @@ Puppet::Type.type(:evs).provide(:evs) do
         begin
           set_evsprop(tenant, evs, prop)
         rescue Puppet::ExecutionFailure => e
-          raise Puppet::Error, "Cannot update the property " \
+          fail "Cannot update the property " \
                                "#{key}=#{value}.\n#{e.inspect}"
         end
       end

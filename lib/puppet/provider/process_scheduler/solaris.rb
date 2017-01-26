@@ -26,7 +26,7 @@ Puppet::Type.type(:process_scheduler).provide(:process_scheduler) do
     begin
       sched = dispadmin("-d").split[0]
     rescue Puppet::ExecutionFailure
-      if $!.to_s.match(/class is not set/)
+      if $!.to_s =~ /class is not set/
         # with no default scheduler set dispadmin exits 1
         sched = "TS"
       else
@@ -34,25 +34,23 @@ Puppet::Type.type(:process_scheduler).provide(:process_scheduler) do
       end
     end
     [
-      new(
-       :name => 'current',
+      new(:name => 'current',
        :scheduler => sched,
-       :ensure => :present
-      )
+       :ensure => :present)
     ]
   end
 
   def self.prefetch(resources)
     things = instances
-    resources.keys.each { |key|
-      things.find { |prop|
+    resources.keys.each do |key|
+      things.find do |prop|
         # key.to_s in case name uses newvalues and is converted to symbol
         prop.name == key.to_s
-      }.tap { |provider|
+      end.tap do |provider|
         next if provider.nil?
         resources[key].provider = provider
-      }
-    }
+      end
+    end
   end
 
   def scheduler=(value)

@@ -25,7 +25,9 @@ Puppet::Type.type(:ilb_server).provide(:ilb_server) do
   def self.instances
     groups=Hash.new { |h,k| h[k] = {} }
 
-    ilbadm("show-servergroup", "-o","SGNAME,SERVERID,MINPORT,MAXPORT,IP_ADDRESS", "-p").each_line { |line|
+    ilbadm("show-servergroup", "-o",
+           "SGNAME,SERVERID,MINPORT,MAXPORT,IP_ADDRESS", "-p").
+      each_line do |line|
       sgname, sid, minp, maxp, ip = line.strip.split(":",5)
       ip.insert(0,'[').insert(-1,']') if ip.index(':')
       groups[sgname][sid] = {
@@ -36,22 +38,24 @@ Puppet::Type.type(:ilb_server).provide(:ilb_server) do
         :ensure => :present,
         :enabled => :unassigned
       }
-    }
+    end
 
     # Enabled/Disabled in only available for servers assigned to rules
     # Only entries assigned to rules are returned by show-server
-    ilbadm("show-server","-o","servergroup,serverid,status", "-p").each_line { |line|
+    ilbadm("show-server","-o","servergroup,serverid,status", "-p").
+      each_line do |line|
       sgname,sid,status = line.strip.split(":")
-      if status == 'D'
-        groups[sgname][sid][:enabled] = :false
-      else
-        groups[sgname][sid][:enabled] = :true
-      end
-    }
+      groups[sgname][sid][:enabled] =
+        if status == 'D'
+          :false
+        else
+          :true
+        end
+    end
 
     servers=[]
-    groups.each_pair { |sgname,srv_hsh|
-      srv_hsh.each_pair.collect { |sid,srv|
+    groups.each_pair do |sgname,srv_hsh|
+      srv_hsh.each_pair.collect do |sid,srv|
         # Port is optional, build it up as needed
         port = nil
         if srv[:minp]
@@ -68,10 +72,10 @@ Puppet::Type.type(:ilb_server).provide(:ilb_server) do
                        :servergroup => sgname,
                        :ensure => srv[:ensure],
                        :enabled => srv[:enabled],
-                       :sid => sid)
-                    )
-      }
-    }
+                       :sid => sid
+        ))
+      end
+    end
     return servers
   end
 

@@ -62,7 +62,6 @@ Puppet::Type.newtype(:ilb_rule) do
     validate do |value|
       PuppetX::Oracle::SolarisProviders::Util::Ilb.valid_portspec?(value)
     end
-
   end
 
   newproperty(:protocol) do
@@ -90,8 +89,8 @@ Puppet::Type.newtype(:ilb_rule) do
     validate do |value|
       # Let newvalues check general input first
       super(value)
-      next unless value.match(%r(/\d+$))
-      fail "Invalid pmask #{value}" unless (0..128).include?(value.slice(1..-1).to_i)
+      next unless value =~ %r(/\d+$)
+      fail "Invalid pmask #{value}" unless (0..128).cover?(value.slice(1..-1).to_i)
     end
   end
 
@@ -120,9 +119,9 @@ Puppet::Type.newtype(:ilb_rule) do
     validate do |value|
       ips = value.split('-')
       fail "Invalid IP range #{value}" if ips.length > 2
-      ips.each { |ip|
+      ips.each do |ip|
         fail "Invalid IP #{ip}" unless valid_ip?(ip)
-      }
+      end
       if ips.length == 2
         if (range = (IPAddr.new(ips[0])..IPAddr.new(ips[1])).to_a.length) > 10
           fail "Invalid range > 10 addresses (#{range}) in range #{value}"
@@ -190,23 +189,23 @@ Puppet::Type.newtype(:ilb_rule) do
   end
 
   # Top level post parameter validation
-  validate {
+  validate do
     # Skip validation if there is no catalog
     # i.e. puppet resource ilb_rule
     next if @cagtalog == nil
     [:vip, :port, :lbalg, :topo_type, :servergroup].each do |thing|
       fail("#{thing} must be defined") unless self[thing]
     end
-  }
+  end
 
   autorequire(:ilb_server) do
-    children = catalog.resources.select { |resource|
+    children = catalog.resources.select do |resource|
       resource.type == :ilb_server &&
         resource[:servergroup] == self[:servergroup]
-    }
-    children.each.collect { |child|
+    end
+    children.each.collect do |child|
       child[:name]
-    }
+    end
   end
 
   autorequire(:ilb_servergroup) do

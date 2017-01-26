@@ -44,14 +44,14 @@ Puppet::Type.type(:interface_properties).provide(:interface_properties) do
 
   def self.prefetch(resources)
     things = instances
-    resources.keys.each { |key|
-      things.find { |prop|
+    resources.keys.each do |key|
+      things.find do |prop|
         prop.name == key
-      }.tap { |provider|
+      end.tap do |provider|
         next if provider.nil?
         resources[key].provider = provider
-      }
-    }
+      end
+    end
   end
 
   def create
@@ -62,8 +62,8 @@ Puppet::Type.type(:interface_properties).provide(:interface_properties) do
   def change_props
     out_of_sync= Hash.new {|k,v| k[v]=[]}
     # Compare the desired values against the current values
-    resource[:properties].each_pair { |proto,hsh|
-      hsh.each_pair { |prop,should_be|
+    resource[:properties].each_pair do |proto,hsh|
+      hsh.each_pair do |prop,should_be|
         is = properties[proto][prop]
 
         # Current Value == Desired Value
@@ -71,8 +71,8 @@ Puppet::Type.type(:interface_properties).provide(:interface_properties) do
           # Stash out of sync property
           out_of_sync[proto].push("%s=%s" % [prop, should_be])
         end
-      }
-    }
+      end
+    end
 
     out_of_sync
   end
@@ -80,11 +80,11 @@ Puppet::Type.type(:interface_properties).provide(:interface_properties) do
   def properties=(value)
     # Support old style intf/proto names
     name = @resource[:name].split('/')[0]
-    change_props.each_pair { |proto,props|
-      props.each { |prop|
+    change_props.each_pair do |proto,props|
+      props.each do |prop|
         ipadm("set-ifprop", "-p", prop, "-m", proto, name)
-      }
-    }
+      end
+    end
     @property_hash[:properties].merge(value)
   end
 

@@ -49,21 +49,21 @@ Puppet::Type.newtype(:protocol_properties) do
       # There will almost always be more properties on the system than
       # defined in the resource. Make sure the properties in the resource
       # are insync
-      should.each_pair { |prop,value|
-        return false unless is.has_key?(prop)
+      should.each_pair do |prop,value|
+        return false unless is.key?(prop)
         # Stop after the first out of sync property
         return false unless property_matches?(is[prop],value)
-      }
+      end
       true
     end
 
-    validate { |hsh|
+    validate do |hsh|
       fail "Invalid, must be a hash" unless hsh.kind_of? Hash
       fail "Invalid, cannot be empty" if hsh.empty?
-      hsh.each_pair { |key,value|
-        fail "key #{key} must be a-Z - _" unless key.match(/[\p{Alnum}_-]+/)
-        fail "value #{value} must be a-Z - _" unless key.match(/[\p{Alnum}_-]+/)
-      }
-    }
+      hsh.each_pair do |key,value|
+        fail "key #{key} must be a-Z - _" unless key =~ /[\p{Alnum}_-]+/
+        fail "value #{value} must be a-Z - _" unless key =~ /[\p{Alnum}_-]+/
+      end
+    end
   end
 end

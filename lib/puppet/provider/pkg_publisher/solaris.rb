@@ -25,16 +25,15 @@ Puppet::Type.type(:pkg_publisher).provide(:pkg_publisher) do
   def self.instances
     publishers = {}
     publisher_order = []
-    pkg(:publisher, "-H", "-F", "tsv").split("\n").each do |line|
-      name, sticky, _syspub, enabled,
-      type, _status, origin, proxy = line.split
+    pkg(:publisher, "-H", "-F", "tsv").split("\n").collect do |line|
+      name, sticky, _syspub, enabled, type, _status, origin, proxy = line.split
 
       # strip off any trailing "/" characters
-      if origin.end_with?("/")
+      if origin && origin.end_with?("/")
         origin = origin[0..-2]
       end
 
-      unless publishers.has_key?(name)
+      unless publishers.key?(name)
         # create a new hash entry for this publisher
         publishers[name] = {
           'sticky' => sticky,
@@ -47,27 +46,27 @@ Puppet::Type.type(:pkg_publisher).provide(:pkg_publisher) do
         }
       end
 
-        if type.eql? "mirror"
-          publishers[name]["mirror"] << origin
-        else
-          publishers[name]["origin"] << origin
-        end
+      if type.eql? "mirror"
+        publishers[name]["mirror"] << origin
+      else
+        publishers[name]["origin"] << origin
+      end
 
-        # proxy is per-origin/mirror
-        publishers[name]["proxy"].push(proxy == '-' ? :absent : proxy)
+      # proxy is per-origin/mirror
+      publishers[name]["proxy"].push(proxy == '-' ? :absent : proxy)
 
-        # set the order of the publishers
-        if not publisher_order.include?("name")
-          publisher_order.push name
-        end
-        index = publisher_order.index(name)
-        if index == 0 || index == nil
-          publishers[name]["searchfirst"] = :true
-          publishers[name]["searchafter"] = nil
-        else
-          publishers[name]["searchfirst"] = nil
-          publishers[name]["searchafter"] = publisher_order[index-1]
-        end
+      # set the order of the publishers
+      if not publisher_order.include?("name")
+        publisher_order.push name
+      end
+      index = publisher_order.index(name)
+      if index.zero?
+        publishers[name]["searchfirst"] = :true
+        publishers[name]["searchafter"] = nil
+      else
+        publishers[name]["searchfirst"] = nil
+        publishers[name]["searchafter"] = publisher_order[index-1]
+      end
     end
 
     __pub = ""

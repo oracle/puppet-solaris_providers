@@ -47,12 +47,12 @@ Puppet::Type.newtype(:address_properties) do
   end
 
   autorequire(:address_object) do
-    children = catalog.resources.select { |resource|
+    children = catalog.resources.select do |resource|
       resource.type == :address_object &&
         self[:address].include?(resource[:name])
-    }
-    children.each.collect { |child|
+    end
+    children.each.collect do |child|
       child[:name]
-    }
+    end
   end
 end

@@ -23,9 +23,9 @@ Puppet::Type.type(:ilb_servergroup).provide(:ilb_servergroup) do
   mk_resource_methods
 
   def self.instances
-    ilbadm("show-servergroup","-o","sgname","-p").each_line.to_a.uniq.collect { |name|
+    ilbadm("show-servergroup","-o","sgname","-p").each_line.to_a.uniq.collect do |name|
       new(:name => name.strip, :ensure => :present)
-    }
+    end
   end
 
   def self.prefetch(resources)

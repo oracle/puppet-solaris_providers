@@ -369,7 +369,7 @@ describe Puppet::Type.type(:svccfg).provider(:svccfg) do
       it "executes svccfg addpg for a defined type" do
         params[:property] = "pkg"
         params[:type]     = :application
-        resource.delete(:value)
+        params.delete(:value)
         described_class.expects(:svccfg).with(
           "-s", params[:fmri],
           "addpg",
@@ -382,7 +382,7 @@ describe Puppet::Type.type(:svccfg).provider(:svccfg) do
       it "executes svccfg addpg for a user supplied type" do
         params[:property] = "pkg"
         params[:type]     = "foobar"
-        resource.delete(:value)
+        params.delete(:value)
         described_class.expects(:svccfg).with(
           "-s", params[:fmri],
           "addpg",

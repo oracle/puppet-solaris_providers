@@ -437,5 +437,4 @@ Puppet::Type.newtype(:ldap) do
     self.pg = "cred"
     self.prop_type = :astring
   end
-
 end

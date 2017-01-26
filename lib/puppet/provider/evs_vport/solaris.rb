@@ -33,7 +33,7 @@ Puppet::Type.type(:evs_vport).provide(:evs_vport) do
       vport_list = evsadm("show-vport", "-c", "-o",
                           "name,tenant,status").split("\n")
     rescue Puppet::ExecutionFailure => e
-      raise Puppet::Error, "unable to populate VPort instances: \n" \
+      fail "unable to populate VPort instances: \n" \
                            "#{e.inspect}"
     end
     vport_list
@@ -100,7 +100,7 @@ Puppet::Type.type(:evs_vport).provide(:evs_vport) do
     begin
       create_vport(tenant, vport, add_properties(@resource))
     rescue Puppet::ExecutionFailure => e
-      raise Puppet::Error, "Cannot add VPort: \n #{e.inspect}"
+      fail "Cannot add VPort: \n #{e.inspect}"
     end
   end
 
@@ -109,7 +109,7 @@ Puppet::Type.type(:evs_vport).provide(:evs_vport) do
     begin
       delete_vport(tenant, vport)
     rescue Puppet::ExecutionFailure => e
-      raise Puppet::Error, "Cannot remove VPort: \n #{e.inspect}"
+      fail "Cannot remove VPort: \n #{e.inspect}"
     end
   end
 
@@ -118,7 +118,7 @@ Puppet::Type.type(:evs_vport).provide(:evs_vport) do
     begin
       evsadm("reset-vport", "-T", tenant, vport)
     rescue Puppet::ExecutionFailure => e
-      raise Puppet::Error, "Cannot reset VPort: \n #{e.inspect}"
+      fail "Cannot reset VPort: \n #{e.inspect}"
     end
 
     @resource[:ensure] = :present
@@ -145,15 +145,15 @@ Puppet::Type.type(:evs_vport).provide(:evs_vport) do
 
   ## read-only properties (settable upon creation) ##
   def ipaddr=(value)
-    raise Puppet::Error, "ipaddr property is settable only upon creation"
+    fail "ipaddr property is settable only upon creation"
   end
 
   def macaddr=(value)
-    raise Puppet::Error, "macaddr property is settable only upon creation"
+    fail "macaddr property is settable only upon creation"
   end
 
   def uuid=(value)
-    raise Puppet::Error, "uuid property is settable only upon creation"
+    fail "uuid property is settable only upon creation"
   end
 
   # Add VPort Instance
@@ -193,7 +193,7 @@ Puppet::Type.type(:evs_vport).provide(:evs_vport) do
     return [] if fullname == nil
     parsed_val = fullname.strip.split("/")
     if (parsed_val.length != 3)
-      raise Puppet::Error, "Invalid VPort name #{@resource[:name]} \n" \
+      fail "Invalid VPort name #{@resource[:name]} \n" \
                            "Name convention must be <tenant>/<evs>/<vport>"
     end
     tenant, evs, vport = parsed_val
@@ -235,7 +235,7 @@ Puppet::Type.type(:evs_vport).provide(:evs_vport) do
         begin
           set_vportprop(tenant, vport, prop)
         rescue Puppet::ExecutionFailure => e
-          raise Puppet::Error, "Cannot update the property " \
+          fail "Cannot update the property " \
                                "#{key}=#{value}.\n#{e.inspect}"
         end
       end

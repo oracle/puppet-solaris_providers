@@ -26,8 +26,8 @@ Puppet::Type.type(:ilb_healthcheck).provide(:ilb_healthcheck) do
   def self.instances
     checks=[]
 
-    ilbadm('show-healthcheck').each_line { |line|
-      next if line.match(/^HCNAME/)
+    ilbadm('show-healthcheck').each_line do |line|
+      next if line =~ /^HCNAME/
       name, timeout, count, interval, default_ping, test = line.strip.split(/\s+/,6)
       checks.push(
         new(:name => name,
@@ -36,10 +36,9 @@ Puppet::Type.type(:ilb_healthcheck).provide(:ilb_healthcheck) do
             :interval => interval,
             :default_ping => (default_ping == "Y" ? :true : :false),
             :test => test,
-            :ensure => :present
-           )
+            :ensure => :present)
       )
-    }
+    end
     return checks
   end
 
@@ -63,11 +62,11 @@ Puppet::Type.type(:ilb_healthcheck).provide(:ilb_healthcheck) do
       _args.push "-n"
     end
 
-    _arg_str = [:timeout, :count, :interval, :test].each.collect { |thing|
+    _arg_str = [:timeout, :count, :interval, :test].each.collect do |thing|
       if @resource[thing] && @resource[thing] != :absent
         "hc-#{thing}=#{@resource[thing]}"
       end
-    }
+    end
 
     _args.push('-h',_arg_str.compact.join(','))
 
@@ -81,11 +80,11 @@ Puppet::Type.type(:ilb_healthcheck).provide(:ilb_healthcheck) do
 
   [
     :timeout, :count, :interval, :test, :default_ping
-  ].each { |method|
+  ].each do |method|
     define_method("#{method}=") do |should|
       destroy
       create
       @property_hash[method] = should
     end
-  }
+  end
 end

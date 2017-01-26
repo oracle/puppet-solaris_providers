@@ -22,7 +22,8 @@ Puppet::Type.type(:etherstub).provide(:etherstub) do
 
   def self.instances
     dladm("show-etherstub", "-p", "-o", "link").split(
-      "\n").collect do |line|
+      "\n"
+    ).collect do |line|
       link = line.strip()
       new(:name => link, :ensure => :present)
     end

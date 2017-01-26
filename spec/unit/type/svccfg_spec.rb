@@ -131,11 +131,11 @@ describe type_class do
           :template_prop_pattern => ["foo"]
         }.each_pair { |k,a|
           a.each { |v|
-            it "should not accept type #{k} -> #{v}" do
+            it "should not accept type #{k} -> <value>" do
               expect {
                 described_class.new(:name => "#{k}-#{v}", :ensure => :present,
                                     :fmri => "svc:/baz", :property => "foo",
-                                    :type => k, :value => k)
+                                    :type => k, :value => v)
               }.to raise_error(Puppet::ResourceError, /Property groups do not take values/)
             end
           }

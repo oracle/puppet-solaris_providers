@@ -24,22 +24,23 @@ Puppet::Type.type(:boot_environment).provide(:boot_environment) do
     beadm(:list, "-H").split("\n").collect do |line|
       data = line.split(";")
       name = data[0]
-      if data[2].include? "N"
-        activate = :true
-      else
-        activate = :false
-      end
-      if data[2].include? "R"
-        running = :true
-      else
-        running = :false
-      end
+      activate =
+        if data[2].include? "N"
+          :true
+        else
+          :false
+        end
+      running =
+        if data[2].include? "R"
+          :true
+        else
+          :false
+        end
 
       new(:name => name,
           :ensure => :present,
           :activate => activate,
-          :running => running
-         )
+          :running => running)
     end
   end
 
@@ -89,22 +90,20 @@ Puppet::Type.type(:boot_environment).provide(:boot_environment) do
 
     if clone_be = @resource[:clone_be]
       if clone_be.include? "@"
-        if beadm(:list, "-H", "-s").each_line.detect \
-           { |line| src = line.split(";")[1]
+        if beadm(:list, "-H", "-s").each_line.detect do |line|
+             src = line.split(";")[1]
              # Direct match for be://fmri or name@snap format
              src == clone_be || src.split('/')[-1] == clone_be
-           }
+           end
           flags << "-e" << clone_be
         else
           fail "BE #{clone_be} not found."
         end
+      elsif beadm(:list, "-H").split("\n").detect \
+            { |line| line.split(";")[0] == clone_be }
+        flags << "-e" << clone_be
       else
-        if beadm(:list, "-H").split("\n").detect \
-           { |line| line.split(";")[0] == clone_be }
-          flags << "-e" << clone_be
-        else
-          fail "BE #{clone_be} not found."
-        end
+        fail "BE #{clone_be} not found."
       end
     end
 

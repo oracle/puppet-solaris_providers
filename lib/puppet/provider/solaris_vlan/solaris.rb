@@ -22,7 +22,8 @@ Puppet::Type.type(:solaris_vlan).provide(:solaris_vlan) do
 
   def self.instances
     dladm("show-vlan", "-p", "-o", "link,over,vid").split(
-      "\n").collect do |line|
+      "\n"
+    ).collect do |line|
       link, over, vlanid = line.split(":")
       new(:name => link,
           :ensure => :present,

@@ -30,8 +30,7 @@ Puppet::Type.type(:ipmp_interface).provide(:ipmp_interface) do
       ifaces << new(:name => name.strip(),
                     :ensure => :present,
                     :interfaces => over.split,
-                    :temporary => persist.match(/^-+$/) ? :true : :false
-                   )
+                    :temporary => persist =~ /^-+$/ ? :true : :false)
     end
     ifaces
   end

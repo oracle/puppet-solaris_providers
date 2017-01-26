@@ -175,7 +175,7 @@ function buildMatchString(searchString, event) {
 
 function highlight() {
   $('#full_list li:visible').each(function(n) {
-    $(this).removeClass('even odd').addClass(n % 2 == 0 ? 'odd' : 'even');
+    $(this).removeClass('even odd').addClass(n % 2.zero? ? 'odd' : 'even');
   });
 }
 

@@ -24,11 +24,12 @@ Puppet::Type.type(:address_object).provide(:address_object) do
 
   def self.instances
     ipadm("show-addr", "-p", "-o", "addrobj,type,state,addr").split(
-      "\n").collect do |line|
+      "\n"
+    ).collect do |line|
       addrobj, address_type, state, addr = line.split(":", 4)
 
       # replace any hypen with an underscore
-      address_type = address_type.gsub(/\-/, "_")
+      address_type = address_type.tr('-', "_")
 
       hsh = {
         :name => addrobj,
@@ -57,7 +58,7 @@ Puppet::Type.type(:address_object).provide(:address_object) do
         remote = remote.delete("\\")
         hsh[:address] = local
         hsh[:remote_address] = remote
-      elsif address_type.downcase == "dhcp"
+      elsif address_type.casecmp("dhcp").zero?
         # Temporary objects cannot be enabled
         hsh.delete(:enable)
         # Remove down, temporary objects cannot be downed...
@@ -72,17 +73,13 @@ Puppet::Type.type(:address_object).provide(:address_object) do
         hsh[:address] = local.empty? ? :absent : local
       end
 
-
       type_props = {
         :static => [:address,:remote_address,:down],
         :dhcp => [:seconds,:hostname],
         :addrconf => [:interface_id,:remote_interface_id],
       }
 
-
-      type_props[address_type.to_sym].each {|t|
-        hsh[t] ||= :absent
-      }
+      type_props[address_type.to_sym].each {|t| hsh[t] ||= :absent }
 
       new(hsh)
     end

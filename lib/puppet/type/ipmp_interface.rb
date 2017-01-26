@@ -26,7 +26,7 @@ Puppet::Type.newtype(:ipmp_interface) do
     isnamevar
   end
 
-  newproperty(:temporary)  do
+  newproperty(:temporary) do
     desc "Optional parameter that specifies that the IP interface is
               temporary.  Temporary interfaces last until the next reboot.
               Temporary interfaces cannot be modified in place. They will be
@@ -58,22 +58,22 @@ Puppet::Type.newtype(:ipmp_interface) do
     end
 
     validate do |value|
-      unless (3..16).include? value.length
+      unless (3..16).cover? value.length
         fail "Invalid interface '#{value}' must be 3-16 characters"
       end
-      unless /^[a-z][a-z_0-9]+[0-9]+$/.match(value)
+      unless /^[a-z][a-z_0-9]+[0-9]+$/ =~ value
         fail "Invalid interface name '#{value}' must match a-z _ 0-9"
       end
     end
   end
 
   autorequire(:ip_interface) do
-    children = catalog.resources.select { |resource|
+    children = catalog.resources.select do |resource|
       resource.type == :ip_interface &&
         self[:interfaces].include?(resource[:name])
-    }
-    children.each.collect { |child|
+    end
+    children.each.collect do |child|
       child[:name]
-    }
+    end
   end
 end

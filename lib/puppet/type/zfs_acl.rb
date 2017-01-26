@@ -137,9 +137,9 @@ Puppet::Type.newtype(:zfs_acl) do
 
       # Map to_s to flatten differences between directory and file
       # permission sets. Order matters so we can't just compare hashes
-      (0..current.length).each { |idx|
+      (0..current.length).each do |idx|
         return false unless current[idx].to_s == should[idx].to_s
-      }
+      end
       return true
     end
 
@@ -202,9 +202,7 @@ Perm Type: 'allow', 'deny', 'audit', 'alarm'
 See chmod(1) NFSv4 ACL Specification for additional details
 "
 
-    munge { |value|
-      Puppet::Type::ZfsAcl::Ace.new(value,self)
-    }
+    munge { |value| Puppet::Type::ZfsAcl::Ace.new(value,self) }
 
 
     # output similar to ls -v output as ACE hashes is unreadable
@@ -215,15 +213,15 @@ See chmod(1) NFSv4 ACL Specification for additional details
       value.each_with_index.collect { |val,idx| [idx,val.to_s].join(':') }
     end
 
-    validate { |value|
+    validate do |value|
       fail "value: #{val}:#{val.class} must be a hash" unless value.kind_of?(Hash)
       # Keys needs to be munged back into strings if they came from
       # the provider adding new ACEs
-      value.dup.each_pair {|k,v|
+      value.dup.each_pair do |k,v|
         next if k.kind_of?(String)
         value.delete(k)
         value[k.to_s] = v
-      }
+      end
       fail "#{value} target must be defined" unless value['target']
       fail "perms must be defined" unless value['perms']
       fail "perm_type must be defined" unless value['perm_type']
@@ -251,7 +249,7 @@ See chmod(1) NFSv4 ACL Specification for additional details
       unless @ace_valid.perm_type.include?(value['perm_type'])
         fail "Invalid perm_type: #{value['perm_type']}"
       end
-    }
+    end
   end
 
   newparam(:set_default_perms) do
@@ -287,10 +285,10 @@ Equavalent to:
 "
     defaultto :true
     newvalues(:true,:false)
-    munge { |value|
+    munge do |value|
       return value if [TrueClass,FalseClass].include?(value.class)
-      value == :true || value == 'true'  ? true : false
-    }
+      value == :true || value == 'true' ? true : false
+    end
   end
 
   newparam(:purge_acl) do
@@ -308,16 +306,15 @@ Equavalent to:
 
   autorequire(:user) do
     self[:acl].each_with_object([]) do |ace,arr|
-      next unless ace.target.match(/^user:(.*)/)
+      next unless ace.target =~ /^user:(.*)/
       arr.push($1)
     end
   end
 
   autorequire('group') do
     self[:acl].each_with_object([]) do |ace,arr|
-      next unless ace.target.match(/^group:(.*)/)
+      next unless ace.target =~ /^group:(.*)/
       arr.push($1)
     end
   end
-
 end

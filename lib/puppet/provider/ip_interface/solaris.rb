@@ -38,7 +38,8 @@ Puppet::Type.type(:ip_interface).provide(:ip_interface) do
 
   def exists?
     ipadm("show-if", "-p", "-o", "IFNAME").split(
-      "\n").include? @resource[:name]
+      "\n"
+    ).include? @resource[:name]
   end
 
   def create

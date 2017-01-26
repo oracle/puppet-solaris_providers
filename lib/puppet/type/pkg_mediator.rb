@@ -28,7 +28,7 @@ Puppet::Type.newtype(:pkg_mediator) do
     desc "The version of the mediated interface to use"
     newvalues(/none/io,/\A\d+(?:\.\d+){0,}\Z/)
     munge do |value|
-      return value.downcase.capitalize.to_sym if value.match(/none/i)
+      return value.downcase.capitalize.to_sym if value =~ /none/i
       value
     end
   end
@@ -37,14 +37,14 @@ Puppet::Type.newtype(:pkg_mediator) do
     desc "The implementation of the mediated interface to use"
     newvalues(/none/io,/\A[[:alnum:]-]+(?:@\d+(?:\.\d+){0,})?\Z/)
     munge do |value|
-      return value.downcase.capitalize.to_sym if value.match(/none/i)
+      return value.downcase.capitalize.to_sym if value =~ /none/i
       value
     end
   end
 
-  validate {
+  validate do
     if self[:version] == :None && self[:implementation] == :None
       fail("Version and Implementation cannot both be :None use ensure => :absent instead")
     end
-  }
+  end
 end

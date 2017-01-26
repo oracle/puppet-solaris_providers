@@ -68,7 +68,7 @@ Puppet::Type.type(:pkg_mediator).provide(:pkg_mediator) do
   def exists?
     if @property_hash[:ensure] == :present and not
       # Don't check values unless they are set in the manifest/resource
-      (  @resource[:version].nil? && @resource[:implementation].nil? )
+      ( @resource[:version].nil? && @resource[:implementation].nil? )
       # Both Version and Implementation must be expected or unspecified
       return ((version == @resource[:version]) ||
               @resource[:version].nil? ) \
@@ -101,17 +101,18 @@ Puppet::Type.type(:pkg_mediator).provide(:pkg_mediator) do
     # If there is no pre-existing resource there will be no properties
     # defined. If we got here and set_args is 0 we have unset_args
     # otherwise there would be no changes
-    if @property_hash[:ensure].nil? && @property_flush[:set_args].size == 0
+    if @property_hash[:ensure].nil? && @property_flush[:set_args].empty?
       raise Puppet::ResourceError.new(
-              "Cannot unset absent mediator; use ensure => :absent instead of <property> => None")
+        "Cannot unset absent mediator; use ensure => :absent instead of <property> => None"
+      )
     end
   end
 
   def flush
-    pkg("set-mediator", @property_flush[:set_args], @resource[:name]) if
-      @property_flush[:set_args].size > 0
-    pkg("unset-mediator", @property_flush[:unset_args], @resource[:name]) if
-      @property_flush[:unset_args].size > 0
+    pkg("set-mediator", @property_flush[:set_args], @resource[:name]) unless
+      @property_flush[:set_args].empty?
+    pkg("unset-mediator", @property_flush[:unset_args], @resource[:name]) unless
+      @property_flush[:unset_args].empty?
     @property_hash = self.class.get_mediator(resource[:name])
   end
 

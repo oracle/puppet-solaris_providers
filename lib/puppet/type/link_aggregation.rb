@@ -59,14 +59,13 @@ Puppet::Type.newtype(:link_aggregation) do
     end
 
     validate do |value|
-      unless (3..16).include? value.length
+      unless (3..16).cover? value.length
         fail "Invalid interface '#{value}' must be 3-16 characters"
       end
-      unless /^[a-z][a-z_0-9]+[0-9]+$/.match(value)
+      unless /^[a-z][a-z_0-9]+[0-9]+$/ =~ value
         fail "Invalid interface name '#{value}' must match a-z _ 0-9"
       end
     end
-
   end
 
   newproperty(:mode) do
@@ -100,20 +99,19 @@ Puppet::Type.newtype(:link_aggregation) do
     newvalues(/^(?:\p{Xdigit}{1,2}:){5}\p{Xdigit}{1,2}$/,:auto)
   end
   autorequire(:ip_interface) do
-    children = catalog.resources.select { |resource|
+    children = catalog.resources.select do |resource|
       resource.type == :ip_interface &&
         self[:lower_links].include?(resource[:name])
-    }
-    children.each.collect { |child|
+    end
+    children.each.collect do |child|
       child[:name]
-    }
+    end
   end
 
-  validate {
+  validate do
     if (self[:mode] != :absent && !self[:mode].nil?) &&
        (self[:lower_links] == :absent || self[:lower_links].nil?)
       fail "lower_links must be defined when mode is specified"
     end
-  }
-
+  end
 end

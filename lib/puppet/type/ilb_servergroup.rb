@@ -21,5 +21,4 @@ Puppet::Type.newtype(:ilb_servergroup) do
   newparam(:name, :namevar => true) do
     desc "Name for the server group."
   end
-
 end

@@ -136,7 +136,7 @@ module PuppetX::Oracle::SolarisProviders::Util::Svcs
   def is_count?(prop_value,fail_on_false=false)
     # Check each component if this is an array
     prop_value.each { |val| send(__method__,val)} if prop_value.kind_of? Array
-    unless prop_value.kind_of?(Integer) || prop_value.match(/\A\d+\Z/)
+    unless prop_value.kind_of?(Integer) || prop_value =~ /\A\d+\Z/
       fail "#{prop_value} must be an integer" if fail_on_false
       return false
     end
@@ -150,36 +150,36 @@ module PuppetX::Oracle::SolarisProviders::Util::Svcs
   def is_fmri?(prop_value,fail_on_false=false)
     # Check each component if this is an array
     prop_value.each { |val| send(__method__,val)} if prop_value.kind_of? Array
-    prop_value.split(/\s+/).each { |v|
-      unless v.match(/\A\p{Alpha}+:\/+\p{Graph}+\Z/)
+    prop_value.split(/\s+/).each do |v|
+      unless v =~ /\A\p{Alpha}+:\/+\p{Graph}+\Z/
         fail "'#{v}' does not appear to be valid" if fail_on_false
         return false
       end
-    }
+    end
 
     true
   end
   def is_host?(prop_value,fail_on_false=false)
     # Check each component if this is an array
     prop_value.each { |val| send(__method__,val)} if prop_value.kind_of? Array
-    prop_value.split(/\s+/).each { |v|
+    prop_value.split(/\s+/).each do |v|
       unless ( valid_hostname?(v) || valid_ip?(v) )
         fail "#{v} invalid valid hostname or ip address" if fail_on_false
         return false
       end
-    }
+    end
 
     true
   end
   def is_hostname?(prop_value,fail_on_false=false)
     # Check each component if this is an array
     prop_value.each { |val| send(__method__,val)} if prop_value.kind_of? Array
-    prop_value.split(/\s+/).each { |v|
+    prop_value.split(/\s+/).each do |v|
       unless valid_hostname?(v)
         fail "#{v} invalid hostname" if fail_on_false
         return false
       end
-    }
+    end
 
     true
   end
@@ -192,7 +192,7 @@ module PuppetX::Oracle::SolarisProviders::Util::Svcs
         return false
       end
     else
-      unless prop_value.match(/\A-?\d+\Z/)
+      unless prop_value =~ /\A-?\d+\Z/
         fail "#{prop_value} must be an integer" if fail_on_false
         return false
       end
@@ -203,43 +203,43 @@ module PuppetX::Oracle::SolarisProviders::Util::Svcs
   def is_net_address?(prop_value,fail_on_false=false)
     # Check each component if this is an array
     prop_value.each { |val| send(__method__,val)} if prop_value.kind_of? Array
-    prop_value.split(/\s+/).each { |v|
+    prop_value.split(/\s+/).each do |v|
       unless valid_ip?(v)
         fail "#{v} invalid net_address" if fail_on_false
         return false
       end
-    }
+    end
 
     true
   end
   def is_net_address_v4?(prop_value,fail_on_false=false)
     # Check each component if this is an array
     prop_value.each { |val| send(__method__,val)} if prop_value.kind_of? Array
-    prop_value.split(/\s+/).each { |v|
+    prop_value.split(/\s+/).each do |v|
       unless valid_ipv4?(v)
         fail "#{v} invalid net_address_v4" if fail_on_false
         return false
       end
-    }
+    end
 
     true
   end
   def is_net_address_v6?(prop_value,fail_on_false=false)
     # Check each component if this is an array
     prop_value.each { |val| send(__method__,val)} if prop_value.kind_of? Array
-    prop_value.split(/\s+/).each { |v|
+    prop_value.split(/\s+/).each do |v|
       unless valid_ipv6?(v)
         fail "#{v} invalid net_address_v6" if fail_on_false
         return false
       end
-    }
+    end
 
     true
   end
   def is_time?(prop_value,fail_on_false=false)
     # Check each component if this is an array
     prop_value.each { |val| send(__method__,val)} if prop_value.kind_of? Array
-    unless  prop_value.kind_of?(Float) || prop_value.to_f >= 0
+    unless prop_value.kind_of?(Float) || prop_value.to_f >= 0
       fail "#{prop_value} invalid time" if fail_on_false
       return false
     end
@@ -249,14 +249,13 @@ module PuppetX::Oracle::SolarisProviders::Util::Svcs
   def is_uri?(prop_value,fail_on_false=false)
     # Check each component if this is an array
     prop_value.each { |val| send(__method__,val)} if prop_value.kind_of? Array
-    prop_value.split(/\s+/).each { |v|
-      unless v.match(/\A\p{Alpha}+:\p{Graph}+\Z/)
+    prop_value.split(/\s+/).each do |v|
+      unless v =~ /\A\p{Alpha}+:\p{Graph}+\Z/
         fail "#{v} invalid uri" if fail_on_false
         return false
       end
-    }
+    end
 
     true
   end
 end
-

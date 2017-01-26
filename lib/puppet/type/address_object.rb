@@ -184,9 +184,9 @@ Puppet::Type.newtype(:address_object) do
     @type_props.freeze
 
     # Set found = 1 for each type
-    @type_props.each_pair { |k,v|
-      v.each { |cp| found[k] = 1 if self[cp]
-      }}
+    @type_props.each_pair do |k,v|
+      v.each do |cp| found[k] = 1 if self[cp]
+      end end
 
     # If more than one type is found the configuration is invalid
     if found.values.inject(0){ |s,a| s+= a } > 1
@@ -216,12 +216,12 @@ Puppet::Type.newtype(:address_object) do
     @type_props.freeze
 
     # Select params which are defined but invalid for the address_type
-    invalid = @check_props.select { |cp|
+    invalid = @check_props.select do |cp|
       # Valid type if property is not found
       next unless @type_props[type].index(cp).nil?
 
       self[cp].nil? == false
-    }
+    end
 
 
     # Return array of invalid options
@@ -229,8 +229,8 @@ Puppet::Type.newtype(:address_object) do
   end
 
   # Validate generated resource as a whole
-  validate {
-    unless  self[:address_type]
+  validate do
+    unless self[:address_type]
 
       invalid = check_implied_type_params
       unless invalid.empty?
@@ -247,20 +247,22 @@ Puppet::Type.newtype(:address_object) do
 
       case self[:address_type]
       when :dhcp
-        fail("cannot specify :address with :address_type = :dhcp"
-            ) if self[:address]
-        fail("cannot specify :remote_address with :address_type = :dhcp"
-            ) if self[:remote_address]
-        fail("cannot specify :remote_address with :address_type = :dhcp"
-            ) if self[:remote_address]
-      when :static
-      when :addrconf
-      when :from_gz, :inherited
-        #fail("cannot specify any values with :address_type = #{self[:address_type]}")
+        if self[:address]
+          fail("cannot specify :address with :address_type = :dhcp")
+        end
+        if self[:remote_address]
+          fail("cannot specify :remote_address with :address_type = :dhcp")
+        end
+        if self[:remote_address]
+          fail("cannot specify :remote_address with :address_type = :dhcp")
+        end
+      # when :static # do nothing
+      # when :addrconf # do nothing
+      # when :from_gz, :inherited # do nothing
       end
     end
 
     fail("cannot specify :enable when :temporary == :true") if [:true,:false].include?(self[:enable]) &&
                                                                self[:temporary] == :true
-  }
+  end
 end
