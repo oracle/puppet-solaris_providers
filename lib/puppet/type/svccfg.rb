@@ -93,22 +93,29 @@ Puppet::Type.newtype(:svccfg) do
     validation See scf_value_create(3SCF).
 
     String type arguments passed as an array will be treated as a single string.
-    For multi-value string lists use type => array (RARE)"
+    For multi-value string lists use type => array (RARE)
+
+    In some cases type creates a property group and cannot receive a value. PG
+    Types: application, dependency, framework, configfile, method, template,
+    template_pg_pattern, template_prop_pattern, USER_DEFINED_STRING.
+    "
 
     newvalues(:count, :integer, :opaque, :host, :hostname, :net_address,
               :net_address_v4, :net_address_v6, :time, :astring, :ustring,
-              :boolean, :fmri, :uri, :dependency, :framework, :configfile,
-              :method, :template, :template_pg_pattern,
-              :template_prop_pattern)
+              :boolean, :fmri, :uri, :application, :dependency, :framework,
+              :configfile, :method, :template, :template_pg_pattern,
+              :template_prop_pattern, /^[\p{Alnum}.-_]+$/)
 
   end
 
   newproperty(:value, :array_matching => :all) do
     desc "Value of the property. Value types :fmri, :opaque, :host, :hostname,
       :net_address, :net_address_v4, :net_address_v6, and :uri are treated as
-
       lists if they contain whitespace. Most array arguments are also treated
-      as lists. See scf_value_create(3SCF)"
+      as lists. See scf_value_create(3SCF)
+
+      If no value is provided and type is not an SMF property type, a property group will be created.
+    "
 
     include PuppetX::Oracle::SolarisProviders::Util::Svcs
 
@@ -161,37 +168,30 @@ Puppet::Type.newtype(:svccfg) do
       if self[:ensure] != :present
         return true
       end
-
-      # Value is required for non-property groups and
-      # invalid for property groups
-      unless is_pg_type?(self[:type])
-
-        if self[:value].nil? && (self.provider && self.provider.value.nil?)
-          fail ":value is required for setting properties"
-        end
-      else
-        is_pg_valid?(self[:value],true)
-      end
     end
 
+    # Generate prop_fmri if it is not provided
     self[:prop_fmri] ||= "#{self[:fmri]}/:properties/#{self[:property]}"
-
 
     # Treat value as an array in any configuration
     [self[:value]].flatten.each { |val|
-      #
       # Validate Value arguments based on type
       case self[:type]
       when :astring, :ustring, :opaque, :boolean, :count, :fmri, :host, :hostname,
            :integer, :net_address, :net_address_v4, :net_address_v6, :time, :uri
+        if self[:value].nil? && (self.provider && self.provider.value.nil?)
+          fail ":value is required for setting properties"
+        end
         self.send(:"is_#{self[:type]}?", val,true)
-      when :dependency, :framework, :configfile, :method, :template,
-           :template_pg_pattern, :template_prop_pattern
-      # These are property groups
+      when is_pg_type?(self[:type])
+        # These are property groups
+        is_pg_valid?(self[:value])
       when nil, :absent
         warning "Type should be provided in resource definition"
       else
-        fail "unknown type #{self[:type]}"
+        # Unknown types are used for property groups
+        warning "Unknown type '#{self[:type]}' treated as property group type"
+        is_pg_valid?(self[:value])
       end
     }
   }

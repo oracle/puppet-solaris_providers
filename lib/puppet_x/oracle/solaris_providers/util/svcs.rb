@@ -74,6 +74,25 @@ module PuppetX::Oracle::SolarisProviders::Util::Svcs
   end
 
 
+  def prop_types
+    [
+      :boolean, :count, :integer, :time, :fmri, :host, :hostname, :net_address,
+      :net_address_v4, :net_address_v6, :uri, :astring, :ustring, :opaque,
+      :array # a processing hint for arrays of string type arguments
+    ]
+  end
+  def is_prop_type?(prop_type,fail_on_false=false)
+    unless prop_types.include?(prop_type)
+      fail "invalid property type" if fail_on_false
+      return false
+    end
+    true
+  end
+  def pg_types
+    [
+      :dependency, :framework, :configfile, :method, :template, :application
+    ]
+  end
   # The provided prop_value is a valid property group type
   def is_pg_valid?(prop_value,fail_on_false=false)
     unless prop_value.nil?
@@ -83,8 +102,7 @@ module PuppetX::Oracle::SolarisProviders::Util::Svcs
     true
   end
   def is_pg_type?(prop_type,fail_on_false=false)
-    unless [:dependency, :framework, :configfile, :method, :template,
-            :template_pg_pattern, :template_prop_pattern].include?(prop_type)
+    unless pg_types.include?(prop_type)
       fail "invalid property group type" if fail_on_false
       return false
     end

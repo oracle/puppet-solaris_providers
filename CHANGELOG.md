@@ -1,3 +1,13 @@
+# 2.0.2
+## Impacting Changes
+* svccfg
+  * Property groups will be automatically created with the type 'application' if
+    they do not exist
+  * Property group types can be a user defined string
+
+## Bugs Fixes and Enhancements
+* 25661234 puppet solaris_provider should allow free strings for smf pg types
+
 # 2.0.1
 ## Bugs Fixes and Enhancements
 * 23593309 rspec tests need to be written for solaris_providers link_properties
@@ -7,7 +17,7 @@
 
 # 2.0.0
   *Puppet 4 related changes and Bug Fixes*
-## Incompatible Changes:
+## Incompatible Changes
 * NIS provider securenets argument changes from an Array of components allowing
   a single entry to an Array of string entries.
   * Previous versions indicated securenets must be a Hash in error messages.
@@ -61,6 +71,24 @@
     `{ proto => { prop => value }}`
   * Old style interface (name) definitions `net0/ipv4` continue to work
 * svccfg
+  * Property groups will NO LONGER be automatically created. Previously defining
+    a property => 'foo/bar' would have created the property group 'foo' on the
+    first run and set the property 'foo/bar' on the second run. Puppet will now
+    fail if the property group does not exist or will not be created. 
+    SEE: 2.0.2 for updates to this change
+  ```Ruby
+    svccfg { 'svc:/system/system-log:rsyslog/:properties/config':
+      ensure    => 'present',
+      type      => 'configfile',
+    }
+  ```
+  ```Ruby
+    svccfg { 'svc:/system/system-log:rsyslog/:properties/config/log_from_remote':
+      ensure    => 'present',
+      type      => 'boolean',
+      value     => 'false',
+    }
+  ```
   * resource names should be provided as the fully qualified fmri of the
     property svc:/<fmri>[:<instance>]/:properties/<property>
   * the non-standard type array must be used with string type properties

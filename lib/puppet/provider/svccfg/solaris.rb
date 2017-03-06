@@ -137,13 +137,20 @@ Puppet::Type.type(:svccfg).provide(:svccfg) do
   def create
     # commands will always begin with these args
     args = ["-s", @resource[:fmri]]
-
     # It is legal to create nested property groups. We no longer try to
     # guess intent with the presence of a /
-    if is_pg_type?(@resource[:type])
-      args << "addpg" << @resource[:property] << @resource[:type]
+    if is_pg_type?(@resource[:type]) || @resource[:value].nil?
+      args << "addpg" << @resource[:property] << @resource[:type].to_s
     else
-      fail "Property Group (#{pg}) must exist" unless pg_exists?
+      if !pg_exists?
+        # Auto create the property group if needed
+        group = @resource[:property].slice(0,@resource[:property].rindex('/'))
+        type = is_prop_type?(@resource[:type]) ? :application : @resource[:type]
+        warning "Automatically Creating Property Group #{group} type: '#{type}'"
+        svccfg(*args,'addpg',group,type)
+      end
+
+      # build the rest of the argument array
       args << "setprop" << @resource[:property] << "="
 
       # Add resource type if it is defined

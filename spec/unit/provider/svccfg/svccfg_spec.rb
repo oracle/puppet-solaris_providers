@@ -7,16 +7,17 @@ describe Puppet::Type.type(:svccfg).provider(:svccfg) do
       :name => "foo",
       :fmri => "svc:/application/puppet:agent",
       :property => "refresh/timeout_seconds",
-      :type => "count",
+      :type => :count,
       :value => 0,
-      :ensure => :present
+      :ensure => :present,
+      # resource auto generates this from the above
+      :prop_fmri => "svc:/application/puppet:agent/:properties/refresh/timeout_seconds"
     }
-
   end
 
   let(:resource) { Puppet::Type.type(:svccfg).new(params) }
   let(:provider) { described_class.new(resource) }
-  let(:pg) { resource[:prop_fmri].slice(0,resource[:prop_fmri].rindex('/')) }
+  let(:pg_fmri) { params[:prop_fmri].slice(0,params[:prop_fmri].rindex('/')) }
 
   before(:each) do
 
@@ -191,15 +192,15 @@ describe Puppet::Type.type(:svccfg).provider(:svccfg) do
 
 
         {
-        :name=>"svc:/application/cups/in-lpd:default/:properties/filesystem_minimal/entities",
-        :fmri=>"svc:/application/cups/in-lpd:default",
-        :property=>"filesystem_minimal/entities", :type=>"fmri",
-        :value=>"svc:/system/filesystem/minimal", :ensure=>:present
-      },
+          :name=>"svc:/application/cups/in-lpd:default/:properties/filesystem_minimal/entities",
+          :fmri=>"svc:/application/cups/in-lpd:default",
+          :property=>"filesystem_minimal/entities", :type=>"fmri",
+          :value=>"svc:/system/filesystem/minimal", :ensure=>:present
+        },
 
         {
-        :name=>"svc:/application/cups/in-lpd:default/:properties/loopback/entities",
-        :fmri=>"svc:/application/cups/in-lpd:default", :property=>"loopback/entities",
+          :name=>"svc:/application/cups/in-lpd:default/:properties/loopback/entities",
+          :fmri=>"svc:/application/cups/in-lpd:default", :property=>"loopback/entities",
         :type=>"fmri", :value=>"svc:/network/loopback", :ensure=>:present
       },
 
@@ -224,17 +225,19 @@ describe Puppet::Type.type(:svccfg).provider(:svccfg) do
         end
   end
     context "#create" do
-        let(:munge) {
-          munge = Class.new
-          munge.extend PuppetX::Oracle::SolarisProviders::Util::Svcs
-        }
+      let(:munge) {
+        munge = Class.new
+        munge.extend PuppetX::Oracle::SolarisProviders::Util::Svcs
+        munge.extend Puppet
+      }
+      context "input munging" do
       {
         :astring=> "a string",
- :ustring=> "still a string",
- :boolean=> "true",
- :count=> "1",
- :integer=> "10",
- :time => "1339662573.051463000"
+        :ustring=> "still a string",
+        :boolean=> "true",
+        :count=> "1",
+        :integer=> "10",
+        :time => "1339662573.051463000"
       }.each_pair { |thing,value|
       it "creates with #{thing}" do
         params[:name]  = "create-#{thing}"
@@ -249,9 +252,9 @@ describe Puppet::Type.type(:svccfg).provider(:svccfg) do
             "=", "#{params[:type]}:",
             munge.munge_value(value,thing)
         )
-        described_class.expects(:svccfg).with("-s", resource[:fmri], "refresh")
-        described_class.expects(:svcprop).with("-f", resource[:prop_fmri])
-        described_class.expects(:svcprop).with(pg)
+        described_class.expects(:svccfg).with("-s", params[:fmri], "refresh")
+        described_class.expects(:svcprop).with("-f", params[:prop_fmri])
+        described_class.expects(:svcprop).with(pg_fmri)
         expect(provider.create).to eq(nil)
       end
       }
@@ -277,27 +280,27 @@ describe Puppet::Type.type(:svccfg).provider(:svccfg) do
             "=", "#{params[:type]}:",
             munge.munge_value(arry,thing)
         )
-        described_class.expects(:svccfg).with("-s", resource[:fmri], "refresh")
-        described_class.expects(:svcprop).with("-f", resource[:prop_fmri])
-        described_class.expects(:svcprop).with(pg)
+        described_class.expects(:svccfg).with("-s", params[:fmri], "refresh")
+        described_class.expects(:svcprop).with("-f", params[:prop_fmri])
+        described_class.expects(:svcprop).with(pg_fmri)
         expect(provider.create).to eq(nil)
       end
       }
       {
         :fmri=> ['svc:/foo svc:/bar','svc:/foo'],
- :host=> ['foo.com bar.com','foo.com'],
- :hostname=> ['a.foo.com b.bar.com','a.foo.com'],
- :net_address=> ['1.2.3.4 3.4.5.6','1.2.3.4'],
- :net_address_v4=> ['1.2.3.4 3.4.5.6','1.2.3.4'],
-       :net_address_v6 => ['ff::00 fe::00','ff::00'],
-       :uri => ['thing:/stuff thing:/stuff2','thing:/stuff']
+        :host=> ['foo.com bar.com','foo.com'],
+        :hostname=> ['a.foo.com b.bar.com','a.foo.com'],
+        :net_address=> ['1.2.3.4 3.4.5.6','1.2.3.4'],
+        :net_address_v4=> ['1.2.3.4 3.4.5.6','1.2.3.4'],
+        :net_address_v6 => ['ff::00 fe::00','ff::00'],
+        :uri => ['thing:/stuff thing:/stuff2','thing:/stuff']
       }.each { |thing,arry|
-      it "#{thing} value treated as list" do
-        params[:name]  = "create-#{thing}"
-        params[:type]  = thing
-        params[:value] = arry[0]
-        params[:fmri]  = "svc:/bogus/service"
-        params[:property] = "config/something"
+        it "#{thing} value treated as list" do
+          params[:name]  = "create-#{thing}"
+          params[:type]  = thing
+          params[:value] = arry[0]
+          params[:fmri]  = "svc:/bogus/service"
+          params[:property] = "config/something"
         described_class.expects(:svccfg).with(
            "-s", params[:fmri],
             "setprop",
@@ -305,9 +308,9 @@ describe Puppet::Type.type(:svccfg).provider(:svccfg) do
             "=", "#{params[:type]}:",
             munge.munge_value(arry[0],thing)
         )
-        described_class.expects(:svccfg).with("-s", resource[:fmri], "refresh")
-        described_class.expects(:svcprop).with("-f", resource[:prop_fmri])
-        described_class.expects(:svcprop).with(pg)
+        described_class.expects(:svccfg).with("-s", params[:fmri], "refresh")
+        described_class.expects(:svcprop).with("-f", params[:prop_fmri])
+        described_class.expects(:svcprop).with(pg_fmri)
         expect(provider.create).to eq(nil)
       end
       it "#{thing} value passes through unmunged" do
@@ -323,9 +326,9 @@ describe Puppet::Type.type(:svccfg).provider(:svccfg) do
             "=", "#{params[:type]}:",
             munge.munge_value(arry[1],thing)
         )
-        described_class.expects(:svccfg).with("-s", resource[:fmri], "refresh")
-        described_class.expects(:svcprop).with("-f", resource[:prop_fmri])
-        described_class.expects(:svcprop).with(pg)
+        described_class.expects(:svccfg).with("-s", params[:fmri], "refresh")
+        described_class.expects(:svcprop).with("-f", params[:prop_fmri])
+        described_class.expects(:svcprop).with(pg_fmri)
         expect(provider.create).to eq(nil)
       end
       }
@@ -334,13 +337,13 @@ describe Puppet::Type.type(:svccfg).provider(:svccfg) do
         params[:value] = "this is an astring"
         munged = munge.munge_value(params[:value])
         described_class.expects(:svccfg).with(
-           "-s", resource[:fmri],
+           "-s", params[:fmri],
             "setprop",
-            resource[:property],
+            params[:property],
             "=",
             munged
         )
-        described_class.expects(:svccfg).with("-s", resource[:fmri], "refresh")
+        described_class.expects(:svccfg).with("-s", params[:fmri], "refresh")
         provider.stubs(:pg_exists?).returns true
         expect(provider.create).to eq(nil)
       end
@@ -360,18 +363,53 @@ describe Puppet::Type.type(:svccfg).provider(:svccfg) do
       # String escapes in multi-value types generally can't be tested here as
       # they must first be valid and are weeded out by the input validation
       # on the puppet type
+    end
 
-      it "should execute svccfg addpg" do
-        resource[:property] = "tm_proppat_nt_config_user"
-        resource[:type]     = "template_prop_pattern"
-        described_class.expects(:svccfg).with(
-            "-s", resource[:fmri],
+      context "property group" do
+        it "executes svccfg addpg for a defined type" do
+          params[:property] = "pkg"
+          params[:type]     = :application
+          resource.delete(:value)
+          described_class.expects(:svccfg).with(
+            "-s", params[:fmri],
             "addpg",
-            resource[:property],
-            resource[:type]
-        )
-        described_class.expects(:svccfg).with("-s", resource[:fmri], "refresh")
-        expect(provider.create).to eq(nil)
+            params[:property],
+            params[:type].to_s
+          )
+          described_class.expects(:svccfg).with("-s", params[:fmri], "refresh")
+          expect(provider.create).to eq(nil)
+        end
+        it "executes svccfg addpg for a user supplied type" do
+          params[:property] = "pkg"
+          params[:type]     = "foobar"
+          resource.delete(:value)
+          described_class.expects(:svccfg).with(
+            "-s", params[:fmri],
+            "addpg",
+            params[:property],
+            params[:type].to_s
+          )
+          described_class.expects(:svccfg).with("-s", params[:fmri], "refresh")
+          expect(provider.create).to eq(nil)
+        end
+        it "automatically creates a non-existent pg with type :application" do
+          pg = params[:property].slice(0,params[:property].rindex('/'))
+          # Create the property group
+          described_class.expects(:svccfg).with(
+            "-s", params[:fmri],
+            "addpg", pg, :application
+          )
+          # Create the property
+          described_class.expects(:svccfg).with(
+            "-s", params[:fmri], "setprop",
+            params[:property],
+            '=', "#{params[:type]}:",
+            munge.munge_value(params[:value],params[:type])
+          )
+          # refresh the service
+          described_class.expects(:svccfg).with("-s",params[:fmri],"refresh")
+          expect(provider.create).to eq(nil)
+        end
       end
     end
     context "#destroy" do
@@ -380,14 +418,14 @@ describe Puppet::Type.type(:svccfg).provider(:svccfg) do
         expect{resource}.not_to raise_error
       end
       it "should execute svccfg delprop" do
-        described_class.expects(:svccfg).with("-s",resource[:fmri],"delprop",resource[:property])
-        described_class.expects(:svccfg).with("-s",resource[:fmri],"refresh")
+        described_class.expects(:svccfg).with("-s",params[:fmri],"delprop",params[:property])
+        described_class.expects(:svccfg).with("-s",params[:fmri],"refresh")
         expect(provider.destroy).to eq(nil)
       end
       it "should execute svccfg delprop" do
-        resource[:property] = "tm_proppat_nt_config_user"
-        described_class.expects(:svccfg).with("-s",resource[:fmri],"delprop",resource[:property])
-        described_class.expects(:svccfg).with("-s",resource[:fmri],"refresh")
+        params[:property] = "tm_proppat_nt_config_user"
+        described_class.expects(:svccfg).with("-s",params[:fmri],"delprop",params[:property])
+        described_class.expects(:svccfg).with("-s",params[:fmri],"refresh")
         expect(provider.destroy).to eq(nil)
       end
     end
