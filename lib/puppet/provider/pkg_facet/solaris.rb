@@ -73,7 +73,7 @@ Puppet::Type.type(:pkg_facet).provide(:pkg_facet) do
     cv = Puppet::Type::Pkg_facet::ProviderPkg_facet.send(:class_variable_get, :@@classvars)
     # If changes have been stashed apply them
     if cv[:changes].length > 0
-      Puppet.debug("Applying %s defered facet changes" % cv[:changes].length)
+      Puppet.debug("Applying %s deferred facet changes" % cv[:changes].length)
       pkg("change-facet", cv[:changes])
     end
 
