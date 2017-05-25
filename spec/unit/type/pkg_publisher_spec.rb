@@ -143,31 +143,34 @@ describe Puppet::Type.type(:pkg_publisher) do
 
     describe "for proxy" do
       def validate(pval)
-         @class.new(:name => @profile_name, :proxy => pval)
+         @class.new(:name => @profile_name, :proxy => pval,
+         :origin => "http://bar")
       end
 
       it "should accept a value" do
-        expect { validate "foo" }.not_to raise_error
+        expect { validate "http://foo" }.not_to raise_error
       end
     end  # proxy
 
     describe "for sslkey" do
       def validate(skey)
-         @class.new(:name => @profile_name, :sslkey => skey)
+         @class.new(:name => @profile_name, :sslkey => skey,
+         :origin => "http://bar")
       end
 
       it "should accept a value" do
-        expect { validate "foo" }.not_to raise_error
+        expect { validate "/foo" }.not_to raise_error
       end
     end  # sslkey
 
     describe "for sslcert" do
       def validate(scert)
-         @class.new(:name => @profile_name, :sslcert => scert)
+         @class.new(:name => @profile_name, :sslcert => scert,
+         :origin => "http://bar")
       end
 
       it "should accept a value" do
-        expect { validate "foo" }.not_to raise_error
+        expect { validate "/foo" }.not_to raise_error
       end
     end  # sslcert
 

@@ -25,33 +25,27 @@ Puppet::Type.type(:pkg_publisher).provide(:pkg_publisher) do
   def self.instances
     publishers = {}
     publisher_order = []
-    pkg(:publisher, "-H", "-F", "tsv").split("\n").collect do |line|
-      name, sticky, _syspub, enabled, type, _status, origin, proxy = \
-                                                             line.split("\t")
+    pkg(:publisher, "-H", "-F", "tsv").split("\n").each do |line|
+      name, sticky, _syspub, enabled,
+      type, _status, origin, proxy = line.split
 
-      # set the order of the publishers
-      if not publisher_order.include?("name")
-        publisher_order.push name
-      end
       # strip off any trailing "/" characters
       if origin.end_with?("/")
         origin = origin[0..-2]
       end
 
-      if publishers.has_key?(name)
-        # if we've seen this publisher before, simply update the origin
-        # array
-        if type.eql? "mirror"
-          publishers[name]["mirror"] << origin
-        else
-          publishers[name]["origin"] << origin
-        end
-
-      else
+      unless publishers.has_key?(name)
         # create a new hash entry for this publisher
-        publishers[name] = {'sticky' => sticky, 'enable' => enabled,
-                            'origin' => Array[],
-                            'mirror' => Array[]}
+        publishers[name] = {
+          'sticky' => sticky,
+          'enable' => enabled,
+          'proxy' => Array[],
+          'origin' => Array[],
+          'mirror' => Array[],
+          'sslkey' => Array[],
+          'sslcert' => Array[],
+        }
+      end
 
         if type.eql? "mirror"
           publishers[name]["mirror"] << origin
@@ -59,18 +53,38 @@ Puppet::Type.type(:pkg_publisher).provide(:pkg_publisher) do
           publishers[name]["origin"] << origin
         end
 
-        publishers[name]["proxy"] = proxy if proxy != "-"
+        # proxy is per-origin/mirror
+        publishers[name]["proxy"].push(proxy == '-' ? :absent : proxy)
 
+        # set the order of the publishers
+        if not publisher_order.include?("name")
+          publisher_order.push name
+        end
         index = publisher_order.index(name)
-        if index == 0
+        if index == 0 || index == nil
           publishers[name]["searchfirst"] = :true
           publishers[name]["searchafter"] = nil
         else
           publishers[name]["searchfirst"] = nil
           publishers[name]["searchafter"] = publisher_order[index-1]
         end
+    end
+
+    __pub = ""
+    pkg(:publisher, "-H", "-F", "tsv", publishers.keys).split("\n")
+      .each do |line|
+
+      field,value = line.strip.split(': ',2)
+      case field
+      when %r{publisher}i
+        __pub = value
+      when %r{SSL Key}i
+         publishers[__pub]["sslkey"].push(value == 'None' ? :absent : value)
+      when %r{SSL Cert}i
+         publishers[__pub]["sslcert"].push(value == 'None' ? :absent : value)
       end
     end
+
     # create new entries for the system
     publishers.keys.collect do |publisher|
       new(:name => publisher,
@@ -83,8 +97,8 @@ Puppet::Type.type(:pkg_publisher).provide(:pkg_publisher) do
           :searchfirst => publishers[publisher]["searchfirst"],
           :searchafter => publishers[publisher]["searchafter"],
           :searchbefore => nil,
-          :sslkey => nil,
-          :sslcert => nil)
+          :sslkey => publishers[publisher]["sslkey"],
+          :sslcert => publishers[publisher]["sslcert"])
     end
   end
 
@@ -101,16 +115,17 @@ Puppet::Type.type(:pkg_publisher).provide(:pkg_publisher) do
   end
 
   def exists?
-    # only compare against @resource if one is provided via manifests
-    if @property_hash[:ensure] == :present and @resource[:origin] != nil
-      return @property_hash[:origin].sort() == @resource[:origin].sort()
-    end
     @property_hash[:ensure] == :present
   end
 
-  def build_origin
+  def is_origin?(uri)
+    @resource[:origin].index(uri) ? true : false
+  end
+
+  def build_origin(index=-1)
     origins = []
 
+    if index == -1
     # add all the origins from the manifest
     if !@resource[:origin].nil?
       for o in @resource[:origin] do
@@ -124,25 +139,27 @@ Puppet::Type.type(:pkg_publisher).provide(:pkg_publisher) do
         origins << "-m" << o
       end
     end
+  else
+    combined = @resource[:origin] + @resource[:mirror]
+    origins << (is_origin?(combined[index]) ? '-g' : '-m')
+    origins << combined[index]
+  end
+
+    # For batchable (-1) and the first entry (0)
     # remove all the existing origins and mirrors
-    if @property_hash != {}
-      if !@property_hash[:origin].nil?
-        for o in @property_hash[:origin] do
-          origins << "-G" << o
-        end
-      end
-      if !@property_hash[:mirror].nil?
-        for o in @property_hash[:mirror] do
-          origins << "-M" << o
-        end
-      end
+    if index < 1
+      origins << '-G' << '*'
+      origins << '-M' << '*'
     end
+
     origins
   end
 
-  def build_flags
+  def build_flags(index=-1)
     flags = []
 
+   # For the first entry or if batahcable set all the top level flags
+   if index < 1
     if searchfirst = @resource[:searchfirst] and searchfirst != ""
       if searchfirst == :true
         flags << "--search-first"
@@ -176,17 +193,20 @@ Puppet::Type.type(:pkg_publisher).provide(:pkg_publisher) do
                        "Skipping --search-before argument"
       end
     end
+  end
 
-    if proxy = @resource[:proxy]
-      flags << "--proxy" << proxy
+    # If this is batched use the values for the first array element
+    index = (index < 1 ? 0 : index )
+    if (value = @resource[:proxy][index]) && value != :absent
+      flags << "--proxy" << value
     end
 
-    if sslkey = @resource[:sslkey]
-      flags << "-k" << sslkey
+    if (value = @resource[:sslkey][index]) && value != :absent
+      flags << "-k" << value
     end
 
-    if sslcert = @resource[:sslcert]
-      flags << "-c" << sslcert
+    if (value = @resource[:sslcert][index]) && value != :absent
+      flags << "-c" << value
     end
     flags
   end
@@ -198,6 +218,7 @@ Puppet::Type.type(:pkg_publisher).provide(:pkg_publisher) do
     else
       pkg("set-publisher", "--non-sticky", @resource[:name])
     end
+    value
   end
 
   def enable=(value)
@@ -206,37 +227,82 @@ Puppet::Type.type(:pkg_publisher).provide(:pkg_publisher) do
     else
       pkg("set-publisher", "--disable", @resource[:name])
     end
+    value
   end
 
   def searchfirst=(value)
     if value == :true
       pkg("set-publisher", "--search-first", @resource[:name])
     end
+    value
   end
 
   def searchbefore=(value)
     pkg("set-publisher", "--search-before", value, @resource[:name])
+    value
   end
 
   def searchafter=(value)
     pkg("set-publisher", "--search-after", value, @resource[:name])
+    value
   end
 
-  def proxy=(value)
-    pkg("set-publisher", "--proxy", value, @resource[:name])
+  def proxy=(array)
+    combined = @resource[:origin] + @resource[:mirror]
+    array.each_with_index do |value,idx|
+      value = value == :absent ? '' : value
+      pkg("set-publisher", "--proxy", value,
+      (is_origin?(combined[idx]) ? '-g' : '-m'), combined[idx],
+      @resource[:name])
+    end
+    array
   end
 
-  def sslkey=(value)
-    pkg("set-publisher", "-k", value, @resource[:name])
+  def sslkey=(array)
+    # Unset value appears to be the empty string. However, if pkg cannot
+    # connect to the publisher after modification the change is rejected
+    combined = @resource[:origin] + @resource[:mirror]
+    array.each_with_index do |value,idx|
+      value = value == :absent ? '' : value
+      pkg("set-publisher", "-k", value, '-p', combined[idx])
+    end
+    array
   end
 
-  def sslcert=(value)
-    pkg("set-publisher", "-c", value, @resource[:name])
+  def sslcert=(array)
+    # Unset value appears to be the empty string. However, if pkg cannot
+    # connect to the publisher after modification the change is rejected
+    combined = @resource[:origin] + @resource[:mirror]
+    array.each_with_index do |value,idx|
+      value = value == :absent ? '' : value
+      pkg("set-publisher", "-c", value, '-p', combined[idx])
+    end
+    array
+  end
+
+  def batchable?
+    # publishers with multiple origins / mirrors can use different proxies
+    # and ssl certs/keys per-URI if values are provided and non-uniform
+    # each origin will be created individually
+    if @resource[:proxy].length == 0 &&
+      @resource[:sslcert].length == 0 &&
+      @resource[:sslkey].length == 0
+      true
+    else
+      false
+    end
   end
 
   # required puppet functions
   def create
-    pkg("set-publisher", build_flags, build_origin, @resource[:name])
+    if batchable?
+      pkg("set-publisher", *build_flags, *build_origin, @resource[:name])
+    else
+      (0...(@resource[:origin] + @resource[:mirror]).length).each do |index|
+        pkg("set-publisher", *build_flags(index), *build_origin(index), @resource[:name])
+      end
+    end
+
     # pkg(5) does not allow for a new publisher to be set with the disabled
     # flag, so check for it after setting the publisher
     if enable = @resource[:enable] and enable != nil
@@ -246,8 +312,40 @@ Puppet::Type.type(:pkg_publisher).provide(:pkg_publisher) do
     end
   end
 
-  def mirror=(value)
-    create
+  def mirror=(array)
+    if array.empty? || array == [:absent]
+      pkg("set-publisher", '-M', '*', @resource[:name])
+    else
+      add_list = array - mirror
+      remove_list = mirror - array
+      unless add_list.empty?
+        pkg("set-publisher", *(%w[-m].product(add_list).flatten),
+        @resource[:name])
+      end
+      unless remove_list.empty?
+        pkg("set-publisher", *(%w[-M].product(remove_list).flatten),
+        @resource[:name])
+      end
+    end
+    @property_hash[:mirror] = array
+  end
+
+  def origin=(array)
+    if array.empty? || array == [:absent]
+      pkg("set-publisher", '-G', '*', @resource[:name])
+    else
+      add_list = array - origin
+      remove_list = origin - array
+      unless add_list.empty?
+        pkg("set-publisher", *(%w[-g].product(add_list).flatten),
+        @resource[:name])
+      end
+      unless remove_list.empty?
+        pkg("set-publisher", *(%w[-G].product(remove_list).flatten),
+        @resource[:name])
+      end
+    end
+    @property_hash[:origin] = array
   end
 
   def destroy
