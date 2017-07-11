@@ -1,0 +1,6 @@
+solarisstudio  true  false  true  origin  online  https://pkg.oracle.com/solarisstudio/support/  http://bogus.proxy
+exa-family  true  false  true  origin  online  https://pkg.oracle.com/solaris/exa-family/  -
+solaris-mirror  true  false  true  origin  online  file:///media/sol-12_0-119-repo/repo/  -
+solaris-mirror  true  false  true  mirror  online  http://pkg.oracle.com/solaris/release/  -
+solaris  true  false  true  origin  online  file:///media/sol-12_0-119-repo/repo/  -
+solaris  true  false  true  origin  online  http://pkg.oracle.com/solaris/release/  http://bogus.proxy

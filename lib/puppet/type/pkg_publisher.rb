@@ -16,7 +16,35 @@
 
 require 'puppet/property/list'
 Puppet::Type.newtype(:pkg_publisher) do
-  @doc = "Manage Oracle Solaris package publishers"
+  @doc = "Manage Oracle Solaris package publishers.
+
+  If pkg is unable to connect to the publisher after modifications are made
+  it will revert the change. e.g. attempts to remove ssl certs and keys
+  will fail if the repository cannot be reached after they are removed.
+
+  When setting proxies, sslcerts, and sslkeys the number of each must match
+  the combined number of origins and mirrors provided.
+
+  Proxies, certs, and keys are applied to origins and mirrors in the order in
+  which they are specified starting with origins.
+
+''''
+  pkg_publisher{ 'solaris':
+    :enable => 'true',
+    :ensure => :present,
+    :mirror => [],
+    :name => 'solaris',
+    :origin => ['file:///media/sol-12_0-119-repo/repo', 'http://pkg.oracle.com/solaris/release'],
+    :proxy => [:absent, 'http://bogus.proxy'],
+    :searchafter => 'solaris-mirror',
+    :searchbefore => nil,
+    :searchfirst => nil,
+    :sslcert => [:absent, '/cert/for/2nd_origin'],
+    :sslkey => nil,
+    :sticky => 'true',
+  }
+''''
+  "
 
   ensurable
 
@@ -25,27 +53,20 @@ Puppet::Type.newtype(:pkg_publisher) do
     isnamevar
   end
 
-  newproperty(:origin, :parent => Puppet::Property::List) do
+  newproperty(:origin, :parent => Puppet::Property::List,
+              :array_matching => :all ) do
     desc "Which origin URI(s) to set.  For multiple origins, specify them
               as a list"
 
-    # ensure should remains an array
+    # Stop invalid parameter membership(:membership) errors as we don't have
+    # a membership parameter
     def should
       @should
     end
 
-    def insync?(is)
-      is = [] if is == :absent or is.nil?
-      is.sort == self.should.sort
-    end
-
-    def retrieve
-      provider.origin
-    end
-
     # for origins with a file:// URI, strip any trailing / character
     munge do |value|
-      if value.start_with? "file" and value.end_with? "/"
+      if value.to_s.end_with? "/"
         value = value.chomp("/")
       else
         value
@@ -77,43 +98,97 @@ Puppet::Type.newtype(:pkg_publisher) do
               order"
   end
 
-  newproperty(:proxy) do
+  newproperty(:proxy, :parent => Puppet::Property::List,
+  :array_matching => :all ) do
     desc "Use the specified web proxy URI to retrieve content for the
-              specified origin or mirror"
-  end
-
-  newproperty(:sslkey) do
-    desc "Specify the client SSL key"
-  end
-
-  newproperty(:sslcert) do
-    desc "Specify the client SSL certificate"
-  end
-
-  newproperty(:mirror, :parent => Puppet::Property::List) do
-    desc "Which mirror URI(s) to set.  For multiple mirrors, specify them
-              as a list"
-
-    # ensure should remains an array
+              specified origin or mirror (list). If provided the number of
+              entries must match the the number of origins and mirrors.
+              Provide the value :absent for missing values if no key is needed."
     def should
       @should
     end
 
-    def insync?(is)
-      is = [] if is == :absent or is.nil?
-      is.sort == self.should.sort
-    end
+    newvalues(%r{^http://},:absent)
+  end
 
-    def retrieve
-      provider.mirror
+  newproperty(:sslkey, :parent => Puppet::Property::List,
+  :array_matching => :all ) do
+    desc "Specify the client SSL key (list). If provided the number of entries
+    must match the the number of origins and mirrors. Provide the value :absent
+    for missing values if no key is needed."
+    def should
+      @should
+    end
+    newvalues(:absent,%r{^/.*})
+  end
+
+  newproperty(:sslcert, :parent => Puppet::Property::List,
+  :array_matching => :all ) do
+    desc "Specify the client SSL certificate (list). If provided the number of entries
+    must match the the number of origins and mirrors. Provide the value :absent
+    for missing values if no key is needed."
+    def should
+      @should
+    end
+    newvalues(:absent,%r{^/.*})
+  end
+
+  newproperty(:mirror, :parent => Puppet::Property::List,
+  :array_matching => :all ) do
+    desc "Which mirror URI(s) to set.  For multiple mirrors, specify them
+              as a list"
+    def should
+      @should
     end
 
     munge do |value|
-      if value.start_with? "file" and value.end_with? "/"
+      if value.to_s.end_with? "/"
         value = value.chomp("/")
       else
         value
       end
+    end
+  end
+  validate {
+    # Don't try to validate if we don't want the resource to be present
+    if self[:ensure] != :present
+      return true
+    end
+    uris = self[:origin].to_a + self[:mirror].to_a
+    unless self[:proxy].to_a.length == 0 ||
+      self[:proxy].length == uris.length
+      fail("The number of proxies #{self[:proxy].length} must be 0 or equal to the number of origins and mirrors #{uris.length}")
+    end
+    unless self[:sslcert].to_a.length == 0 ||
+      self[:sslcert].length == uris.length
+      fail("The number of sslcerts #{self[:sslcert].length} must be 0 or equal to the number of origins and mirrors #{uris.length}")
+    end
+    unless self[:sslkey].to_a.length == 0 ||
+      self[:sslkey].length == uris.length
+      fail("The number of sslkeys #{self[:sslkey].length} must be 0 or equal to the number of origins and mirrors #{uris.length}")
+    end
+    true
+  }
+
+  # autorequire any sslcert or sslkey
+  autorequire(:file) do
+    children = catalog.resources.select do |res|
+      res.type == :file &&
+      ( self[:sslcert].include?(res[:path]) ||
+      self[:sslkey].include?(res[:path]))
+    end
+    children.each.collect do |child|
+      # We expect name to almost always be the path...almost
+      child[:name]
+    end
+  end
+
+  # autorequire any referenced publisher for search before/after
+  autorequire(:pkg_publisher) do
+    catalog.resources.select do |res|
+      res.type == :pkg_publisher &&
+      ( self[:searchbefore] == res[:name] ||
+      self[:searchafter] == res[:name] )
     end
   end
 end

@@ -1,0 +1,46 @@
+
+            Publisher: solaris
+                Alias:
+           Origin URI: file:///media/sol-12_0-119-repo/repo/
+              SSL Key: None
+             SSL Cert: None
+           Origin URI: http://pkg.oracle.com/solaris/release/
+              SSL Key: None
+             SSL Cert: None
+          Client UUID: debac1e-cafe-decaf-bad1-00000100000
+      Catalog Updated: Wed May 03 19:52:24 2017
+              Enabled: Yes
+
+            Publisher: exa-family
+                Alias:
+           Origin URI: https://pkg.oracle.com/solaris/exa-family/
+              SSL Key: /var/pkg/ssl/4f58196a8bcf9519279cf02f8208a5617aca9984
+             SSL Cert: /var/pkg/ssl/ffe21948d584f3eb6a55f70335ef3a877d01e89a
+ Cert. Effective Date: Sun May 14 18:05:33 2017
+Cert. Expiration Date: Wed May 22 18:05:33 2019
+          Client UUID: debac1e-cafe-decaf-bad1-00000100001
+      Catalog Updated: Wed May 03 15:49:21 2017
+              Enabled: Yes
+
+            Publisher: solarisstudio
+                Alias:
+           Origin URI: https://pkg.oracle.com/solarisstudio/support/
+              SSL Key: /var/pkg/ssl/4f58196a8bcf9519279cf02f8208a5617aca9984
+             SSL Cert: /var/pkg/ssl/ffe21948d584f3eb6a55f70335ef3a877d01e89a
+ Cert. Effective Date: Sun May 14 18:05:33 2017
+Cert. Expiration Date: Wed May 22 18:05:33 2019
+          Client UUID: debac1e-cafe-decaf-bad1-00000100002
+      Catalog Updated: Fri May 19 23:29:38 2017
+              Enabled: Yes
+
+            Publisher: solaris-mirror
+                Alias:
+           Origin URI: file:///media/sol-12_0-119-repo/repo/
+              SSL Key: None
+             SSL Cert: None
+           Origin URI: http://pkg.oracle.com/solaris/release/
+              SSL Key: None
+             SSL Cert: None
+          Client UUID: debac1e-cafe-decaf-bad1-00000100003
+      Catalog Updated: Wed May 03 19:52:24 2017
+              Enabled: Yes
