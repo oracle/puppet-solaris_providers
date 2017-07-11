@@ -23,7 +23,7 @@ Puppet::Type.newtype(:evs) do
     desc "The full name for EVS (including the tenant name)"
     validate do |value|
       if value.split("/").length != 2
-        raise Puppet::Error, "Invalid EVS name\n"\
+        fail "Invalid EVS name\n"\
                              "Name convention must be <tenant>/<evs>"
       end
     end
@@ -46,7 +46,7 @@ Puppet::Type.newtype(:evs) do
       value.split(",").collect do |each_val|
         if not ["mac-nospoof", "restricted", "ip-nospoof",
                 "dhcp-nospoof", "none", ""].include? each_val
-          raise Puppet::Error, "Invalid value \"#{each_val}\". "\
+          fail "Invalid value \"#{each_val}\". "\
                                "Valid values are mac-nospoof, restricted, "\
                                "ip-nospoof, dhcp-nospoof, none."
         end

@@ -25,7 +25,8 @@ Puppet::Type.type(:vnic).provide(:vnic) do
   def self.instances
     vnics = []
     dladm("show-vnic", "-p", "-o", "link,over,macaddress").split(
-      "\n").collect do |line|
+      "\n"
+    ).collect do |line|
       link, over, mac = line.split(":", 3)
       # remove the escape character
       vnics << new(:name => link,

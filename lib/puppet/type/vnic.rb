@@ -26,12 +26,12 @@ Puppet::Type.newtype(:vnic) do
 
     validate do |vnic_value|
       if not vnic_value =~ /^[[:alpha:]]([\w\/.-]){1,29}([\d])$/i
-        raise Puppet::Error, "Invalid VNIC name: #{vnic_value}"
+        fail "Invalid VNIC name: #{vnic_value}"
       end
     end
   end
 
-  newparam(:temporary)  do
+  newparam(:temporary) do
     desc "Optional parameter that specifies that  the  VNIC  is  temporary.
               Temporary VNICs last until the next reboot."
     newvalues(:true, :false)
@@ -42,7 +42,7 @@ Puppet::Type.newtype(:vnic) do
               operating"
     validate do |link_value|
       if not link_value =~ /^[[:alpha:]]([\w.]){1,29}([\d])$/i
-        raise Puppet::Error, "Invalid lower-link: #{link_value}"
+        fail "Invalid lower-link: #{link_value}"
       end
     end
   end
@@ -51,7 +51,7 @@ Puppet::Type.newtype(:vnic) do
     desc "Sets the VNIC's MAC address based on  the  specified value."
     validate do |mac_value|
       if not mac_value =~ /^([[:xdigit:]]{1,2}[:-]){5}[[:xdigit:]]{1,2}$/i
-        raise Puppet::Error, "Invalid MAC address: #{mac_value}"
+        fail "Invalid MAC address: #{mac_value}"
       end
     end
   end

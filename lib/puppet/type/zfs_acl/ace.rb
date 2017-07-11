@@ -15,7 +15,6 @@
 #
 
 class Puppet::Type::ZfsAcl
-
   class Ace < Hash
   end
 
@@ -36,14 +35,14 @@ class Puppet::Type::ZfsAcl
         delete read_acl write_acl write_owner synchronize
         absent
     )
-    @dir_perms = %w( list_directory add_subdirectory add_file )
+    @dir_perms = %w(list_directory add_subdirectory add_file)
     @read_set = %w(read_data read_acl read_attributes read_xattr)
     @write_set = %w(write_data append_data write_attributes write_xattr)
-    @target = %w( owner@ group@ everyone@ owner group everyone )
+    @target = %w(owner@ group@ everyone@ owner group everyone)
     @target_patterns = [ /^user:.+/, /^group:.+/ ]
-    @perm_sets = %w( full_set modify_set read_set write_set )
-    @inheritance = %w( file_inherit dir_inherit inherit_only no_propagate absent )
-    @perm_type = %w( allow deny audit alarm )
+    @perm_sets = %w(full_set modify_set read_set write_set)
+    @inheritance = %w(file_inherit dir_inherit inherit_only no_propagate absent)
+    @perm_type = %w(allow deny audit alarm)
     class << self
       attr_reader :perms, :target, :target_patterns, :perm_sets, :inheritance,
         :perm_type, :default_perms, :write_set, :read_set
@@ -58,7 +57,7 @@ class Puppet::Type::ZfsAcl
       # problematic
 
       cperms=Array.new(14).fill('-')
-      value.each { |perm|
+      value.each do |perm|
         # ordering isn't strictly important but is probably useful visually
         # for the end user rwxpdDaARWcCos
         case perm
@@ -91,12 +90,12 @@ class Puppet::Type::ZfsAcl
         when 'synchronize'
           cperms[13] = :s
         end
-      }
+      end
       cperms
     end
     def self.compact_inh(value)
       cinh=Array.new(6).fill('-')
-      value.each { |inh|
+      value.each do |inh|
         # There are six positions...
         case inh
         when 'file_inherit'
@@ -108,7 +107,7 @@ class Puppet::Type::ZfsAcl
         when 'no_propagate'
           cinh[3] = :n
         end
-      }
+      end
      cinh
     end
   end
@@ -122,13 +121,13 @@ class Puppet::Type::ZfsAcl
       elsif hash.kind_of?(String)
         hash = self.split_ace(hash)
       else
-        raise Puppet::Error, "Invalid input #{hash.class}:#{hash}"
+        fail "Invalid input #{hash.class}:#{hash}"
       end
 
-      hash.dup.each_pair { |k,v|
+      hash.dup.each_pair do |k,v|
         hash.delete(k)
         hash[k.intern] = v
-      }
+      end
 
       @hash=hash
       @provider = (resource[:provider] rescue nil)
@@ -136,8 +135,7 @@ class Puppet::Type::ZfsAcl
 
       # Munge values
       case @hash[:target]
-      when /:/
-        # do nothing
+      # when /:/ # do nothing
       when 'everyone', 'group', 'owner'
         # allow the string but convert to ...@ syntax
         @hash[:target] << '@'
@@ -189,11 +187,12 @@ class Puppet::Type::ZfsAcl
       hsh['perm_type'] = fields.pop
 
       # The first one or two fields define the target
-      if %w(user group groupsid usersid sid).include?(fields[0])
-        hsh['target'] = fields.slice!(0,2).join(":")
-      else
-        hsh['target'] = fields.shift
-      end
+      hsh['target']=
+        if %w(user group groupsid usersid sid).include?(fields[0])
+          fields.slice!(0,2).join(":")
+        else
+          fields.shift
+        end
 
       # The next field is perms even if it is empty
       hsh['perms'] = fields.shift.split("/")
@@ -225,14 +224,18 @@ class Puppet::Type::ZfsAcl
     # Only create a hash from ace values
     def hash
       @hash[:perm_type].hash ^
-      @hash[:perms].hash ^
-      @hash[:inheritance].hash ^
-      @hash[:target].hash
+        @hash[:perms].hash ^
+        @hash[:inheritance].hash ^
+        @hash[:target].hash
     end
 
     # Act like an object automatically and allow dot access
     def method_missing(sym)
-        @hash[sym]
+        @hash[sym] || super
+    end
+
+    def respond_to_missing?(sym,include_all=false)
+      super
     end
 
     # Because we modify the set of perms if we are adding defaults

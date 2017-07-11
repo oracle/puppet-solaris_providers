@@ -37,11 +37,11 @@ Puppet::Type.newtype(:link_properties) do
       # There will almost always be more properties on the system than
       # defined in the resource. Make sure the properties in the resource
       # are insync
-      should.each_pair { |prop,value|
-        return false unless is.has_key?(prop)
+      should.each_pair do |prop,value|
+        return false unless is.key?(prop)
         # Stop after the first out of sync property
         return false unless property_matches?(is[prop],value)
-      }
+      end
       true
     end
 

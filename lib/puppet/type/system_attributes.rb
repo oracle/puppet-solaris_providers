@@ -30,7 +30,6 @@ Puppet::Type.newtype(:system_attributes) do
       [ /((\/.*))/m, [ [:name],[:file] ] ],
       [ /(.*)/m, [ [:name] ] ]
     ]
-
   end
 
   newparam(:name, :namevar => true) do

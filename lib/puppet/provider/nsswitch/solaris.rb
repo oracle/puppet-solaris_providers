@@ -23,7 +23,7 @@ Puppet::Type.type(:nsswitch).provide(:nsswitch,
   commands :svccfg => '/usr/sbin/svccfg', :svcprop => '/usr/bin/svcprop'
 
   class << self; attr_accessor :nsswitch_fmri end
-  Nsswitch_fmri = "svc:/system/name-service/switch"
+  Nsswitch_fmri = "svc:/system/name-service/switch".freeze
 
   mk_resource_methods
 
@@ -43,15 +43,15 @@ Puppet::Type.type(:nsswitch).provide(:nsswitch,
 
   def self.prefetch(resources)
     things = instances
-    resources.keys.each { |key|
-      things.find { |prop|
+    resources.keys.each do |key|
+      things.find do |prop|
         # key.to_s in case name uses newvalues and is converted to symbol
         prop.name == key.to_s
-      }.tap { |provider|
+      end.tap do |provider|
         next if provider.nil?
         resources[key].provider = provider
-      }
-    }
+      end
+    end
   end
 
   def exists?

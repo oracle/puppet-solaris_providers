@@ -27,7 +27,7 @@ Puppet::Type.newtype(:evs_properties) do
     # Names are preset to "controller_property" and "client_property"
     validate do |value|
       if value != "controller_property" && value != "client_property"
-        raise Puppet::Error, "Invalid property type name\n" \
+        fail "Invalid property type name\n" \
                              "Name must be either 'controller_property' or " \
                              "'client_property'"
       end
@@ -52,14 +52,14 @@ Puppet::Type.newtype(:evs_properties) do
     # Use munge to support single value input
     munge do |value|
       uplink_list = value.strip().split(";", -1)
-      if uplink_list.length == 0
+      if uplink_list.empty?
         value = ";;;;"
       elsif uplink_list.length == 1
         value = "#{value};;;;"
       elsif uplink_list.length == 5
         value
       else
-        raise Puppet::Error, "Invalid uplink_port format: \n" \
+        fail "Invalid uplink_port format: \n" \
                              "The format must be uplink_port=<uplink> or " \
                              "uplink_port='<uplink>;[<vlan-range>];[<vxlan-range>];" \
                              "[<host>];[<flat>]'"
@@ -75,14 +75,14 @@ Puppet::Type.newtype(:evs_properties) do
     # Use munge to support single value input
     munge do |value|
       uri_list = value.strip().split(";", -1)
-      if uri_list.length == 0
+      if uri_list.empty?
         value = ";"
       elsif uri_list.length == 1
         value = "#{value};"
       elsif uri_list.length == 2
         value
       else
-        raise Puppet::Error, "Invalid uri_template format: \n"\
+        fail "Invalid uri_template format: \n"\
                              "The format of the uri_template value must be\n"\
                              "uri_template='ssh://[username@][;<host>]' or \n"\
                              "uri_template='unix://[username@][;<host>]'"
@@ -106,14 +106,14 @@ Puppet::Type.newtype(:evs_properties) do
     # Use munge to support single value input
     munge do |value|
       vxlan_list = value.strip().split(";", -1)
-      if vxlan_list.length == 0
+      if vxlan_list.empty?
         value = ";;"
       elsif vxlan_list.length == 1
         value = "#{value};;"
       elsif vxlan_list.length == 3
         value
       else
-        raise Puppet::Error, "Invalid vxlan_addr format: \n" \
+        fail "Invalid vxlan_addr format: \n" \
                              "The format of the vxlan_addr value must be\n"\
                              "vxlan_addr=<vxlan_IP_addr> or"\
                              "vxlan_addr='<vxlan_IP_addr>;[<vxlan-range>];[<host>]'"

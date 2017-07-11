@@ -69,12 +69,12 @@ Puppet::Type.newtype(:ilb_server) do
 
     validate do |value|
       value.strip!
-      if value[0] == '['
-        # IPv6 hostspec only
-        _host = value.tr('[]','')
-      else
-        _host = value
-      end
+      _host =
+        if value[0] == '['
+          value.tr('[]','')
+        else
+          value
+        end
       unless ( valid_hostname?(_host) || valid_ip?(_host) )
         fail "Invalid host or IP #{_host}"
       end
@@ -107,7 +107,7 @@ Puppet::Type.newtype(:ilb_server) do
 
     validate do |value|
       fail "Must be defined" unless value
-      fail "Must be defined" unless value.match(/[\p{Alnum}_]+/)
+      fail "Must be defined" unless value =~ /[\p{Alnum}_]+/
     end
   end
 
@@ -127,5 +127,4 @@ Puppet::Type.newtype(:ilb_server) do
   autorequire(:ilb_servergroup) do
     [self[:servergroup]]
   end
-
 end

@@ -39,7 +39,7 @@ Puppet::Type.type(:svccfg).provide(:svccfg) do
     # "prop_fmri" => [ "fmri", "property", "type", "value" ]
 
     svcprop('-a', '-f', '*').each_line do |line|
-      if line.encode!(:invalid => :replace).match(/\Asvc:/)
+      if line.encode!(:invalid => :replace).start_with?('svc:')
         @prop_fmri = line.chomp.split[0]
         svcs[@prop_fmri] = line.chomp.split(%r(/:properties/| ),4)
       else
@@ -54,24 +54,20 @@ Puppet::Type.type(:svccfg).provide(:svccfg) do
     # Walk each discovered service
     svcs.each_pair do |prop_fmri,a|
       # Walk each property and create the resource
-      instances.push new(
-                       :name       => prop_fmri,
-                       :prop_fmri  => prop_fmri,
-                       :fmri       => a[0],
-                       :property   => a[1],
-                       :type       => a[2],
-                       :value      => a[3],
-                       :ensure     => :present,
-                     )
+      instances.push new(:name       => prop_fmri,
+                         :prop_fmri  => prop_fmri,
+                         :fmri       => a[0],
+                         :property   => a[1],
+                         :type       => a[2],
+                         :value      => a[3],
+                         :ensure     => :present)
 
       tmp_pg = prop_fmri.slice(0,prop_fmri.rindex('/'))
-      unless pg_created.has_key? tmp_pg
-        pgs.push new(
-                   :name => tmp_pg,
+      unless pg_created.key? tmp_pg
+        pgs.push new(:name => tmp_pg,
                    :prop_fmri => tmp_pg,
                    :type => :unknown_pg,
-                   :ensure => :present
-                 )
+                   :ensure => :present)
         pg_created[tmp_pg]=true
       end
     end
@@ -80,19 +76,19 @@ Puppet::Type.type(:svccfg).provide(:svccfg) do
 
   def self.prefetch(resources)
     things = instances
-    resources.each_pair { |key,res|
-      things.find { |prop|
+    resources.each_pair do |key,res|
+      things.find do |prop|
         # Match on prop_fmri
         [
           res[:prop_fmri],
           # Try to construct a prop_fmri string
           "%s/:properties/%s" % [res[:fmri], res[:property]]
         ].include? prop.prop_fmri
-      }.tap { |provider|
+      end.tap do |provider|
         next if provider.nil?
         resources[key].provider = provider
-      }
-    }
+      end
+    end
   end
 
   def update_property_hash

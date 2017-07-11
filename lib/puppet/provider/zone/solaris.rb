@@ -52,10 +52,9 @@ Puppet::Type.type(:zone).provide(:solaris) do
   # or performing a zone configuration, which requires a zonecfg_export
   # file or string.
   def configure
-
     # make sure there's a zonecfg from some source
     if @resource[:zonecfg_archive].nil? && @resource[:zonecfg_export].nil?
-      raise Puppet::Error, "No configuration resource is defined."
+      fail "No configuration resource is defined."
     end
 
     # open zonecfg_export as a file if possible or treat it like a string
@@ -117,7 +116,7 @@ Puppet::Type.type(:zone).provide(:solaris) do
     if var[:input]
       execute("echo \"#{var[:input]}\" | #{var[:cmd]}", :failonfail => true, :combine => true)
     else
-      execute("#{var[:cmd]}", :failonfail => true, :combine => true)
+      execute((var[:cmd]).to_s, :failonfail => true, :combine => true)
     end
   end
 
@@ -162,7 +161,6 @@ Puppet::Type.type(:zone).provide(:solaris) do
       end
     end
     @property_hash.dup
-
   end
 
   # We need a way to test whether a zone is in process.  Our 'ensure'
@@ -238,12 +236,12 @@ Puppet::Type.type(:zone).provide(:solaris) do
 
         unless Puppet::FileSystem.exist?(sysidcfg)
           begin
-            File.open(sysidcfg, "w", 0600) do |f|
+            File.open(sysidcfg, "w", 0o600) do |f|
               f.puts cfg
             end
           rescue => detail
             puts detail.stacktrace if Puppet[:debug]
-            raise Puppet::Error, "Could not create sysidcfg: #{detail}", detail.backtrace
+            fail "Could not create sysidcfg: #{detail}", detail.backtrace
           end
         end
       end

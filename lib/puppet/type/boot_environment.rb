@@ -23,7 +23,7 @@ Puppet::Type.newtype(:boot_environment) do
   newparam(:name) do
     desc "The BE name"
     validate do |value|
-      raise Puppet::Error, "Invalid BE name:  #{value}" unless
+      fail "Invalid BE name:  #{value}" unless
         value =~ /^[\d\w\.\-\:\_]+$/
     end
     isnamevar
@@ -47,18 +47,18 @@ Puppet::Type.newtype(:boot_environment) do
     Properties are not synchronized after BE creation.
     "
     munge do |value|
-      value.each_pair { |key,val|
+      value.each_pair do |key,val|
         value[key] = val.shellescape
-      }
+      end
     end
     validate do |value|
       fail "Invalid must be a Hash" unless value.kind_of?(Hash)
 
-      value.keys.each { |key|
-        unless key.match(/^[\p{Alnum}\-\:\_\.]+$/)
+      value.keys.each do |key|
+        unless key =~ /^[\p{Alnum}\-\:\_\.]+$/
           fail "Invalid option '#{key}' must be ALNUM - : _ ."
         end
-      }
+      end
     end
   end
 
@@ -80,9 +80,9 @@ Puppet::Type.newtype(:boot_environment) do
     newvalues(:true, :false)
   end
 
-  validate {
+  validate do
     if self[:clone_be] && self[:zpool]
       warning "zpool is ignored when cloning a BE"
     end
-  }
+  end
 end

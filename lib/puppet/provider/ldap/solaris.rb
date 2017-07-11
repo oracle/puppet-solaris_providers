@@ -25,7 +25,7 @@ Puppet::Type.type(:ldap).provide(:ldap,
   defaultfor :osfamily => :solaris, :kernelrelease => ['5.11', '5.12']
   commands :svccfg => '/usr/sbin/svccfg', :svcprop => '/usr/bin/svcprop'
 
-  Ldap_fmri = "svc:/network/ldap/client"
+  Ldap_fmri = "svc:/network/ldap/client".freeze
 
 
   mk_resource_methods
@@ -43,11 +43,10 @@ Puppet::Type.type(:ldap).provide(:ldap,
       data = line.split()
       fullprop = data[0]
       _type = data[1]
-      if data.length > 2
-        value = data[2..-1].join(" ")
-      else
-        value = nil
-      end
+      value =
+        if data.length > 2
+          data[2..-1].join(" ")
+        end
 
       _pg, prop = fullprop.split("/")
       prop = prop.intern
@@ -62,15 +61,15 @@ Puppet::Type.type(:ldap).provide(:ldap,
 
   def self.prefetch(resources)
     things = instances
-    resources.keys.each { |key|
-      things.find { |prop|
+    resources.keys.each do |key|
+      things.find do |prop|
         # key.to_s in case name uses newvalues and is converted to symbol
         prop.name == key.to_s
-      }.tap { |provider|
+      end.tap do |provider|
         next if provider.nil?
         resources[key].provider = provider
-      }
-    }
+      end
+    end
   end
 
   def exists?

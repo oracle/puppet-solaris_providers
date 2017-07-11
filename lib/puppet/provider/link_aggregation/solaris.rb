@@ -44,8 +44,8 @@ Puppet::Type.type(:link_aggregation).provide(:link_aggregation) do
       each_line.collect do |line|
       # Strip partial mac address from addrpolicy fixed lines
       line = line.gsub(/\\:/,'')
-      link, mode, policy, addrpolicy, lacpactivity, lacptimer = \
-                                                    line.chomp.split(":").map! { |e| ( e == "--" ) ? :absent : e }
+      (link, mode, policy, addrpolicy, lacpactivity, lacptimer) =
+        line.chomp.split(":").map! { |e| e == "--" ? :absent : e }
 
       aggr={
         :name => link,
@@ -57,11 +57,12 @@ Puppet::Type.type(:link_aggregation).provide(:link_aggregation) do
         :temporary => persistent.include?(link) ? :false : :true
       }
 
-      if addrpolicy && addrpolicy.match(/^fixed/)
-        aggr[:address] = macs[link]
-      else
-        aggr[:address] = :auto
-      end
+      aggr[:address] =
+        if addrpolicy =~ /^fixed/
+          macs[link]
+        else
+          aggr[:address] = :auto
+        end
 
       links = dladm("show-aggr", "-x", "-p", "-o", "port", link).
                 each_line.collect do |portline|
@@ -117,12 +118,12 @@ Puppet::Type.type(:link_aggregation).provide(:link_aggregation) do
     destroy
     # Populate resource from property hash...just in case only mode
     # is being changed
-    @property_hash.each_pair { |prop,prop_val|
+    @property_hash.each_pair do |prop,prop_val|
       unless resource[prop]
         next if prop_val == :absent
         resource[prop] = prop_val
       end
-    }
+    end
     create
     return @property_hash[:mode]= value
   end
@@ -224,9 +225,9 @@ Puppet::Type.type(:link_aggregation).provide(:link_aggregation) do
       create
 
       # Update the property_hash
-      @property_hash.keys { |prop|
+      @property_hash.keys do |prop|
         @property_hash[prop] = resource[prop]
-      }
+      end
 
       # We have done this once
       return @recreated=true

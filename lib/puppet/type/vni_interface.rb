@@ -24,7 +24,7 @@ Puppet::Type.newtype(:vni_interface) do
     isnamevar
   end
 
-  newparam(:temporary)  do
+  newparam(:temporary) do
     desc "Optional parameter that specifies that the VNI interface is
               temporary.  Temporary interfaces last until the next reboot."
     newvalues(:true, :false)

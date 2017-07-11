@@ -42,7 +42,6 @@ Puppet::Type.newtype(:svccfg) do
       [ %r^(((.*)/:properties/(.*)))^, [ [:name],[:prop_fmri],[:fmri],[:property] ] ],
       [ /(.*)/m, [ [:name] ] ]
     ]
-
   end
 
   # This is a parameter, it cannot be changed. It must be defined this way to be
@@ -65,7 +64,6 @@ Puppet::Type.newtype(:svccfg) do
     desc "The symbolic name for properties to manipulate.  When provided as the
     fully composed property FMRI <fmri>/properties:/<property> :fmri,
     :property, and :prop_fmri will be auto-populated."
-
   end
 
   newparam(:fmri) do
@@ -142,7 +140,7 @@ Puppet::Type.newtype(:svccfg) do
     end
   end
 
-  validate {
+  validate do
     # Validation must happen after we have both the type and value.
 
     # Skip validation if we are in instances/prefetch
@@ -174,7 +172,7 @@ Puppet::Type.newtype(:svccfg) do
     self[:prop_fmri] ||= "#{self[:fmri]}/:properties/#{self[:property]}"
 
     # Treat value as an array in any configuration
-    [self[:value]].flatten.each { |val|
+    [self[:value]].flatten.each do |val|
       # Validate Value arguments based on type
       case self[:type]
       when :astring, :ustring, :opaque, :boolean, :count, :fmri, :host, :hostname,
@@ -182,19 +180,18 @@ Puppet::Type.newtype(:svccfg) do
         if self[:value].nil? && (self.provider && self.provider.value.nil?)
           fail ":value is required for setting properties"
         end
-        self.send(:"is_#{self[:type]}?", val,true)
-      when is_pg_type?(self[:type])
-        # These are property groups
-        is_pg_valid?(self[:value])
+        self.send(:"is_#{self[:type]}?", val, true)
       when nil, :absent
         warning "Type should be provided in resource definition"
       else
-        # Unknown types are used for property groups
-        warning "Unknown type '#{self[:type]}' treated as property group type"
-        is_pg_valid?(self[:value])
+        unless is_pg_valid?(self[:value], true)
+          # Unknown types are used for property groups
+          warning "Unknown type '#{self[:type]}' treated as property group type"
+          is_pg_valid?(self[:value], true)
+        end
       end
-    }
-  }
+    end
+  end
 
   # Auto require property groups if they exist
   autorequire(:svccfg) do

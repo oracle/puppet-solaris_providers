@@ -25,7 +25,7 @@ Puppet::Type.type(:dns).provide(:dns,
   commands :svccfg => '/usr/sbin/svccfg', :svcprop => '/usr/bin/svcprop'
 
 
-  Dns_fmri = "svc:/network/dns/client"
+  Dns_fmri = "svc:/network/dns/client".freeze
 
   mk_resource_methods
 
@@ -50,15 +50,15 @@ Puppet::Type.type(:dns).provide(:dns,
 
   def self.prefetch(resources)
     things = instances
-    resources.keys.each { |key|
-      things.find { |prop|
+    resources.keys.each do |key|
+      things.find do |prop|
         # key.to_s in case name uses newvalues and is converted to symbol
         prop.name == key.to_s
-      }.tap { |provider|
+      end.tap do |provider|
         next if provider.nil?
         resources[key].provider = provider
-      }
-    }
+      end
+    end
   end
 
   Puppet::Type.type(:dns).validproperties.each do |field|

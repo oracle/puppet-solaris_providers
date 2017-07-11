@@ -24,7 +24,7 @@ Puppet::Type.newtype(:ip_tunnel) do
     isnamevar
   end
 
-  newparam(:temporary)  do
+  newparam(:temporary) do
     desc "Optional parameter that specifies that the IP tunnel is
               temporary.  Temporary IP tunnels last until the next reboot."
     newvalues(:true, :false)

@@ -32,7 +32,7 @@ Puppet::Type.type(:address_properties).provide(:address_properties) do
       next if perm == 'r-'
       # Skip empty values
       next if (value == nil || value.empty?)
-      if not props.has_key? addrobj
+      if not props.key? addrobj
         props[addrobj] = {}
       end
       props[addrobj][property] = value
@@ -63,19 +63,23 @@ Puppet::Type.type(:address_properties).provide(:address_properties) do
   def change_props
     out_of_sync=[]
     # Compare the desired values against the current values
-    resource[:properties].each_pair { |prop,should_be|
+    resource[:properties].each_pair do |prop,should_be|
       is = properties[prop]
       # Current Value == Desired Value
       unless is == should_be
         # Stash out of sync property
         out_of_sync.push("%s=%s" % [prop, should_be])
       end
-    }
+    end
     out_of_sync
   end
 
   def properties=(value)
-    @resource[:temporary] == :true ? tmp = "-t" : tmp = nil
+    tmp =
+      if @resource[:temporary] == :true
+        "-t"
+      end
+
     change_props.each do |prop|
       args = [prop , tmp].compact
       ipadm("set-addrprop", "-p", *args, @resource[:name])

@@ -25,9 +25,8 @@ Puppet::Type.type(:protocol_properties).provide(:protocol_properties) do
   def self.instances
     props = Hash.new { |k,v| k[v] = Hash.new }
     ipadm("show-prop", "-c", "-o",
-          "PROTO,PROPERTY,CURRENT,DEFAULT,PERSISTENT,POSSIBLE,PERM"
-         ).each_line do
-      |line|
+          "PROTO,PROPERTY,CURRENT,DEFAULT,PERSISTENT,POSSIBLE,PERM")
+      .each_line do |line|
       protocol, property, value, _tmp = line.strip.split(':',4)
       props[protocol][property] = value ? value : :absent
     end
@@ -43,29 +42,29 @@ Puppet::Type.type(:protocol_properties).provide(:protocol_properties) do
 
   def self.prefetch(resources)
     things = instances
-    resources.keys.each { |key|
-      things.find { |prop|
+    resources.keys.each do |key|
+      things.find do |prop|
         # key.to_s in case name uses newvalues and is converted to symbol
         prop.name == key.to_s
-      }.tap { |provider|
+      end.tap do |provider|
         next if provider.nil?
         resources[key].provider = provider
-      }
-    }
+      end
+    end
   end
 
   # Return an array of prop=value strings to change
   def change_props
     out_of_sync=[]
     # Compare the desired values against the current values
-    resource[:properties].each_pair { |prop,should_be|
+    resource[:properties].each_pair do |prop,should_be|
       is = properties[prop]
       # Current Value == Desired Value
       unless is == should_be
         # Stash out of sync property
         out_of_sync.push("%s=%s" % [prop, should_be])
       end
-    }
+    end
     out_of_sync
   end
 

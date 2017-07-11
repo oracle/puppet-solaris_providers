@@ -26,12 +26,14 @@ Puppet::Type.type(:ilb_rule).provide(:ilb_rule) do
     rules=Hash.new { |h,k| h[k] = {} }
     _currrule = ""
 
-    ilbadm("show-rule", "-f").each_line { |line|
+    ilbadm("show-rule", "-f").each_line do |line|
       field, value = line.strip.tr(' ','').split(":",2)
       field = field.downcase.tr('-','_')
 
       # Skip unset values
-      next if value == '--' unless field == 'pmask'
+      unless field == 'pmask'
+        next if value == '--'
+      end
 
       # Process
       case field
@@ -61,15 +63,16 @@ Puppet::Type.type(:ilb_rule).provide(:ilb_rule) do
       when 'protocol', 'lbagl'
         value = value.downcase.intern
       when 'pmask'
-        if value == '--'
-          rules[_currrule][:persistent] = 'false'
-        else
-          rules[_currrule][:persistent] = value
-        end
+        rules[_currrule][:persistent] =
+          if value == '--'
+            'false'
+          else
+            value
+          end
         next
       when 'hc_port'
         # Support 'any' and 'all' keywords
-        unless value.match(/^\d+$/)
+        unless value =~ /^\d+$/
           value = value.downcase.intern
         end
       end
@@ -77,7 +80,7 @@ Puppet::Type.type(:ilb_rule).provide(:ilb_rule) do
 
       # Collect remaining/munged values
       rules[_currrule][field.intern] = value
-    }
+    end
 
     # Return the array of rule resources
     return rules.each_value.collect { |hsh| new(hsh) }
@@ -107,18 +110,19 @@ Puppet::Type.type(:ilb_rule).provide(:ilb_rule) do
 
   def i_args
     # There will always be -i args
-    _args = [:vip, :port, :protocol].each.collect { |field|
+    _args = [:vip, :port, :protocol].each.collect do |field|
       @resource[field] ? "#{field}=#{@resource[field]}" : next
-    }
+    end
     return ["-i",_args.compact.join(',')]
   end
 
   def m_args
     # There will always be -m args
-    _args = [:lbalg, :proxy_src].each.
-              collect { |field|
-      @resource[field] ? "#{field.to_s.tr('_','-')}=#{@resource[field]}" : next
-    }
+    _args = [:lbalg, :proxy_src].each.collect do |field|
+      @resource[field] ?
+        "#{field.to_s.tr('_','-')}=#{@resource[field]}" :
+        next
+    end
 
     _args.insert(1,"type=#{@resource[:topo_type]}")
     if @resource[:persistent] && @resource[:persistent].match(%r(^/\d+$))
@@ -130,9 +134,9 @@ Puppet::Type.type(:ilb_rule).provide(:ilb_rule) do
 
   def h_args
     # There will sometimes be -h args
-    _args = [:hc_name,:hc_port].each.collect { |field|
+    _args = [:hc_name,:hc_port].each.collect do |field|
       @resource[field] ? "#{field.to_s.tr('_','-')}=#{@resource[field]}" : next
-    }
+    end
     unless _args.compact.empty?
       return ["-h",_args.compact.join(',')]
     else
@@ -142,9 +146,9 @@ Puppet::Type.type(:ilb_rule).provide(:ilb_rule) do
 
   def t_args
     # There will sometimes be -t args
-    _args = [:conn_drain,:nat_timeout,:persist_timeout].each.collect { |field|
+    _args = [:conn_drain,:nat_timeout,:persist_timeout].each.collect do |field|
       @resource[field] ? "#{field.to_s.tr('_','-')}=#{@resource[field]}" : next
-    }
+    end
     unless _args.compact.empty?
       return ["-t",_args.compact.join(',')]
     else
@@ -168,13 +172,13 @@ Puppet::Type.type(:ilb_rule).provide(:ilb_rule) do
     _args.push(i_args, m_args, h_args, t_args)
     _args.push('-o', "servergroup=#{@resource[:servergroup]}")
 
-    ilbadm(*(_args.flatten.compact), @resource[:name])
+    ilbadm(*_args.flatten.compact, @resource[:name])
 
     nil
   end
 
   def destroy
-    ilbadm("delete-rule",  @resource[:name])
+    ilbadm("delete-rule", @resource[:name])
   end
 
   # Most setter methods need to destroy/create instead of updating
@@ -184,12 +188,11 @@ Puppet::Type.type(:ilb_rule).provide(:ilb_rule) do
     :lbalg, :topo_type, :proxy_src,
     :hc_name, :hc_port,
     :conn_drain, :nat_timeout, :persist_timeout
-  ].each { |method|
+  ].each do |method|
     define_method("#{method}=") do |should|
       destroy
       create
       @property_hash[method] = should
     end
-  }
-
+  end
 end

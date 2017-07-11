@@ -23,7 +23,7 @@ Puppet::Type.newtype(:evs_ipnet) do
     desc "The full name of IPnet including tenant name"
     validate do |value|
       if value.split("/").length != 3
-        raise Puppet::Error, "Invalid IPnet name\n"\
+        fail "Invalid IPnet name\n"\
                              "Name convention must be <tenant>/<evs>/<ipnet>"
       end
     end

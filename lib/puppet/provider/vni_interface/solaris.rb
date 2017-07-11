@@ -23,7 +23,8 @@ Puppet::Type.type(:vni_interface).provide(:vni_interface) do
   def self.instances
     vnis = []
     ipadm("show-if", "-p", "-o", "IFNAME,CLASS").split(
-      "\n").each do |line|
+      "\n"
+    ).each do |line|
       ifname, ifclass = line.split(":", 2)
       next if ifclass != "vni"
       vnis << new(:name => ifname, :ensure => :present)

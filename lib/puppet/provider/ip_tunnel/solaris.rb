@@ -22,7 +22,8 @@ Puppet::Type.type(:ip_tunnel).provide(:ip_tunnel) do
 
   def self.instances
     dladm("show-iptun", "-p", "-o", "link,type,local,remote").split(
-      "\n").collect do |line|
+      "\n"
+    ).collect do |line|
       link, type, local, remote = line.split(":")
       new(:name => link,
           :ensure => :present,
