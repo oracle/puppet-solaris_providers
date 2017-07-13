@@ -60,13 +60,13 @@
     sync.
 * svccfg
   * FMRI arguments `fmri` and `prop_fmri` must now be well formed.
-    * `svc:/system/system-log:rsyslog` vs `system-log:rsyslog` or 
+    * `svc:/system/system-log:rsyslog` vs `system-log:rsyslog` or
       `system/system-log:rsyslog`
 
 ## Impacting Changes
 * interface_properties
   * `interface` has been renamed `name`.
-  * `name` should be defined as an ip interface `net0`
+  * `name` should be defined as an ip interface i.e. `net0`
   * properties should be defined as a complex hash of
     `{ proto => { prop => value }}`
   * Old style interface (name) definitions `net0/ipv4` continue to work
@@ -74,7 +74,7 @@
   * Property groups will NO LONGER be automatically created. Previously defining
     a property => 'foo/bar' would have created the property group 'foo' on the
     first run and set the property 'foo/bar' on the second run. Puppet will now
-    fail if the property group does not exist or will not be created. 
+    fail if the property group does not exist or will not be created.
     SEE: 2.0.2 for updates to this change
   ```Ruby
     svccfg { 'svc:/system/system-log:rsyslog/:properties/config':
@@ -96,8 +96,8 @@
     *NOTE* When used as a native string type the array will be joined into a
     single string and the resource will not be idempotent.
   * svccfg is only idempotent when any of the following are true
-    * The property name is fully qualified. `title_patterns` are used to extract
-      details from fully qualified names.
+    * The property name is fully qualified. To help acheive this
+      `title_patterns` are used to extract details from fully qualified names.
   ```Ruby
     svccfg { 'svc:/system/system-log:rsyslog/:properties/config/log_from_remote':
       ensure    => 'present',
@@ -131,7 +131,7 @@
   * The new read only/ignored property running has been added to allow puppet
     resource boot_environment output to indicate both the activate and running
     BE.
-   
+
 
 ###  Bugs Fixes and Enhancements:
 * 19429313 address_object type should support vrrp addresses
@@ -180,6 +180,20 @@
 * 25306904 puppet dns,nis,ldap,protocol_properties prefetch fails after input auto munge
 * 25348321 puppet boot_environment needs to validate all properties and parameters
 * 25354751 puppet vnic provider needs to support / and - as valid vnic name characters
+
+# 1.2.3 (Unreleased)
+## New Features
+* Solaris Integrated Load Balancer (ILB) support
+  * ilb_healthcheck
+  * ilb_rule
+  * ilb_server
+  * ilb_servergroup
+* Manage NFSv4 ACL Specifications on ZFS Files
+  * zfs_acl
+
+###  Bugs Fixes and Enhancements:
+* 22960016 Puppet needs a native way to set ZFS ACLs
+* 23547788 Add ILB type to Puppet
 
 # 1.2.2
 This release unifies the source for the oracle-solaris_providers IPS package.

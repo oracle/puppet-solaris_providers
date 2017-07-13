@@ -53,9 +53,8 @@ Puppet::Type.newtype(:zfs_acl) do
 
   The following example sets permissions equavalent to 755 and also grants
   the full set of permissions to user jack but removes the write_acl
-  permission. The *_set permissions are expended internally and applied
+  permission. The *_set permissions are expanded internally and applied
   individually.
-
 
 ```ruby
     zfs_acl { '/root/foo':
