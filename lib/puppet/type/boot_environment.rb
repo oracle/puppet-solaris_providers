@@ -69,8 +69,12 @@ Puppet::Type.newtype(:boot_environment) do
   end
 
   newproperty(:running) do
-    desc "An existing BE may be Active and/or Running. This parameter has no
-          effect on behavior and exists only for display purposes."
+    desc "An existing BE may be Active and/or Running. Display only.
+          Providing a non-matching value will result in an Error during
+          catalog application.
+
+          This value may be used to detect unexpected changes in the running BE.
+          "
     newvalues(:true,:false)
   end
 
@@ -78,6 +82,14 @@ Puppet::Type.newtype(:boot_environment) do
     desc "Activate the specified BE. Only one BE may be active at a time.
     Activating an instance does not reboot the system to change the running BE."
     newvalues(:true, :false)
+  end
+
+  newproperty(:created) do
+    desc "Creation timestamp. Display only"
+
+    def insync?(is)
+      true
+    end
   end
 
   validate do

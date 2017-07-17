@@ -20,9 +20,11 @@ Puppet::Type.type(:boot_environment).provide(:boot_environment) do
   defaultfor :osfamily => :solaris, :kernelrelease => ['5.11', '5.12']
   commands :beadm => '/usr/sbin/beadm', :zpool => '/usr/sbin/zpool'
 
+  mk_resource_methods
+
   def self.instances
     beadm(:list, "-H").split("\n").collect do |line|
-      data = line.split(";")
+      data = line.strip.split(";")
       name = data[0]
       activate =
         if data[2].include? "N"
@@ -37,10 +39,13 @@ Puppet::Type.type(:boot_environment).provide(:boot_environment) do
           :false
         end
 
-      new(:name => name,
-          :ensure => :present,
-          :activate => activate,
-          :running => running)
+      new(
+        :name => name,
+        :ensure => :present,
+        :activate => activate,
+        :running => running,
+        :created => Time.at(data[-1].to_i)
+      )
     end
   end
 
@@ -70,7 +75,7 @@ Puppet::Type.type(:boot_environment).provide(:boot_environment) do
     @property_hash[:activate]
   end
   def running=(value)
-      warn "Cannot change the running state of a BE"
+      fail "Cannot change the running state of a BE. Use activate and reboot"
   end
 
   def exists?

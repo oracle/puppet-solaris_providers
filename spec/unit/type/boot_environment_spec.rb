@@ -26,7 +26,7 @@ describe Puppet::Type.type(:boot_environment) do
   end
 
   describe "has property" do
-    [ :activate, ].each { |prop|
+    [ :activate, :running, :created ].each { |prop|
       it prop do
         expect(described_class.attrtype(prop)).to be == :property
       end

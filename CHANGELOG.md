@@ -1,3 +1,21 @@
+# 2.1.0
+## New Features
+* boot_environment
+  * Now shows the created timestamp of the BE
+* pkg_publisher
+  * supports unique proxies, ssl certs, and ssl keys per origin
+
+## Impacting Changes
+* boot_environemnt
+  * Providing a value which does not match the running state to 'running' is now
+    an error instead of a warning. The running value should not be provided
+    except as a mechanism to detect a change in the running BE.
+
+## Bugs Fixes and Enhancements
+* 26137448 puppet pkg_publisher does not work for slightly complex configurations
+* 26137407 puppet pkg_publisher provider is not idempotent with ssl certs and keys
+* 26452898 puppet boot_environment should show created timestamp
+
 # 2.0.2
 ## Impacting Changes
 * svccfg
