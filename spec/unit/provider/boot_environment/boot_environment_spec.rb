@@ -42,7 +42,7 @@ describe Puppet::Type.type(:boot_environment).provider(:boot_environment) do
                                   my_fixture('beadm_list_H.txt'))
     instances = described_class.instances.map { |p|
       hsh={}
-      [:name, :activate, :ensure, :running].each { |fld|
+      [:name, :activate, :ensure, :running, :created].each { |fld|
         hsh[fld] = p.get(fld)
       }
       hsh
@@ -57,10 +57,16 @@ describe Puppet::Type.type(:boot_environment).provider(:boot_environment) do
     it "first instance is running" do
       expect(instances[0][:running]).to eq(:true)
     end
+    it "first instance has expected created" do
+      # Don't use stringified time for comparison
+      expect(instances[0][:created]).to eq(Time.at(1481572424))
+    end
     it "last instance is s12b113-backup-1" do
       expect(instances[-1]).to eq(
                                  {:name=>"s12b113-backup-1", :activate=>:false,
-                                  :ensure=>:present, :running => :false}
+                                  :ensure=>:present, :running => :false,
+                                  :created => Time.at(1482172700)
+                                }
                                )
     end
   end
