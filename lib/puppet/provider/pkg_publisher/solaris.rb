@@ -126,24 +126,24 @@ Puppet::Type.type(:pkg_publisher).provide(:pkg_publisher) do
     origins = []
 
     if index == -1
-    # add all the origins from the manifest
-    if !@resource[:origin].nil?
-      for o in @resource[:origin] do
-        origins << "-g" << o
+      # add all the origins from the manifest
+      if !@resource[:origin].nil?
+        for o in @resource[:origin] do
+          origins << "-g" << o
+        end
       end
-    end
 
-    # add all the mirrors from the manifest
-    if !@resource[:mirror].nil?
-      for o in @resource[:mirror] do
-        origins << "-m" << o
+      # add all the mirrors from the manifest
+      if !@resource[:mirror].nil?
+        for o in @resource[:mirror] do
+          origins << "-m" << o
+        end
+      else
+        combined = @resource[:origin] + @resource[:mirror]
+        origins << (is_origin?(combined[index]) ? '-g' : '-m')
+        origins << combined[index]
       end
     end
-  else
-    combined = @resource[:origin] + @resource[:mirror]
-    origins << (is_origin?(combined[index]) ? '-g' : '-m')
-    origins << combined[index]
-  end
 
     # For batchable (-1) and the first entry (0)
     # remove all the existing origins and mirrors
@@ -158,42 +158,42 @@ Puppet::Type.type(:pkg_publisher).provide(:pkg_publisher) do
   def build_flags(index=-1)
     flags = []
 
-   # For the first entry or if batahcable set all the top level flags
-   if index < 1
-    if searchfirst = @resource[:searchfirst] and searchfirst != ""
-      if searchfirst == :true
-        flags << "--search-first"
+    # For the first entry or if batahcable set all the top level flags
+    if index < 1
+      if searchfirst = @resource[:searchfirst] and searchfirst != ""
+        if searchfirst == :true
+          flags << "--search-first"
+        end
       end
-    end
 
-    if sticky = @resource[:sticky] and sticky != nil
-      if sticky == :true
-        flags << "--sticky"
-      elsif sticky == :false
-        flags << "--non-sticky"
+      if sticky = @resource[:sticky] and sticky != nil
+        if sticky == :true
+          flags << "--sticky"
+        elsif sticky == :false
+          flags << "--non-sticky"
+        end
       end
-    end
 
-    if searchafter = @resource[:searchafter] and searchafter != ""
-      if pkg(:publisher, "-H", "-F", "tsv").split("\n").detect \
-         { |line| line.split()[0] == searchafter }
-        flags << "--search-after" << searchafter
-      else
-        Puppet.warning "Publisher #{searchafter} not found.  " \
-                       "Skipping --search-after argument"
+      if searchafter = @resource[:searchafter] and searchafter != ""
+        if pkg(:publisher, "-H", "-F", "tsv").split("\n").detect \
+          { |line| line.split()[0] == searchafter }
+          flags << "--search-after" << searchafter
+        else
+          Puppet.warning "Publisher #{searchafter} not found.  " \
+          "Skipping --search-after argument"
+        end
       end
-    end
 
-    if searchbefore = @resource[:searchbefore] and searchbefore != ""
-      if pkg(:publisher, "-H", "-F", "tsv").split("\n").detect \
-         { |line| line.split()[0] == searchbefore }
-        flags << "--search-before" << searchbefore
-      else
-        Puppet.warning "Publisher #{searchbefore} not found.  " \
-                       "Skipping --search-before argument"
+      if searchbefore = @resource[:searchbefore] and searchbefore != ""
+        if pkg(:publisher, "-H", "-F", "tsv").split("\n").detect \
+          { |line| line.split()[0] == searchbefore }
+          flags << "--search-before" << searchbefore
+        else
+          Puppet.warning "Publisher #{searchbefore} not found.  " \
+          "Skipping --search-before argument"
+        end
       end
     end
-  end
 
     # If this is batched use the values for the first array element
     index = (index < 1 ? 0 : index )
@@ -284,9 +284,9 @@ Puppet::Type.type(:pkg_publisher).provide(:pkg_publisher) do
     # publishers with multiple origins / mirrors can use different proxies
     # and ssl certs/keys per-URI if values are provided and non-uniform
     # each origin will be created individually
-    if @resource[:proxy].length == 0 &&
-      @resource[:sslcert].length == 0 &&
-      @resource[:sslkey].length == 0
+    if @resource[:proxy].empty? &&
+       @resource[:sslcert].empty? &&
+       @resource[:sslkey].empty?
       true
     else
       false
