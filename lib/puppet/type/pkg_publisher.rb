@@ -14,7 +14,6 @@
 # limitations under the License.
 #
 
-require 'puppet/property/list'
 Puppet::Type.newtype(:pkg_publisher) do
   @doc = "Manage Oracle Solaris package publishers.
 
@@ -53,8 +52,7 @@ Puppet::Type.newtype(:pkg_publisher) do
     isnamevar
   end
 
-  newproperty(:origin, :parent => Puppet::Property::List,
-              :array_matching => :all ) do
+  newproperty(:origin, :array_matching => :all ) do
     desc "Which origin URI(s) to set.  For multiple origins, specify them
               as a list"
 
@@ -73,6 +71,7 @@ Puppet::Type.newtype(:pkg_publisher) do
       end
     end
   end
+
   newproperty(:enable) do
     desc "Enable the publisher"
     newvalues(:true, :false)
@@ -98,8 +97,7 @@ Puppet::Type.newtype(:pkg_publisher) do
               order"
   end
 
-  newproperty(:proxy, :parent => Puppet::Property::List,
-  :array_matching => :all ) do
+  newproperty(:proxy, :array_matching => :all ) do
     desc "Use the specified web proxy URI to retrieve content for the
               specified origin or mirror (list). If provided the number of
               entries must match the the number of origins and mirrors.
@@ -111,8 +109,7 @@ Puppet::Type.newtype(:pkg_publisher) do
     newvalues(%r{^http://},:absent)
   end
 
-  newproperty(:sslkey, :parent => Puppet::Property::List,
-  :array_matching => :all ) do
+  newproperty(:sslkey, :array_matching => :all ) do
     desc "Specify the client SSL key (list). If provided the number of entries
     must match the the number of origins and mirrors. Provide the value :absent
     for missing values if no key is needed."
@@ -122,8 +119,7 @@ Puppet::Type.newtype(:pkg_publisher) do
     newvalues(:absent,%r{^/.*})
   end
 
-  newproperty(:sslcert, :parent => Puppet::Property::List,
-  :array_matching => :all ) do
+  newproperty(:sslcert, :array_matching => :all ) do
     desc "Specify the client SSL certificate (list). If provided the number of entries
     must match the the number of origins and mirrors. Provide the value :absent
     for missing values if no key is needed."
@@ -133,8 +129,7 @@ Puppet::Type.newtype(:pkg_publisher) do
     newvalues(:absent,%r{^/.*})
   end
 
-  newproperty(:mirror, :parent => Puppet::Property::List,
-  :array_matching => :all ) do
+  newproperty(:mirror, :array_matching => :all ) do
     desc "Which mirror URI(s) to set.  For multiple mirrors, specify them
               as a list"
     def should
@@ -149,33 +144,34 @@ Puppet::Type.newtype(:pkg_publisher) do
       end
     end
   end
-  validate {
+  validate do
     # Don't try to validate if we don't want the resource to be present
     if self[:ensure] != :present
       return true
     end
     uris = self[:origin].to_a + self[:mirror].to_a
-    unless self[:proxy].to_a.length == 0 ||
-      self[:proxy].length == uris.length
+    unless self[:proxy].to_a.empty? ||
+           self[:proxy].length == uris.length
       fail("The number of proxies #{self[:proxy].length} must be 0 or equal to the number of origins and mirrors #{uris.length}")
     end
-    unless self[:sslcert].to_a.length == 0 ||
-      self[:sslcert].length == uris.length
+    unless self[:sslcert].to_a.empty? ||
+           self[:sslcert].length == uris.length
       fail("The number of sslcerts #{self[:sslcert].length} must be 0 or equal to the number of origins and mirrors #{uris.length}")
     end
-    unless self[:sslkey].to_a.length == 0 ||
-      self[:sslkey].length == uris.length
+    unless self[:sslkey].to_a.empty? ||
+           self[:sslkey].length == uris.length
       fail("The number of sslkeys #{self[:sslkey].length} must be 0 or equal to the number of origins and mirrors #{uris.length}")
     end
     true
-  }
+  end
 
   # autorequire any sslcert or sslkey
   autorequire(:file) do
     children = catalog.resources.select do |res|
-      res.type == :file &&
-      ( self[:sslcert].include?(res[:path]) ||
-      self[:sslkey].include?(res[:path]))
+      res.type == :file && (
+        self[:sslcert].include?(res[:path]) ||
+        self[:sslkey].include?(res[:path])
+      )
     end
     children.each.collect do |child|
       # We expect name to almost always be the path...almost
@@ -186,9 +182,10 @@ Puppet::Type.newtype(:pkg_publisher) do
   # autorequire any referenced publisher for search before/after
   autorequire(:pkg_publisher) do
     catalog.resources.select do |res|
-      res.type == :pkg_publisher &&
-      ( self[:searchbefore] == res[:name] ||
-      self[:searchafter] == res[:name] )
+      res.type == :pkg_publisher && (
+        self[:searchbefore] == res[:name] ||
+        self[:searchafter] == res[:name]
+      )
     end
   end
 end
