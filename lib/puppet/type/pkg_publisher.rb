@@ -62,6 +62,8 @@ Puppet::Type.newtype(:pkg_publisher) do
       @should
     end
 
+    newvalues(%r([file|http|https]://.*))
+
     # for origins with a file:// URI, strip any trailing / character
     munge do |value|
       if value.to_s.end_with? "/"
@@ -132,6 +134,7 @@ Puppet::Type.newtype(:pkg_publisher) do
   newproperty(:mirror, :array_matching => :all ) do
     desc "Which mirror URI(s) to set.  For multiple mirrors, specify them
               as a list"
+    newvalues(%r([file|http|https]://.*))
     def should
       @should
     end
@@ -169,8 +172,13 @@ Puppet::Type.newtype(:pkg_publisher) do
   autorequire(:file) do
     children = catalog.resources.select do |res|
       res.type == :file && (
-        self[:sslcert].include?(res[:path]) ||
-        self[:sslkey].include?(res[:path])
+        (
+          !self[:sslcert].nil? &&
+          self[:sslcert].include?(res[:path])
+        ) || (
+          !self[:sslkey].nil? &&
+          self[:sslkey].include?(res[:path])
+        )
       )
     end
     children.each.collect do |child|

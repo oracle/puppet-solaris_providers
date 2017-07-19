@@ -10,11 +10,17 @@
   * Providing a value which does not match the running state to 'running' is now
     an error instead of a warning. The running value should not be provided
     except as a mechanism to detect a change in the running BE.
+* pkg_publisher
+  * origin and mirror now enforce URI specification http(s)|file://
+  * sslcert and sslkey files are autorequired
+  * searchbefore and searchafter publishers are now autorequired
 
 ## Bugs Fixes and Enhancements
 * 26137448 puppet pkg_publisher does not work for slightly complex configurations
 * 26137407 puppet pkg_publisher provider is not idempotent with ssl certs and keys
 * 26452898 puppet boot_environment should show created timestamp
+* 26486256 puppet pkg_publisher fails if sslcert or sslkey are nil
+* 26486276 puppet pkg_publisher rspec code needs to be re-written
 
 # 2.0.2
 ## Impacting Changes
