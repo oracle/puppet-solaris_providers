@@ -1,6 +1,8 @@
 source ENV['GEM_SOURCE'] || "https://rubygems.org"
 
 group(:development, :test) do
+  gem 'metadata-json-lint'
+  gem 'puppet-blacksmith'
   gem 'puppetlabs_spec_helper', :require => true
   gem 'rspec-puppet', :require => true
   gem 'rspec', :require => false
@@ -11,6 +13,7 @@ group(:development, :test) do
   gem 'psych', :require => false
   gem 'puppet', '4.7.0', :require => true
   gem 'pkg-config', :require => false
+  gem 'semantic_puppet'
   # Docs
   gem 'puppet-strings'
   gem 'redcarpet'

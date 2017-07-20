@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 
-Puppet::Type.type(:ipmp_interface).provide(:ipmp_interface) do
+Puppet::Type.type(:ipmp_interface).provide(:solaris) do
   desc "Provider for management of IPMP interfaces for Oracle Solaris"
   confine :operatingsystem => [:solaris]
   defaultfor :osfamily => :solaris, :kernelrelease => ['5.11', '5.12']

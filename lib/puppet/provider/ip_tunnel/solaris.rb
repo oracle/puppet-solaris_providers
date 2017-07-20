@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 
-Puppet::Type.type(:ip_tunnel).provide(:ip_tunnel) do
+Puppet::Type.type(:ip_tunnel).provide(:solaris) do
   desc "Provider for managing Oracle Solaris IP Tunnel links"
   confine :operatingsystem => [:solaris]
   defaultfor :osfamily => :solaris, :kernelrelease => ['5.11', '5.12']

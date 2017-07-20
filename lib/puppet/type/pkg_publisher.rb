@@ -62,7 +62,7 @@ Puppet::Type.newtype(:pkg_publisher) do
       @should
     end
 
-    newvalues(%r([file|http|https]://.*))
+    newvalues(%r([file|http|https]://.*),:absent)
 
     # for origins with a file:// URI, strip any trailing / character
     munge do |value|
@@ -134,7 +134,7 @@ Puppet::Type.newtype(:pkg_publisher) do
   newproperty(:mirror, :array_matching => :all ) do
     desc "Which mirror URI(s) to set.  For multiple mirrors, specify them
               as a list"
-    newvalues(%r([file|http|https]://.*))
+    newvalues(%r([file|http|https]://.*),:absent)
     def should
       @should
     end

@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 
-Puppet::Type.type(:pkg_facet).provide(:pkg_facet) do
+Puppet::Type.type(:pkg_facet).provide(:solaris) do
   desc "Provider for Oracle Solaris facets"
   confine :operatingsystem => [:solaris]
   defaultfor :osfamily => :solaris, :kernelrelease => ['5.11', '5.12']
@@ -22,7 +22,7 @@ Puppet::Type.type(:pkg_facet).provide(:pkg_facet) do
 
   # Defined classvar once. Access must be via Klass.send to prevent
   # undefined method `class_variable_get' errors
-  Puppet::Type::Pkg_facet::ProviderPkg_facet.send(:class_variable_set, :@@classvars, {:changes => []})
+  Puppet::Type::Pkg_facet::ProviderSolaris.send(:class_variable_set, :@@classvars, {:changes => []})
 
   def self.instances
     pkg(:facet, "-H", "-F", "tsv").split("\n").collect do |line|

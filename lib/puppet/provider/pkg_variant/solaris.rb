@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 
-Puppet::Type.type(:pkg_variant).provide(:pkg_variant) do
+Puppet::Type.type(:pkg_variant).provide(:solaris) do
   desc "Provider for Oracle Solaris variants"
   confine :operatingsystem => [:solaris]
   defaultfor :osfamily => :solaris, :kernelrelease => ['5.11', '5.12']

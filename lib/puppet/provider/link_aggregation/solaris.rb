@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 
-Puppet::Type.type(:link_aggregation).provide(:link_aggregation) do
+Puppet::Type.type(:link_aggregation).provide(:solaris) do
   desc "Provider for creating Oracle Solaris link aggregations"
   confine :operatingsystem => [:solaris]
   defaultfor :osfamily => :solaris, :kernelrelease => ['5.11', '5.12']

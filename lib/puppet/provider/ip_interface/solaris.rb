@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 
-Puppet::Type.type(:ip_interface).provide(:ip_interface) do
+Puppet::Type.type(:ip_interface).provide(:solaris) do
   desc "Provider for management of IP interfaces for Oracle Solaris"
   confine :operatingsystem => [:solaris]
   defaultfor :osfamily => :solaris, :kernelrelease => ['5.11', '5.12']

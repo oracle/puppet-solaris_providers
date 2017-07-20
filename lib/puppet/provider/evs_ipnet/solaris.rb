@@ -15,7 +15,7 @@
 #
 
 
-Puppet::Type.type(:evs_ipnet).provide(:evs_ipnet) do
+Puppet::Type.type(:evs_ipnet).provide(:solaris) do
   desc "Provider for managing EVS IPnet setup in the Solaris OS"
   confine :operatingsystem => [:solaris]
   defaultfor :osfamily => :solaris, :kernelrelease => ["5.11", "5.12"]

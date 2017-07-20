@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 
-Puppet::Type.type(:pkg_publisher).provide(:pkg_publisher) do
+Puppet::Type.type(:pkg_publisher).provide(:solaris) do
   desc "Provider for Solaris publishers"
   confine :operatingsystem => [:solaris]
   defaultfor :osfamily => :solaris, :kernelrelease => ['5.11', '5.12']
@@ -126,22 +126,21 @@ Puppet::Type.type(:pkg_publisher).provide(:pkg_publisher) do
 
     if index == -1
       # add all the origins from the manifest
-      if !@resource[:origin].nil?
-        for o in @resource[:origin] do
+      unless @resource[:origin].nil?
+        @resource[:origin].each do |o|
           origins << "-g" << o
         end
       end
-
       # add all the mirrors from the manifest
-      if !@resource[:mirror].nil?
-        for o in @resource[:mirror] do
-          origins << "-m" << o
+      unless @resource[:mirror].nil?
+        @resource[:mirror].each do |m|
+          origins << "-m" << m
         end
-      else
-        combined = @resource[:origin] + @resource[:mirror]
-        origins << (is_origin?(combined[index]) ? '-g' : '-m')
-        origins << combined[index]
       end
+    else
+      combined = @resource[:origin] + @resource[:mirror]
+      origins << (is_origin?(combined[index]) ? '-g' : '-m')
+      origins << combined[index]
     end
 
     # For batchable (-1) and the first entry (0)

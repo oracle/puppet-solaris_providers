@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 
-Puppet::Type.type(:protocol_properties).provide(:protocol_properties) do
+Puppet::Type.type(:protocol_properties).provide(:solaris) do
   desc "Provider for managing Oracle Solaris protocol object properties"
   confine :operatingsystem => [:solaris]
   defaultfor :osfamily => :solaris, :kernelrelease => ['5.11', '5.12']

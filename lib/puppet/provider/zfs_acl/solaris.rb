@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 
-Puppet::Type.type(:zfs_acl).provide(:zfs_acl) do
+Puppet::Type.type(:zfs_acl).provide(:solaris) do
   Ace = Puppet::Type::ZfsAcl::Ace
   desc "Provider for management of ZFS ACLs for Oracle Solaris"
   confine :operatingsystem => [:solaris]

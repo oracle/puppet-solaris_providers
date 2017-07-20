@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 
-Puppet::Type.type(:process_scheduler).provide(:process_scheduler) do
+Puppet::Type.type(:process_scheduler).provide(:solaris) do
   @doc = "Provider to manage Solaris process scheduler"
   confine :operatingsystem => [:solaris]
   defaultfor :osfamily => :solaris, :kernelrelease => ['5.11', '5.12']

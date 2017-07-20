@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 
-Puppet::Type.type(:address_properties).provide(:address_properties) do
+Puppet::Type.type(:address_properties).provide(:solaris) do
   desc "Provider for managing Oracle Solaris address object properties"
   confine :operatingsystem => [:solaris]
   defaultfor :osfamily => :solaris, :kernelrelease => ['5.11', '5.12']
@@ -26,7 +26,7 @@ Puppet::Type.type(:address_properties).provide(:address_properties) do
     props = {}
 
     ipadm("show-addrprop", "-c", "-o",
-          "ADDROBJ,PROPERTY,CURRENT,PERM").each_line do |line| 
+          "ADDROBJ,PROPERTY,CURRENT,PERM").each_line do |line|
       addrobj, property, value, perm = line.strip().split(":")
       # Skip read-only properties
       next if perm == 'r-'

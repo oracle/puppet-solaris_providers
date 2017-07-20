@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 
-Puppet::Type.type(:svccfg).provide(:svccfg) do
+Puppet::Type.type(:svccfg).provide(:solaris) do
   desc "Provider for svccfg actions on Oracle Solaris"
   defaultfor :operatingsystem => :solaris
   commands :svccfg => "/usr/sbin/svccfg", :svcprop => "/usr/bin/svcprop"

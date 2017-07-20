@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 
-Puppet::Type.type(:evs).provide(:evs) do
+Puppet::Type.type(:evs).provide(:solaris) do
   desc "Provider for managing EVS setup in the Solaris OS"
   confine :operatingsystem => [:solaris]
   defaultfor :osfamily => :solaris, :kernelrelease => ["5.11", "5.12"]

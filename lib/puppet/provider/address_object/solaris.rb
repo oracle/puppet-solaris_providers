@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 
-Puppet::Type.type(:address_object).provide(:address_object) do
+Puppet::Type.type(:address_object).provide(:solaris) do
   desc "Provider for creating Oracle Solaris address objects"
   confine :operatingsystem => [:solaris]
   defaultfor :osfamily => :solaris, :kernelrelease => ['5.11', '5.12']
