@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 
-Puppet::Type.type(:system_attributes).provide(:system_attributes) do
+Puppet::Type.type(:system_attributes).provide(:solaris) do
   desc "Provider for management of file system attributes for Oracle Solaris"
   confine :operatingsystem => [:solaris]
   defaultfor :osfamily => :solaris, :kernelrelease => ['5.11', '5.12']

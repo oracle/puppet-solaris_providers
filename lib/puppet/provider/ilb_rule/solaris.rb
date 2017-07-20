@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 
-Puppet::Type.type(:ilb_rule).provide(:ilb_rule) do
+Puppet::Type.type(:ilb_rule).provide(:solaris) do
   @doc = "Provider to manage Solaris Integrated Load Balancer (ILB) rule configuration."
   confine :operatingsystem => [:solaris]
   defaultfor :osfamily => :solaris, :kernelrelease => ['5.11', '5.12']

@@ -14,11 +14,12 @@
 # limitations under the License.
 #
 
-Puppet::Type.type(:boot_environment).provide(:boot_environment) do
+Puppet::Type.type(:boot_environment).provide(:solaris) do
   desc "Provider for Oracle Solaris Boot Environments (BEs)"
   confine :operatingsystem => [:solaris]
   defaultfor :osfamily => :solaris, :kernelrelease => ['5.11', '5.12']
-  commands :beadm => '/usr/sbin/beadm', :zpool => '/usr/sbin/zpool'
+  # We have a parameter zpool which masks this definition
+  commands :beadm => '/usr/sbin/beadm', :zpool_cmd => '/usr/sbin/zpool'
 
   mk_resource_methods
 
@@ -120,7 +121,7 @@ Puppet::Type.type(:boot_environment).provide(:boot_environment) do
     if @resource[:zpool] && !@resource[:clone_be]
       zp = @resource[:zpool]
       found = false
-      for line in zpool(:list, "-o", "name", "-H").each_line do
+      zpool_cmd(:list, "-o", "name", "-H").each_line do |line|
         if zp == line.strip
           found = true
           flags << "-p" << zp

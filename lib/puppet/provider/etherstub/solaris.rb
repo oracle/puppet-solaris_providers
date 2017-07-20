@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 
-Puppet::Type.type(:etherstub).provide(:etherstub) do
+Puppet::Type.type(:etherstub).provide(:solaris) do
   desc "Provider for creating Solaris etherstubs"
   confine :operatingsystem => [:solaris]
   defaultfor :osfamily => :solaris, :kernelrelease => ['5.11', '5.12']

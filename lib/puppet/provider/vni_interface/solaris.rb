@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 
-Puppet::Type.type(:vni_interface).provide(:vni_interface) do
+Puppet::Type.type(:vni_interface).provide(:solaris) do
   desc "Provider for management of VNI interfaces for Oracle Solaris"
   confine :operatingsystem => [:solaris]
   defaultfor :osfamily => :solaris, :kernelrelease => ['5.11', '5.12']

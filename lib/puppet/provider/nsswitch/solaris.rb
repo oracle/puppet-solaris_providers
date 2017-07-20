@@ -14,9 +14,9 @@
 # limitations under the License.
 #
 
-Puppet::Type.type(:nsswitch).provide(:nsswitch,
-  :parent =>
-  Puppet::Type.type(:svccfg).provider(:svccfg)) do
+Puppet::Type.type(:nsswitch).provide(:solaris,
+                             :parent =>
+                             Puppet::Type.type(:svccfg).provider(:solaris)) do
   desc "Provider for name service switch configuration data"
   confine :operatingsystem => [:solaris]
   defaultfor :osfamily => :solaris, :kernelrelease => ['5.11', '5.12']
