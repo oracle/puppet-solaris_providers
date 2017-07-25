@@ -1,0 +1,6 @@
+config/nameserver net_address
+config/options astring
+config/search astring
+config/sortlist astring
+config/value_authorization
+config/domain astring

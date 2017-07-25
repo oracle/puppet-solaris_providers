@@ -33,12 +33,13 @@ Puppet::Type.type(:dns).provide(:solaris,
     props = {}
     svcprop("-p", "config", Dns_fmri).each_line do |line|
       fullprop, value = line.strip.split(" ", 3).values_at(0,2)
+      value ||= :absent
       prop = fullprop.split("/")[1].intern
       if Puppet::Type.type(:dns).validproperties.include? prop
-        if [:options,:nameserver,:search,:sortlist].include? prop
+        if %i[options nameserver search sortlist].include? prop
           # remove escaped spaces, they are invalid in the resource
           # output and break automatic list munging
-          value = value.gsub(/\\ /,' ')
+          value = value.gsub(/\\ /,' ') if value.respond_to?(:gsub)
         end
         props[prop] = value
       end
