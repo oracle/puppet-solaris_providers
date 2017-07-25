@@ -31,8 +31,8 @@ describe Puppet::Type.type(:dns).provider(:solaris) do
 
   describe "#instances" do
     described_class.expects(:svcprop).with(
-      "-p", "config", Dns_fmri).returns File.read(
-                                          my_fixture('svcprop_p_config_Dns_fmri.txt'))
+      "-p", "config", Dns_fmri).
+      returns File.read(my_fixture('svcprop_p_config_Dns_fmri.txt'))
 
     instances = described_class.instances.map { |p|
       {
@@ -71,6 +71,13 @@ describe Puppet::Type.type(:dns).provider(:solaris) do
         end
       end  # validproperties
     end  # validating default values
+
+    it "handles properties with empty values" do
+    described_class.expects(:svcprop).with(
+      "-p", "config", Dns_fmri).
+      returns File.read(my_fixture('empty-svcprop_p_config_Dns_fmri.txt'))
+      expect{described_class.instances}.not_to raise_error
+    end
   end
   describe "correctly formats" do
     {
