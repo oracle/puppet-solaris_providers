@@ -101,7 +101,7 @@ See links to extracted documents listed above.
 
 ## Limitations
 
-These modules were created for use on Oracle Solaris 11 and 12.
+These modules were created for use on Oracle Solaris 11 and 11.4.
 
 ## Development
 
@@ -111,5 +111,5 @@ Contributors should issue pull requests via Github see [contributing](CONTRIBUTI
 ### Notes
 Package installation is via Puppet Core package provider
 
-Solaris providers are shipped with Solaris in the oracle-solaris_providers IPS package and installed automatically with puppet. Use of the module from the Puppet Forge is possible. However, it will result in errors from pkg verify as the IPS oracle-solaris_providers package cannot be removed.
+Solaris providers are shipped with Solaris in the oracle-solaris_providers IPS package and installed automatically with puppet. Use of the module from this repo is possible but not addressed in this document.
 
