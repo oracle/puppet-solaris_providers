@@ -36,7 +36,7 @@ Puppet::Type.type(:dns).provide(:solaris,
       value ||= :absent
       prop = fullprop.split("/")[1].intern
       if Puppet::Type.type(:dns).validproperties.include? prop
-        if %i[options nameserver search sortlist].include? prop
+        if [:options, :nameserver, :search, :sortlist].include? prop
           # remove escaped spaces, they are invalid in the resource
           # output and break automatic list munging
           value = value.gsub(/\\ /,' ') if value.respond_to?(:gsub)
