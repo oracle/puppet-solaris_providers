@@ -1,4 +1,4 @@
-# 2.1.0
+# 2.1.X
 ## New Features
 * boot_environment
   * Now shows the created timestamp of the BE
@@ -21,6 +21,7 @@
 * 26452898 puppet boot_environment should show created timestamp
 * 26486256 puppet pkg_publisher fails if sslcert or sslkey are nil
 * 26486276 puppet pkg_publisher rspec code needs to be re-written
+* 26526141 provider 'dns' requires a populated 'options' parameter or it fails
 
 # 2.0.2
 ## Impacting Changes
