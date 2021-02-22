@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2013, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2013, 2021, Oracle and/or its affiliates.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -45,8 +45,8 @@ The following database limitations are also applicable:
       # Mostly validate options ignoring any additional criteria
       validate do |value|
         unless prop == :printer
-          expr=%r(\b(files|ldap|dns)\b|:\[.*\]|\s)
-          expr_spc=%r(\b(files|ldap|dns)\b|:\[.*\])
+          expr=%r(\b(files|ldap|dns|cluster)\b|:\[.*\]|\s)
+          expr_spc=%r(\b(files|ldap|dns|cluster)\b|:\[.*\])
         else
           expr=%r(\b(files|ldap|dns|user)\b|:\[.*\]|\s)
           expr_spc=%r(\b(files|ldap|dns|user)\b|:\[.*\])
