@@ -93,10 +93,10 @@ describe Puppet::Type.type(:nsswitch).provider(:solaris) do
   # This is sort of overkill since we are defining the methods automatically
   Puppet::Type.type(:nsswitch).validproperties.each { |thing|
     next if thing==:ensure
-    if thing == :alias
-      xit "verify alias processing it fails in puppet 3.6.2 spec tests"
-      next
-    end
+    #if thing == :alias
+     # xit "verify alias processing it fails in puppet 3.6.2 spec tests"
+     # next
+    # end
   context "##{thing}=" do
     it "sets value" do
       described_class.expects(:svccfg).with(
@@ -106,7 +106,7 @@ describe Puppet::Type.type(:nsswitch).provider(:solaris) do
     it "sets complex value" do
       described_class.expects(:svccfg).with(
         '-s', Nsswitch_fmri, "setprop",
-        "config/#{thing}=files\\ dns:\\[notfound=return\\]")
+        "config/#{thing}=files dns:\\[notfound=return\\]")
       expect(provider.send("#{thing}=".intern,"files dns:[notfound=return]")).
         to eq('files dns:[notfound=return]')
     end
