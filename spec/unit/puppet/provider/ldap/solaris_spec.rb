@@ -127,7 +127,7 @@ describe Puppet::Type.type(:ldap).provider(:solaris) do
 
   describe "property=" do
     it "formats string arguments" do
-      resource[:search_base] = %q(dc=foo,dc=com)
+      #resource[:search_base] = %q(dc=foo,dc=com)
       testval = %q(dc=bar,dc=com)
       newval = %q(dc=bar,dc=com)
       described_class.expects(:svccfg).with("-s", Ldap_fmri, "setprop", "config/search_base=", testval )
@@ -135,7 +135,7 @@ describe Puppet::Type.type(:ldap).provider(:solaris) do
     end
 
     it "formats array arguments" do
-      resource[:server_list] = "foo.com"
+      #resource[:server_list] = "foo.com"
       newval = %w(baz.com quux.com)
       testval = %w^( baz.com quux.com )^
       described_class.expects(:svccfg).with("-s", Ldap_fmri, "setprop", "config/server_list=", testval )
