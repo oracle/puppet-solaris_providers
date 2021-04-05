@@ -3,7 +3,7 @@ sudo: false
 before_install:
   - gem install bundler -v 2.2.15
   - echo "gem 'rake', '>= 12.3.3'" >> Gemfile
-bundler_args: --without acceptance
+#bundler_args: --without acceptance
 script:
   - "bundle exec rake $CHECK"
 notifications:
@@ -20,9 +20,9 @@ env:
   - "CHECK=spec"
 
 matrix:
-  allow_failures:
-    - env: "CHECK=rubocop"
-    - rvm: 2.6.6
+  #allow_failures:
+   # - env: "CHECK=rubocop"
+   # - rvm: 2.6.6
   exclude:
     # Can't run Puppet < 4.x with Ruby >= 2.2
     - rvm: 2.2.4
