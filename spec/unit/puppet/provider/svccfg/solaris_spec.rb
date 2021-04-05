@@ -349,9 +349,9 @@ describe Puppet::Type.type(:svccfg).provider(:solaris) do
       end
 
       {
-        %q(simple string) => %q(simple\\ string),
-        %q(it's less simple) => %q(it\\'s\\ less\\ simple),
-        %q(echo foo > /etc/shadow) => %q(echo\\ foo\\ \\>\\ /etc/shadow)
+        %q(simple string) => %q(simple string),
+        %q(it's less simple) => %q(it\\'s less simple),
+        %q(echo foo > /etc/shadow) => %q(echo foo \\> /etc/shadow)
       }.each_pair { |k,v|
         it "escapes shell characters in strings" do
           params[:type] = :astring
