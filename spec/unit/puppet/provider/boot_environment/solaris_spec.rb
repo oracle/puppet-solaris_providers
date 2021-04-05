@@ -1,4 +1,8 @@
 require 'spec_helper'
+require 'mocha/api'
+
+include Mocha::API
+mocha_setup
 
 describe Puppet::Type.type(:boot_environment).provider(:solaris) do
 
