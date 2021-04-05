@@ -1,7 +1,7 @@
 language: ruby
 sudo: false
 before_install:
-  - gem install bundler -v 1.17.2
+  - gem install bundler -v 2.2.15
   - echo "gem 'rake', '>= 12.3.3'" >> Gemfile
 bundler_args: --without acceptance
 script:
@@ -10,10 +10,6 @@ notifications:
   email: false
 rvm:
   - 2.6.6
-  - 2.3.0-dev
-  - 2.2.4
-  # Current in Solaris 12
-  - 2.1.6
 
 gemfile:
     # Solaris 12 Version of Puppet is 3.8.6
@@ -39,6 +35,6 @@ matrix:
       gemfile: Gemfiles/puppet-5.5.21
       env: CHECK=spec
     # Add one run of rubocop for Current Solaris 12 Ruby and Puppet
-    - rvm: 2.1.6
-      gemfile: Gemfile
-      env: CHECK=rubocop
+    - #rvm: 2.1.6
+      #gemfile: Gemfile
+      #env: CHECK=rubocop
