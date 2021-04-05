@@ -11,7 +11,7 @@ group(:development, :test) do
   gem 'pry-rescue', :require => false
   gem 'pry-stack_explorer', :require => false
   gem 'psych', :require => false
-  gem 'puppet', '4.7.0', :require => true
+  gem 'puppet', '5.5.21', :require => true
   gem 'pkg-config', :require => false
   gem 'semantic_puppet'
   # Docs
