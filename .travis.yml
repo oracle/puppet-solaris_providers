@@ -14,7 +14,7 @@ rvm:
 gemfile:
     # Solaris 12 Version of Puppet is 3.8.6
   - Gemfile
-  - Gemfiles/puppet-5.x
+  #- Gemfiles/puppet-5.x
 
 env:
   - "CHECK=spec"
