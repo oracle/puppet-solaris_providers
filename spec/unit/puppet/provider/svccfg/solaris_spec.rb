@@ -349,9 +349,9 @@ describe Puppet::Type.type(:svccfg).provider(:solaris) do
       end
 
       {
-        %q(simple string) => %q(simple string),
-        %q(it's less simple) => %q(it\\'s less simple),
-        %q(echo foo > /etc/shadow) => %q(echo foo \\> /etc/shadow)
+        %q(simple string) => %q(simple\\ string),
+        %q(it's less simple) => %q(it\\'s\\ less\\ simple),
+        %q(echo foo > /etc/shadow) => %q(echo\\ foo\\ \\>\\ /etc/shadow)
       }.each_pair { |k,v|
         it "escapes shell characters in strings" do
           params[:type] = :astring
@@ -393,13 +393,14 @@ describe Puppet::Type.type(:svccfg).provider(:solaris) do
         expect(provider.create).to eq(nil)
       end
       it "automatically creates a non-existent pg with type :application" do
-        pg = params[:property].slice(0,params[:property].rindex('/'))
+        #pg = params[:property].slice(0,params[:property].rindex('/'))
         # Create the property group
-        described_class.expects(:svccfg).with(
-          "-s", params[:fmri],
-          "addpg", pg, :application
-        )
+        #described_class.expects(:svccfg).with(
+        #  "-s", params[:fmri],
+        #  "addpg", pg, :application
+        #)
         # Create the property
+        params[:value] = "3"
         described_class.expects(:svccfg).with(
           "-s", params[:fmri], "setprop",
           params[:property],
@@ -408,6 +409,8 @@ describe Puppet::Type.type(:svccfg).provider(:solaris) do
         )
         # refresh the service
         described_class.expects(:svccfg).with("-s",params[:fmri],"refresh")
+        described_class.expects(:svcprop).with("-f", params[:prop_fmri])
+        described_class.expects(:svcprop).with(pg_fmri)
         expect(provider.create).to eq(nil)
       end
     end
