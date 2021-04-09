@@ -44,6 +44,8 @@ describe Puppet::Type.type(:ldap).provider(:solaris) do
   let(:expectedproperties) { Puppet::Type.type(:ldap).validproperties - [:ensure] }
 
   before(:each) do
+    FileTest.stubs(:file?).with('/usr/sbin/svccfg').returns true
+    FileTest.stubs(:executable?).with('/usr/sbin/svccfg').returns true
     FileTest.stubs(:file?).with('/usr/bin/svcprop').returns true
     FileTest.stubs(:executable?).with('/usr/bin/svcprop').returns true
   end
