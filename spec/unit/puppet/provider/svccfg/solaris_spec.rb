@@ -393,12 +393,7 @@ describe Puppet::Type.type(:svccfg).provider(:solaris) do
         expect(provider.create).to eq(nil)
       end
       it "automatically creates a non-existent pg with type :application" do
-        pg = params[:property].slice(0,params[:property].rindex('/'))
-        # Create the property group
-        described_class.expects(:svccfg).with(
-          "-s", params[:fmri],
-          "addpg", pg, :application
-        )
+        params[:value] = "3"
         # Create the property
         described_class.expects(:svccfg).with(
           "-s", params[:fmri], "setprop",
@@ -408,6 +403,8 @@ describe Puppet::Type.type(:svccfg).provider(:solaris) do
         )
         # refresh the service
         described_class.expects(:svccfg).with("-s",params[:fmri],"refresh")
+        described_class.expects(:svcprop).with("-f", params[:prop_fmri])
+        described_class.expects(:svcprop).with(pg_fmri)
         expect(provider.create).to eq(nil)
       end
     end
