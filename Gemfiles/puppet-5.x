@@ -6,7 +6,7 @@ group(:development, :test) do
   gem 'rspec', :require => false
   gem 'rake', '>= 12.3.3', :require => false
   gem 'psych', :require => false
-  gem 'puppet', :require => true
+  gem 'puppet', '5.5.21', :require => true
   gem 'pkg-config', :require => false
 end
 
