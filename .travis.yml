@@ -1,7 +1,7 @@
 language: ruby
 sudo: false
 before_install:
-  - gem install bundler -v 2.2.15
+  - gem install bundler -v 1.10
   - echo "gem 'rake', '>= 12.3.3'" >> Gemfile
 bundler_args: --without acceptance
 script:
