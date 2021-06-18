@@ -2,22 +2,20 @@ language: ruby
 sudo: false
 before_install:
   - gem install bundler -v 1.10
-  - echo "gem 'rake', '< 11.0'" >> Gemfile
+  - echo "gem 'rake', '>= 12.3.3'" >> Gemfile
 bundler_args: --without acceptance
 script:
   - "bundle exec rake $CHECK"
 notifications:
   email: false
 rvm:
-  - 2.3.0-dev
-  - 2.2.4
-  # Current in Solaris 12
-  - 2.1.6
+  # Current in Solaris 11
+  - 2.6.6
 
 gemfile: 
-    # Solaris 12 Version of Puppet is 3.8.6
+    # Solaris 11 Version of Puppet is 5.x
   - Gemfile
-  - Gemfiles/puppet-4.x
+  - Gemfiles/puppet-5.x
 
 env:
   - "CHECK=spec"
@@ -25,7 +23,7 @@ env:
 matrix:
   allow_failures:
     - env: "CHECK=rubocop"
-    - rvm: 2.3.0-dev
+    - rvm: 2.6.6
   exclude:
     # Can't run Puppet < 4.x with Ruby >= 2.2
     - rvm: 2.2.4 
@@ -34,10 +32,6 @@ matrix:
       gemfile: Gemfile
   include:
     # Add one run for older Solaris 11 Ruby and Puppet
-    - rvm: 1.9.3
-      gemfile: Gemfiles/puppet-3.6.2
+    - rvm: 2.6.6
+      gemfile: Gemfiles/puppet-5.x
       env: CHECK=spec
-    # Add one run of rubocop for Current Solaris 12 Ruby and Puppet
-    - rvm: 2.1.6
-      gemfile: Gemfile
-      env: CHECK=rubocop
