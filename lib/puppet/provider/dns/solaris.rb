@@ -21,7 +21,7 @@ Puppet::Type.type(:dns).provide(:solaris,
 
   desc "Provider for management of DNS for Oracle Solaris"
   confine :operatingsystem => [:solaris]
-  defaultfor :osfamily => :solaris, :kernelrelease => ['5.11', '5.12']
+  defaultfor :osfamily => :solaris, :kernelrelease => ['5.11']
   commands :svccfg => '/usr/sbin/svccfg', :svcprop => '/usr/bin/svcprop'
 
 

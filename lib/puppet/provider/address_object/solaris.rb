@@ -17,7 +17,7 @@
 Puppet::Type.type(:address_object).provide(:solaris) do
   desc "Provider for creating Oracle Solaris address objects"
   confine :operatingsystem => [:solaris]
-  defaultfor :osfamily => :solaris, :kernelrelease => ['5.11', '5.12']
+  defaultfor :osfamily => :solaris, :kernelrelease => ['5.11']
   commands :ipadm => '/usr/sbin/ipadm'
 
   mk_resource_methods

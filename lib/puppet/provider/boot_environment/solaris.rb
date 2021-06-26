@@ -17,7 +17,7 @@
 Puppet::Type.type(:boot_environment).provide(:solaris) do
   desc "Provider for Oracle Solaris Boot Environments (BEs)"
   confine :operatingsystem => [:solaris]
-  defaultfor :osfamily => :solaris, :kernelrelease => ['5.11', '5.12']
+  defaultfor :osfamily => :solaris, :kernelrelease => ['5.11']
   # We have a parameter zpool which masks this definition
   commands :beadm => '/usr/sbin/beadm', :zpool_cmd => '/usr/sbin/zpool'
 

@@ -17,7 +17,7 @@
 Puppet::Type.type(:evs_properties).provide(:solaris) do
   desc "Provider for managing Oracle Solaris EVS properties"
   confine :operatingsystem => [:solaris]
-  defaultfor :osfamily => :solaris, :kernelrelease => ["5.11", "5.12"]
+  defaultfor :osfamily => :solaris, :kernelrelease => ["5.11"]
   commands :evsadm => "/usr/sbin/evsadm"
 
   mk_resource_methods

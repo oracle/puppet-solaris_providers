@@ -17,7 +17,7 @@
 Puppet::Type.type(:pkg_facet).provide(:solaris) do
   desc "Provider for Oracle Solaris facets"
   confine :operatingsystem => [:solaris]
-  defaultfor :osfamily => :solaris, :kernelrelease => ['5.11', '5.12']
+  defaultfor :osfamily => :solaris, :kernelrelease => ['5.11']
   commands :pkg => '/usr/bin/pkg'
 
   # Defined classvar once. Access must be via Klass.send to prevent

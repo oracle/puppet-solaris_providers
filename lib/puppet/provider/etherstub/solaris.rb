@@ -17,7 +17,7 @@
 Puppet::Type.type(:etherstub).provide(:solaris) do
   desc "Provider for creating Solaris etherstubs"
   confine :operatingsystem => [:solaris]
-  defaultfor :osfamily => :solaris, :kernelrelease => ['5.11', '5.12']
+  defaultfor :osfamily => :solaris, :kernelrelease => ['5.11']
   commands :dladm => '/usr/sbin/dladm'
 
   def self.instances

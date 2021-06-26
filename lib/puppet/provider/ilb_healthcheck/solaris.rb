@@ -18,7 +18,7 @@
 Puppet::Type.type(:ilb_healthcheck).provide(:solaris) do
   @doc = "Provider to manage Solaris Integrated Load Balancer (ILB) health checks."
   confine :operatingsystem => [:solaris]
-  defaultfor :osfamily => :solaris, :kernelrelease => ['5.11', '5.12']
+  defaultfor :osfamily => :solaris, :kernelrelease => ['5.11']
   commands :ilbadm => '/usr/sbin/ilbadm'
 
   mk_resource_methods

@@ -17,7 +17,7 @@
 Puppet::Type.type(:process_scheduler).provide(:solaris) do
   @doc = "Provider to manage Solaris process scheduler"
   confine :operatingsystem => [:solaris]
-  defaultfor :osfamily => :solaris, :kernelrelease => ['5.11', '5.12']
+  defaultfor :osfamily => :solaris, :kernelrelease => ['5.11']
   commands :dispadmin => '/usr/sbin/dispadmin'
 
   mk_resource_methods

@@ -17,7 +17,7 @@
 Puppet::Type.type(:system_attributes).provide(:solaris) do
   desc "Provider for management of file system attributes for Oracle Solaris"
   confine :operatingsystem => [:solaris]
-  defaultfor :osfamily => :solaris, :kernelrelease => ['5.11', '5.12']
+  defaultfor :osfamily => :solaris, :kernelrelease => ['5.11']
   commands :chmod => '/usr/bin/chmod', :ls => '/usr/bin/ls'
 
   mk_resource_methods

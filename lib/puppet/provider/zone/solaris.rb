@@ -122,7 +122,7 @@ Puppet::Type.type(:zone).provide(:solaris) do
 
 
   def install(dummy_argument=:work_arround_for_ruby_GC_bug)
-    if ['5.11', '5.12'].include? Facter.value(:kernelrelease)
+    if ['5.11'].include? Facter.value(:kernelrelease)
       if !@resource[:install_args] and @resource[:config_profile]
         @resource[:install_args] = " -c " + @resource[:config_profile]
       elsif !@resource[:install_args] and @resource[:archive]

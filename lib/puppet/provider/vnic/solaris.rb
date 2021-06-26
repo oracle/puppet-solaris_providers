@@ -17,7 +17,7 @@
 Puppet::Type.type(:vnic).provide(:solaris) do
   desc "Provider for creating VNICs in the Solaris OS"
   confine :operatingsystem => [:solaris]
-  defaultfor :osfamily => :solaris, :kernelrelease => ['5.11', '5.12']
+  defaultfor :osfamily => :solaris, :kernelrelease => ['5.11']
   commands :dladm => '/usr/sbin/dladm'
 
   mk_resource_methods

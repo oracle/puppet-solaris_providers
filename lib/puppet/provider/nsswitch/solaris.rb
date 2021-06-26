@@ -19,7 +19,7 @@ Puppet::Type.type(:nsswitch).provide(:solaris,
                              Puppet::Type.type(:svccfg).provider(:solaris)) do
   desc "Provider for name service switch configuration data"
   confine :operatingsystem => [:solaris]
-  defaultfor :osfamily => :solaris, :kernelrelease => ['5.11', '5.12']
+  defaultfor :osfamily => :solaris, :kernelrelease => ['5.11']
   commands :svccfg => '/usr/sbin/svccfg', :svcprop => '/usr/bin/svcprop'
 
   class << self; attr_accessor :nsswitch_fmri end

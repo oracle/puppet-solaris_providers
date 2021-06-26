@@ -17,7 +17,7 @@
 Puppet::Type.type(:ip_interface).provide(:solaris) do
   desc "Provider for management of IP interfaces for Oracle Solaris"
   confine :operatingsystem => [:solaris]
-  defaultfor :osfamily => :solaris, :kernelrelease => ['5.11', '5.12']
+  defaultfor :osfamily => :solaris, :kernelrelease => ['5.11']
   commands :ipadm => '/usr/sbin/ipadm', :dladm => '/usr/sbin/dladm'
 
   def self.instances

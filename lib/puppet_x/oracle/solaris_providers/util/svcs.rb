@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2013, 2106, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2013, 2020, Oracle and/or its affiliates.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ module PuppetX::Oracle::SolarisProviders::Util::Svcs
 
   def svcs_escape(value=self)
     if value.kind_of? String
-      value.gsub(/([;&()|^<>\n \t\\\"\'`~*\[\]\$\!])/, '\\\\\1')
+      value.gsub(/([;|^<>\n\t\\\"\'`~\[\]\$\!])/, '\\\\\1')
     else
       value
     end

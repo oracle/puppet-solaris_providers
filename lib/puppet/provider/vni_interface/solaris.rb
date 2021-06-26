@@ -17,7 +17,7 @@
 Puppet::Type.type(:vni_interface).provide(:solaris) do
   desc "Provider for management of VNI interfaces for Oracle Solaris"
   confine :operatingsystem => [:solaris]
-  defaultfor :osfamily => :solaris, :kernelrelease => ['5.11', '5.12']
+  defaultfor :osfamily => :solaris, :kernelrelease => ['5.11']
   commands :ipadm => '/usr/sbin/ipadm'
 
   def self.instances
