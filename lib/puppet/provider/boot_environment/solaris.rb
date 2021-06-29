@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2013, 2017, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2013, 2021, Oracle and/or its affiliates.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@
 Puppet::Type.type(:boot_environment).provide(:solaris) do
   desc "Provider for Oracle Solaris Boot Environments (BEs)"
   confine :operatingsystem => [:solaris]
-  defaultfor :osfamily => :solaris, :kernelrelease => ['5.11', '5.12']
+  defaultfor :osfamily => :solaris, :kernelrelease => ['5.11']
   # We have a parameter zpool which masks this definition
   commands :beadm => '/usr/sbin/beadm', :zpool_cmd => '/usr/sbin/zpool'
 

@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2016, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2016, 2021, Oracle and/or its affiliates.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@ Puppet::Type.type(:zfs_acl).provide(:solaris) do
   Ace = Puppet::Type::ZfsAcl::Ace
   desc "Provider for management of ZFS ACLs for Oracle Solaris"
   confine :operatingsystem => [:solaris]
-  defaultfor :osfamily => :solaris, :kernelrelease => ['5.11', '5.12']
+  defaultfor :osfamily => :solaris, :kernelrelease => ['5.11']
   commands :chmod => '/usr/bin/chmod', :ls => '/usr/bin/ls'
 
   mk_resource_methods

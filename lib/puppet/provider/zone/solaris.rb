@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2016, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2016, 2021, Oracle and/or its affiliates.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -122,7 +122,7 @@ Puppet::Type.type(:zone).provide(:solaris) do
 
 
   def install(dummy_argument=:work_arround_for_ruby_GC_bug)
-    if ['5.11', '5.12'].include? Facter.value(:kernelrelease)
+    if ['5.11'].include? Facter.value(:kernelrelease)
       if !@resource[:install_args] and @resource[:config_profile]
         @resource[:install_args] = " -c " + @resource[:config_profile]
       elsif !@resource[:install_args] and @resource[:archive]

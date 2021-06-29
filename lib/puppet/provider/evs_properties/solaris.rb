@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2015, 2017 Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2015, 2021 Oracle and/or its affiliates.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@
 Puppet::Type.type(:evs_properties).provide(:solaris) do
   desc "Provider for managing Oracle Solaris EVS properties"
   confine :operatingsystem => [:solaris]
-  defaultfor :osfamily => :solaris, :kernelrelease => ["5.11", "5.12"]
+  defaultfor :osfamily => :solaris, :kernelrelease => ["5.11"]
   commands :evsadm => "/usr/sbin/evsadm"
 
   mk_resource_methods

@@ -1,6 +1,6 @@
 
 #
-# Copyright (c) 2016, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2016, 2021, Oracle and/or its affiliates.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@
 Puppet::Type.type(:ilb_healthcheck).provide(:solaris) do
   @doc = "Provider to manage Solaris Integrated Load Balancer (ILB) health checks."
   confine :operatingsystem => [:solaris]
-  defaultfor :osfamily => :solaris, :kernelrelease => ['5.11', '5.12']
+  defaultfor :osfamily => :solaris, :kernelrelease => ['5.11']
   commands :ilbadm => '/usr/sbin/ilbadm'
 
   mk_resource_methods

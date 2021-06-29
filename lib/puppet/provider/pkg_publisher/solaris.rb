@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2013, 2015, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2013, 2021, Oracle and/or its affiliates.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@
 Puppet::Type.type(:pkg_publisher).provide(:solaris) do
   desc "Provider for Solaris publishers"
   confine :operatingsystem => [:solaris]
-  defaultfor :osfamily => :solaris, :kernelrelease => ['5.11', '5.12']
+  defaultfor :osfamily => :solaris, :kernelrelease => ['5.11']
   commands :pkg => '/usr/bin/pkg'
 
   mk_resource_methods
@@ -29,8 +29,10 @@ Puppet::Type.type(:pkg_publisher).provide(:solaris) do
       name, sticky, _syspub, enabled, type, _status, origin, proxy = line.split
 
       # strip off any trailing "/" characters
-      if origin && origin.end_with?("/")
-        origin = origin[0..-2]
+      unless origin.to_s.strip.empty?
+        if origin.end_with?("/")
+          origin = origin[0..-2]
+        end
       end
 
       unless publishers.key?(name)

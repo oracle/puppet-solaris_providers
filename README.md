@@ -43,7 +43,7 @@ Oracle Solaris Providers override the core Puppet providers for:
 
 ## Setup
 
-For Solaris 11.x pkg install puppet
+For Solaris 11.4 (onwards) pkg install puppet
 
 No additional setup or configuration is required.
 

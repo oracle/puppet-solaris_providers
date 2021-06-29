@@ -106,7 +106,7 @@ describe Puppet::Type.type(:nsswitch).provider(:solaris) do
     it "sets complex value" do
       described_class.expects(:svccfg).with(
         '-s', Nsswitch_fmri, "setprop",
-        "config/#{thing}=files\\ dns:\\[notfound=return\\]")
+        "config/#{thing}=files dns:\\[notfound=return\\]")
       expect(provider.send("#{thing}=".intern,"files dns:[notfound=return]")).
         to eq('files dns:[notfound=return]')
     end
