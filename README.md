@@ -41,7 +41,7 @@ Oracle Solaris Providers override the core Puppet providers for:
 
 ### See [documentation index](https://oracle.github.io/puppet-solaris_providers/_index.html) for details
 
-## Setup
+## Installation
 
 For Solaris 11.4 (onwards) pkg install puppet
 
