@@ -11,7 +11,7 @@
   * [Beginning with solaris_providers](#beginning-with-solaris_providers)
 4. [Usage - Configuration options and additional functionality](#usage)
 5. [Limitations - OS compatibility, etc.](#limitations)
-6. [Development - Guide for contributing to the module](#development)
+6. [Contributing - Guide for contributing to the module](#contributing)
 
 
 ## Overview
@@ -103,10 +103,19 @@ See links to extracted documents listed above.
 
 These modules were created for use on Oracle Solaris 11 and 11.4.
 
-## Development
+## Contributing
 
-Contributors should issue pull requests via Github see [contributing](CONTRIBUTING.md) and [testing](TESTING.md).
+This project welcomes contributions from the community. Before submitting a pull request, please [review our contribution guide](./CONTRIBUTING.md) and [testing](TESTING.md).
 
+## Security
+
+Please consult the [security guide](./SECURITY.md) for our responsible security vulnerability disclosure process
+
+## License
+
+Copyright (c) 2004, 2023 Oracle and/or its affiliates.
+
+Released under the Apache License
 
 ### Notes
 Package installation is via Puppet Core package provider
