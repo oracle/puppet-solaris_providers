@@ -7,10 +7,10 @@ get things working in your environment. There are a few guidelines that we
 need contributors to follow so that we can have a chance of keeping on
 top of things.
 
-## Solaris 10 vs Solaris 11 and Solaris 12
+## Solaris 10 vs Solaris 11
 
-This module is targeted at Solaris 11 and Solaris 12. Changes may be accepted
-for Solaris 10 as long as proper constraints are present.
+This module is targeted at Solaris 11.4. Changes may be accepted
+for earlier Solaris releases as long as proper constraints are present.
 
 ## Getting Started
 
@@ -31,9 +31,9 @@ for Solaris 10 as long as proper constraints are present.
 * Make sure your commit messages are in the proper format.
 
 ````
-    (ISSUE) breif summary
+    (ISSUE) brief summary
     OR
-    <Oracle Bug Number> breif summary
+    <Oracle Bug Number> brief summary
 
     Without this patch applied the example commit message in the CONTRIBUTING
     document is not a concrete example.  This is a problem because the
@@ -79,8 +79,8 @@ a ticket number.
 
 ## Submitting Changes
 
-* Sign the [The Oracle Contributor Agreement]
-  (https://www.oracle.com/technetwork/community/oca-486395.html) (OCA).
+* Sign the [The Oracle Contributor Agreement](https://oca.opensource.oracle.com)
+  (OCA).
 
   * For pull requests to be accepted into the repo, the bottom of
   your commit message must have the following line using your name and
