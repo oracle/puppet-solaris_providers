@@ -35,9 +35,9 @@ Puppet::Type.newtype(:ilb_server) do
 
   def self.title_patterns
     [
-      [%r((^(.+)\|(.+)\|(.+))$),[:name,:servergroup,:server,:port]],
-      [%r((^(.+)\|(.+))$),[:name,:servergroup,:server]],
-      [%r(.+),[:name]]
+      [%r((^(.+)\|(.+)\|(.+))$),[[:name],[:servergroup],[:server],[:port]]],
+      [%r((^(.+)\|(.+))$),[[:name],[:servergroup],[:server]]],
+      [%r(.+),[[:name]]]
     ]
   end
 
