@@ -1,4 +1,9 @@
-# 2.1.X
+# 2.0.4
+## Bugs Fixes and Enhancements
+* 39293704 OS command injection in Solaris zone provider configure path
+* Fix title patterns that use procs are not supported (contributed by @alexjfisher)
+
+# 2.0.3
 ## New Features
 * boot_environment
   * Now shows the created timestamp of the BE
