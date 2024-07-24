@@ -113,3 +113,17 @@ Package installation is via Puppet Core package provider
 
 Solaris providers are shipped with Solaris in the oracle-solaris_providers IPS package and installed automatically with puppet. Use of the module from this repo is possible but not addressed in this document.
 
+## Contributing
+
+This project welcomes contributions from the community. Before submitting a pull request, please [review our contribution guide](./CONTRIBUTING.md)
+
+## Security
+
+Please consult the [security guide](./SECURITY.md) for our responsible security vulnerability disclosure process
+
+## License
+
+Copyright (c) 2015, 2024 Oracle and/or its affiliates.
+
+Released under the Apache License Version 2.0 as shown at
+http://www.apache.org/licenses/LICENSE-2.0.
