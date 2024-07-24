@@ -12,6 +12,14 @@ top of things.
 This module is targeted at Solaris 11.4. Changes may be accepted
 for earlier Solaris releases as long as proper constraints are present.
 
+## Opening issues
+
+For bugs or enhancement requests, please file a GitHub issue unless it's
+security related. When filing a bug remember that the better written the bug is,
+the more likely it is to be fixed. If you think you've found a security
+vulnerability, do not raise a GitHub issue and follow the instructions in our
+[security policy](./SECURITY.md).
+
 ## Getting Started
 
 * Fork the repository on GitHub
@@ -79,30 +87,38 @@ a ticket number.
 
 ## Submitting Changes
 
-* Sign the [The Oracle Contributor Agreement](https://oca.opensource.oracle.com)
-  (OCA).
+We welcome your code contributions. Before submitting code via a pull request,
+you will need to have signed the [Oracle Contributor Agreement][OCA] (OCA) and
+your commits need to include the following line using the name and e-mail
+address you used to sign the OCA:
 
-  * For pull requests to be accepted into the repo, the bottom of
-  your commit message must have the following line using your name and
-  e-mail address as it appears in the OCA Signatories list.
+```text
+Signed-off-by: Your Name <you@example.org>
+```
 
-  ```
-  Signed-off-by: Your Name <you@example.org>
-  ```
+This can be automatically added to pull requests by committing with `--sign-off`
+or `-s`, e.g.
 
-  This can be automatically added to pull requests by committing with:
+```text
+git commit --signoff
+```
 
-  ```
-  git commit --signoff
-  ````
-  * Only pull requests from committers that can be verified as having
-signed the OCA can be accepted.
+Only pull requests from committers that can be verified as having signed the OCA
+can be accepted.
 
 * Push your changes to a topic branch in your fork of the repository.
 * Submit a pull request to the repository in the oracle organization.
 * The Configuration Management Team will review the pull request.
 * After feedback has been given we expect responses within two weeks. After two
   weeks we may close the pull request if it isn't showing any activity.
+
+## Code of conduct
+
+Follow the [Golden Rule](https://en.wikipedia.org/wiki/Golden_Rule). If you'd
+like more specific guidelines, see the [Contributor Covenant Code of Conduct][COC].
+
+[OCA]: https://oca.opensource.oracle.com
+[COC]: https://www.contributor-covenant.org/version/1/4/code-of-conduct/
 
 # Additional Resources
 
