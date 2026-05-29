@@ -69,36 +69,32 @@ Puppet::Type.type(:zone).provide(:solaris) do
       end
     end
 
-    # start building a command line
-    command = "#{command(:cfg)} -z #{@resource[:name]}"
-
-    # start building the subcommands
-    command << " '"
+    command = [command(:cfg), "-z", @resource[:name]]
+    subcommands = []
 
     # use an archive if specified
     if !@resource[:zonecfg_archive].nil?
       # use the config from the archive
-      command << "create -a #{@resource[:zonecfg_archive]}"
+      create_cmd = "create -a #{@resource[:zonecfg_archive]}"
 
       # use an archived zone if specified
       if !@resource[:archived_zonename].nil?
-        command << " -z #{@resource[:archived_zonename]}"
+        create_cmd << " -z #{@resource[:archived_zonename]}"
       end
 
-      command << ";"
+      subcommands << create_cmd
     end
 
     # use the exported zonecfg if specified
     if !@resource[:zonecfg_export].nil? and !exported_cfg.nil?
-      command << " #{exported_cfg}"
+      subcommands << exported_cfg
     end
 
-    # end the subcommands
-    command << "'"
+    command << subcommands.join("; ")
 
     # execute the command to configure the zone
     if command
-      exec_cmd(:cmd => command)
+      exec_cmd(command)
     end
   end
 
@@ -112,12 +108,8 @@ Puppet::Type.type(:zone).provide(:solaris) do
 
   # We cannot use the execpipe in util because the pipe is not opened in
   # read/write mode.
-  def exec_cmd(var)
-    if var[:input]
-      execute("echo \"#{var[:input]}\" | #{var[:cmd]}", :failonfail => true, :combine => true)
-    else
-      execute((var[:cmd]).to_s, :failonfail => true, :combine => true)
-    end
+  def exec_cmd(cmd)
+    execute(cmd, :failonfail => true, :combine => true)
   end
 
 
