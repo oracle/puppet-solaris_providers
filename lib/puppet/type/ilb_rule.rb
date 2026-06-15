@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2016, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2016, 2026, Oracle and/or its affiliates.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -192,7 +192,7 @@ Puppet::Type.newtype(:ilb_rule) do
   validate do
     # Skip validation if there is no catalog
     # i.e. puppet resource ilb_rule
-    next if @cagtalog == nil
+    next if @catalog == nil
     [:vip, :port, :lbalg, :topo_type, :servergroup].each do |thing|
       fail("#{thing} must be defined") unless self[thing]
     end
