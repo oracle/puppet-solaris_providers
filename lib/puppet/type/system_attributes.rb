@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2016, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2016, 2026, Oracle and/or its affiliates.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -123,7 +123,7 @@ Puppet::Type.newtype(:system_attributes) do
     desc "Anti-virus software sets to mark a file as quarantined."
     newvalues(/yes/i,/no/i)
     def insync?(is)
-      if @resource[:ignore_av_modified] == 'true'
+      if @resource[:ignore_av_quarantined] == 'true'
         debug "Ignoring difference in av_quarantined"
         return true if should == :absent
       end
