@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2013, 2021, Oracle and/or its affiliates.
+# Copyright (c) 2013, 2026, Oracle and/or its affiliates.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -58,7 +58,7 @@ Puppet::Type.type(:pkg_publisher).provide(:solaris) do
       publishers[name]["proxy"].push(proxy == '-' ? :absent : proxy)
 
       # set the order of the publishers
-      if not publisher_order.include?("name")
+      if not publisher_order.include?(name)
         publisher_order.push name
       end
       index = publisher_order.index(name)
