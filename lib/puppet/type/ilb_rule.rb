@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2016, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2016, 2026, Oracle and/or its affiliates.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -84,12 +84,12 @@ Puppet::Type.newtype(:ilb_rule) do
     "
     defaultto 'false'
 
-    newvalues(/true/i,/false/i,%r(/\d+$))
+    newvalues(/\Atrue\z/i,/\Afalse\z/i,%r{\A/\d+\z})
 
     validate do |value|
       # Let newvalues check general input first
       super(value)
-      next unless value =~ %r(/\d+$)
+      next unless value =~ %r{\A/\d+\z}
       fail "Invalid pmask #{value}" unless (0..128).cover?(value.slice(1..-1).to_i)
     end
   end
