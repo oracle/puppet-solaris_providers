@@ -64,7 +64,7 @@ describe Puppet::Type.type(:pkg_publisher) do
           end
         end
         context "rejects" do
-          %w(bare_string).each do |thing|
+          %w(bare_string p://foo nohttp://foo http://).each do |thing|
             it thing.inspect do
               params[type] = thing
               expect { resource }.to raise_error(Puppet::Error, error_pattern)
