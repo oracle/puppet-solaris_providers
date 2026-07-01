@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2016, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2016, 2026, Oracle and/or its affiliates.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -213,7 +213,7 @@ See chmod(1) NFSv4 ACL Specification for additional details
     end
 
     validate do |value|
-      fail "value: #{val}:#{val.class} must be a hash" unless value.kind_of?(Hash)
+      fail "value: #{value}:#{value.class} must be a hash" unless value.kind_of?(Hash)
       # Keys needs to be munged back into strings if they came from
       # the provider adding new ACEs
       value.dup.each_pair do |k,v|
