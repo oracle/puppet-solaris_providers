@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2013, 2021, Oracle and/or its affiliates.
+# Copyright (c) 2013, 2026, Oracle and/or its affiliates.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -73,7 +73,7 @@ Puppet::Type.type(:boot_environment).provide(:solaris) do
   end
 
   def running
-    @property_hash[:activate]
+    @property_hash[:running]
   end
   def running=(value)
       fail "Cannot change the running state of a BE. Use activate and reboot"
