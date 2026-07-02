@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2013, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2013, 2026, Oracle and/or its affiliates.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -26,6 +26,6 @@ Puppet::Type.newtype(:pkg_facet) do
 
   newproperty(:value) do
     desc "The value for the facet"
-    newvalues(/[tT]rue/, /[fF]alse/, /[nN]one/)
+    newvalues(/\Atrue\z/i, /\Afalse\z/i, /\Anone\z/i)
   end
 end

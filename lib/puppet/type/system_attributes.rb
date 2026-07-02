@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2016, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2016, 2026, Oracle and/or its affiliates.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -45,7 +45,7 @@ Puppet::Type.newtype(:system_attributes) do
   newproperty(:archive) do
     desc "Indicates if a file has been modified since it was last backed up.
     Archive is set whenever the mtime of the file is changed"
-    newvalues(/yes/i,/no/i)
+    newvalues(/\Ayes\z/i,/\Ano\z/i)
 
     def insync?(is)
       debug "#{should} == #{is}"
@@ -62,32 +62,32 @@ Puppet::Type.newtype(:system_attributes) do
     desc "Ignore archive flag settings on file if they are not set in the resource.
     Default: true"
     defaultto 'true'
-    newvalues(/true/i,/false/i)
+    newvalues(/\Atrue\z/i,/\Afalse\z/i)
   end
 
   newproperty(:hidden) do
     desc "Marks a file as hidden."
-    newvalues(/yes/i,/no/i)
+    newvalues(/\Ayes\z/i,/\Ano\z/i)
   end
 
   newproperty(:readonly) do
     desc "Marks a file as readonly."
-    newvalues(/yes/i,/no/i)
+    newvalues(/\Ayes\z/i,/\Ano\z/i)
   end
 
   newproperty(:system) do
     desc "Solaris systems have no special semantics for this attribute."
-    newvalues(/yes/i,/no/i)
+    newvalues(/\Ayes\z/i,/\Ano\z/i)
   end
 
   newproperty(:appendonly) do
     desc "Allows a file to be modified only at offset EOF"
-    newvalues(/yes/i,/no/i)
+    newvalues(/\Ayes\z/i,/\Ano\z/i)
   end
 
   newproperty(:nodump) do
     desc "Solaris systems have no special semantics for this attribute."
-    newvalues(/yes/i,/no/i)
+    newvalues(/\Ayes\z/i,/\Ano\z/i)
   end
 
   newproperty(:immutable) do
@@ -95,13 +95,13 @@ Puppet::Type.newtype(:system_attributes) do
           vents  all  metadata  changes,  except for access time updates.
           When placed on a directory, prevents the deletion and  creation
           of  files in the directories."
-    newvalues(/yes/i,/no/i)
+    newvalues(/\Ayes\z/i,/\Ano\z/i)
   end
 
   newproperty(:av_modified) do
     desc "ZFS  sets the anti-virus attribute which whenever a file's con-
           tent or size changes or when the file is renamed."
-    newvalues(/yes/i,/no/i)
+    newvalues(/\Ayes\z/i,/\Ano\z/i)
     def insync?(is)
       if @resource[:ignore_av_modified] == 'true'
         debug "Ignoring difference in av_modified"
@@ -116,12 +116,12 @@ Puppet::Type.newtype(:system_attributes) do
     desc "Ignore av_modified flag settings on file if they are not set in the resource.
     Default: true"
     defaultto "true"
-    newvalues(/true/i,/false/i)
+    newvalues(/\Atrue\z/i,/\Afalse\z/i)
   end
 
   newproperty(:av_quarantined) do
     desc "Anti-virus software sets to mark a file as quarantined."
-    newvalues(/yes/i,/no/i)
+    newvalues(/\Ayes\z/i,/\Ano\z/i)
     def insync?(is)
       if @resource[:ignore_av_modified] == 'true'
         debug "Ignoring difference in av_quarantined"
@@ -136,24 +136,24 @@ Puppet::Type.newtype(:system_attributes) do
     desc "Ignore av_quarantined flag settings on file if they are not set in the resource.
     Default: true"
     defaultto "true"
-    newvalues(/true/i,/false/i)
+    newvalues(/\Atrue\z/i,/\Afalse\z/i)
   end
 
   newproperty(:nounlink) do
     desc "Prevents  a  file  from  being  deleted.  On  a  directory, the
           attribute also prevents any changes  to  the  contents  of  the
           directory."
-    newvalues(/yes/i,/no/i)
+    newvalues(/\Ayes\z/i,/\Ano\z/i)
   end
 
   newproperty(:offline) do
     desc "Offline"
-    newvalues(/yes/i,/no/i)
+    newvalues(/\Ayes\z/i,/\Ano\z/i)
   end
 
   newproperty(:sparse) do
     desc "Sparse"
-    newvalues(/yes/i,/no/i)
+    newvalues(/\Ayes\z/i,/\Ano\z/i)
   end
 
   newproperty(:sensitive) do
@@ -172,7 +172,7 @@ Puppet::Type.newtype(:system_attributes) do
     Default: false
     "
     defaultto 'false'
-    newvalues(/true/i,/false/i)
+    newvalues(/\Atrue\z/i,/\Afalse\z/i)
   end
 
   autorequire(:file) do
