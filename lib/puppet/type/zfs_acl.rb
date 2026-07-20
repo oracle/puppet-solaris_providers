@@ -120,11 +120,6 @@ Puppet::Type.newtype(:zfs_acl) do
   end
 
   newproperty(:acl, :array_matching => :all) do
-    def initialize(args)
-      super(args)
-      @ace_valid = Puppet::Type::ZfsAcl::Ace::Util
-    end
-
     def insync?(current)
       # We need to add default perms to @should to keep
       # insync? working as expected
@@ -226,26 +221,27 @@ See chmod(1) NFSv4 ACL Specification for additional details
       fail "perm_type must be defined" unless value['perm_type']
 
       # Check target value
-      unless @ace_valid.target.include?(value['target']) ||
-             value['target'].match(Regexp.union(@ace_valid.target_patterns))
+      ace_valid = Puppet::Type::ZfsAcl::Ace::Util
+      unless ace_valid.target.include?(value['target']) ||
+             value['target'].match(Regexp.union(ace_valid.target_patterns))
         fail "Invalid target: #{value['target']}"
       end
 
       # Check Permissions
       bad_perms = []
       bad_perms = bad_perms + ([value['perms']].flatten.compact -
-                               @ace_valid.all_perms)
+                               ace_valid.all_perms)
       fail "Invalid perms: #{bad_perms}" unless bad_perms.empty?
 
       # Check Inheritance
       bad_inh = []
       [value['inheritance']].flatten.compact.each do |thing|
-        bad_inh = bad_inh + (value['inheritance'] - @ace_valid.inheritance)
+        bad_inh = bad_inh + (value['inheritance'] - ace_valid.inheritance)
       end
       fail "Invalid Inheritance: #{bad_inh}" unless bad_inh.empty?
 
       # Check perm_type
-      unless @ace_valid.perm_type.include?(value['perm_type'])
+      unless ace_valid.perm_type.include?(value['perm_type'])
         fail "Invalid perm_type: #{value['perm_type']}"
       end
     end
