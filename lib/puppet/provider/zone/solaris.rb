@@ -41,13 +41,15 @@ Puppet::Type.type(:zone).provide(:solaris) do
       raise Puppet::Error, "No configuration resource is defined."
     end
 
-    command = String.new
+    command = [command(:cfg), "-z", @resource[:name]]
+
     if @resource[:clone]
       if !@resource[:zonecfg_export]
         raise Puppet::Error, "A zone configuration must be defined to
         clone a zone."
       end
-      command = "#{command(:cfg)} -z #{@resource[:name]} -f #{@resource[:zonecfg_export]}"
+      command << "-f"
+      command << @resource[:zonecfg_export]
     else
       unless @resource[:zonecfg_export].nil? || @resource[:zonecfg_export].empty?
         begin
@@ -61,24 +63,27 @@ Puppet::Type.type(:zone).provide(:solaris) do
         @property_hash.clear
       end
 
+      subcommands = []
+
       unless @resource[:archive].nil? || @resource[:archive].empty?
-        if !str.nil?
-          command = "#{command(:cfg)} -z #{@resource[:name]} \'create -a #{@resource[:archive]};#{str}\'"
-        else
-          command = "#{command(:cfg)} -z #{@resource[:name]} create -a #{@resource[:archive]} "
-        end
+        create_cmd = "create -a #{@resource[:archive]}"
+
         if @resource[:archived_zonename]
-          command << " -z #{@resource[:archived_zonename]}"
+          create_cmd << " -z #{@resource[:archived_zonename]}"
         end
+
+        subcommands << create_cmd
       end
 
-      if !@resource[:zonecfg_export].nil? && @resource[:archive].nil?
-        command = "#{command(:cfg)} -z #{@resource[:name]} \'#{str}\'"
+      if !@resource[:zonecfg_export].nil? && !str.nil?
+        subcommands << str
       end
+
+      command << subcommands.join("; ")
     end
 
     if command
-      r = exec_cmd(:cmd => command)
+      exec_cmd(command)
     end
   end
 
@@ -92,12 +97,8 @@ Puppet::Type.type(:zone).provide(:solaris) do
 
   # We cannot use the execpipe in util because the pipe is not opened in
   # read/write mode.
-  def exec_cmd(var)
-    if var[:input]
-    	execute("echo \"#{var[:input]}\" | #{var[:cmd]}", :failonfail => true, :combine => true)
-    else
-        execute("#{var[:cmd]}", :failonfail => true, :combine => true)
-    end
+  def exec_cmd(cmd)
+    execute(cmd, :failonfail => true, :combine => true)
   end
 
 
