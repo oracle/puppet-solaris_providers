@@ -1,3 +1,16 @@
+# 2.1.0
+## Bugs Fixes and Enhancements
+* fix pkg_publisher origin and mirror URI validation
+* fix several type validations to require complete values instead of
+  valid substrings
+* fix pkg_publisher search order
+* fix zfs_acl property initialization with Puppet 7
+* fix boot_environment running property returning the wrong value
+* fix system_attributes av_quarantined property checking the wrong ignore flag
+* ilb_rule properties are now correctly validated when a catalog is present
+
+* update test dependencies and fix test setup for Puppet 7 and Facter 4
+
 # 2.0.4
 ## Bugs Fixes and Enhancements
 * 39293704 OS command injection in Solaris zone provider configure path
