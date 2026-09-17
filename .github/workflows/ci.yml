@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  spec:
+    name: Ruby ${{ matrix.ruby }} / ${{ matrix.name }}
+    runs-on: ubuntu-22.04
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - ruby: "2.6.6"
+            name: Puppet 5
+            gemfile: Gemfiles/puppet-5.x
+          - ruby: "3.3"
+            name: Puppet 7
+            gemfile: Gemfiles/puppet-7.x
+
+    env:
+      BUNDLE_GEMFILE: ${{ matrix.gemfile }}
+      CHECK: test
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ matrix.ruby }}
+          bundler-cache: true
+
+      - name: Run specs
+        env:
+          SPEC_OPTS: "--format progress"
+        run: bundle exec rake "$CHECK"
